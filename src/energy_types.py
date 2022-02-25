@@ -30,5 +30,23 @@ class KWh:
 
 
 class KW:
-    def __init__(self, value: int):
+    def __init__(self, value: float):
         self.value = value
+
+    def __add__(self, other: KW):
+        return KW(self.value + other.value)
+
+    def __sub__(self, other: KW):
+        return KW(self.value - other.value)
+
+    def __gt__(self, other: KW):
+        return self.value > other.value
+
+    def __ge__(self, other: KW):
+        return self.value >= other.value
+
+    def __lt__(self, other: KW):
+        return self.value < other.value
+
+    def __eq__(self, other: KW):
+        return self.value == other.value
