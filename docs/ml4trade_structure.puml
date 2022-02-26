@@ -1,0 +1,97 @@
+@startuml
+
+hide empty methods
+hide empty fields
+
+title ml4trade structure
+
+interface gym.Env {
+  reset()
+  step(action)
+}
+
+class gym_anytrading.TradingEnv {
+  reset()
+  step(action)
+}
+
+interface ml4trade.Unit {
+  value: float
+}
+class ml4trade.Ah
+class ml4trade.KW
+class ml4trade.KWh
+class ml4trade.Currency
+
+class ml4trade.SimulationEnv {
+  _simulate_day(action)
+}
+
+class ml4trade.EnergyMarket {
+  buy(amount: KWh, price: Currency) -> Currency
+  sell(amount: KWh, price: Currency) -> Currency
+  get_current_buy_price() -> Currency
+  get_current_sell_price() -> Currency
+}
+
+class ml4trade.Prosumer {
+  balance: Currency
+  energy_market: EnergyMarket
+  battery_system: BatterySystem
+  energy_system: EnergySystem
+  ---
+  _buy(amount: KWh, price: Currency, forced: bool) -> Currency
+  _sell(amount: KWh, price: Currency, forced: bool) -> Currency
+  ---
+  consume_energy()
+  produce_energy()
+  send_scheduled_transaction()
+  schedule_new_transactions(action)
+}
+
+class ml4trade.BatterySystem
+
+class ml4trade.EnergySystem {
+  systems: list[PowerSystem]
+
+  get_power(date: Date) -> KW
+}
+
+interface ml4trade.PowerSystem {
+  get_power(date: Date, callback: Callable) -> KW
+}
+class ml4trade.ProductionSystem
+class ml4trade.ConsumptionSystem
+
+class ml4trade.Battery {
+  capacity: Ah
+  charge: Ah
+  performance: float
+  
+  charge(amount: Ah) -> Ah
+  discharge(amount: Ah) -> Ah
+}
+
+interface stable_baselines3.Agent {
+  learn()
+  predict(obs)
+}
+
+ml4trade.Unit <|-- ml4trade.Ah
+ml4trade.Unit <|-- ml4trade.KW
+ml4trade.Unit <|-- ml4trade.KWh
+ml4trade.Unit <|-- ml4trade.Currency
+
+gym.Env <|-- ml4trade.SimulationEnv
+ml4trade.SimulationEnv "1" *-- "1" ml4trade.EnergyMarket
+ml4trade.SimulationEnv "1" *-- "1" ml4trade.Prosumer
+ml4trade.EnergyMarket "1" *-- "1" gym_anytrading.TradingEnv
+ml4trade.BatterySystem "1" *-- "n" ml4trade.Battery
+ml4trade.Prosumer "1" *-- "1" ml4trade.BatterySystem
+ml4trade.Prosumer "1" *-- "1" ml4trade.EnergySystem 
+ml4trade.PowerSystem <|-- ml4trade.ProductionSystem
+ml4trade.PowerSystem <|-- ml4trade.ConsumptionSystem
+ml4trade.EnergySystem "1" *-- "n" ml4trade.ProductionSystem
+ml4trade.EnergySystem "1" *-- "n" ml4trade.ConsumptionSystem
+
+@enduml
