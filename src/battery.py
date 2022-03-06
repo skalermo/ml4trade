@@ -8,7 +8,7 @@ class Battery:
         self.current_charge = current_charge
 
     def charge(self, amount: Ah):
-        charged_amount = min(amount, self.capacity - self.current_charge)
+        charged_amount = min(amount, self.capacity - self.current_charge)  # efficiency
         self.current_charge += charged_amount
         return charged_amount
 

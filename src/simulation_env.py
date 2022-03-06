@@ -36,7 +36,7 @@ class SimulationEnv(gym.Env):
         for hour in range(1, 24 + 1):
             if hour == midnight:
                 self.prosumer.set_new_actions()
-            self.prosumer.consume_energy()
+            self.prosumer.consume_energy(hour)
             self.prosumer.produce_energy()
             self.prosumer.send_transaction()
 

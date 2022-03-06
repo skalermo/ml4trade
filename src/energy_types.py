@@ -9,6 +9,10 @@ def to_kw(other: float) -> KW:
     return KW(other)
 
 
+def to_kwh(other: int) -> KWh:
+    return KWh(other)
+
+
 class Ah:
     def __init__(self, value: float):
         self.value = value
@@ -31,10 +35,16 @@ class Ah:
     def __eq__(self, other: Ah):
         return self.value == other.value
 
+    def __neg__(self):
+        return self.value * -1
+
 
 class KWh:
     def __init__(self, value: int):
         self.value = value
+
+    def __mul__(self, other: float):
+        return self.value * other
 
 
 class KW:
