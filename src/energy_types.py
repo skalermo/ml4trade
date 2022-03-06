@@ -1,6 +1,14 @@
 from __future__ import annotations
 
 
+def to_ah(other: float) -> Ah:
+    return Ah(other)
+
+
+def to_kw(other: float) -> KW:
+    return KW(other)
+
+
 class Ah:
     def __init__(self, value: float):
         self.value = value
