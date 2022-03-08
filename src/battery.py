@@ -1,4 +1,4 @@
-from src.energy_types import Ah
+from src.types import Ah
 
 
 class Battery:

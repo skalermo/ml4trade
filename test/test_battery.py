@@ -1,7 +1,7 @@
 import unittest
 
 from src.battery import Battery
-from src.energy_types import Ah
+from src.types import Ah
 
 
 class TestBattery(unittest.TestCase):
