@@ -1,6 +1,6 @@
 from typing import Type, List, Union
 
-from src.types import kW
+from src.custom_types import kW
 from src.energy_manipulation.production import ProductionSystem
 from src.energy_manipulation.consumption import ConsumptionSystem
 

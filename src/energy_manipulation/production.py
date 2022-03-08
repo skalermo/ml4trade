@@ -1,6 +1,6 @@
 from typing import Callable
 
-from src.types import kW
+from src.custom_types import kW
 
 
 def _default_callback(date):

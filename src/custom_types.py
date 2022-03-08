@@ -2,23 +2,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
-@dataclass(frozen=True, order=True, eq=True, repr=True)
-class Ah:
-    value: float
-
-    def __add__(self, other):
-        return Ah(self.value + other.value)
-
-    def __sub__(self, other):
-        return Ah(self.value - other.value)
-
-
-@dataclass(frozen=True, order=True, eq=True, repr=True)
+@dataclass(frozen=True, eq=True, repr=True)
 class kWh:
     value: float
 
     def to_cost(self, price_per_kwh: Currency) -> Currency:
         return Currency(self.value * price_per_kwh.value)
+
+    def __add__(self, other):
+        return kWh(self.value + other.value)
+
+    def __sub__(self, other):
+        return kWh(self.value - other.value)
+
+    def __lt__(self, other):
+        return self.value < other.value
 
 
 @dataclass(frozen=True, order=True, eq=True, repr=True)
