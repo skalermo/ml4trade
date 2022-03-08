@@ -1,18 +1,6 @@
 from __future__ import annotations
 
 
-def to_ah(other: float) -> Ah:
-    return Ah(other)
-
-
-def to_kw(other: float) -> KW:
-    return KW(other)
-
-
-def to_kwh(other: int) -> KWh:
-    return KWh(other)
-
-
 class Ah:
     def __init__(self, value: float):
         self.value = value
@@ -40,11 +28,32 @@ class Ah:
 
 
 class KWh:
-    def __init__(self, value: int):
+    def __init__(self, value: float):
         self.value = value
 
     def __mul__(self, other: float):
         return self.value * other
+
+    def __add__(self, other: KWh):
+        return KWh(self.value + other.value)
+
+    def __sub__(self, other: KWh):
+        return KWh(self.value - other.value)
+
+    def __gt__(self, other: KWh):
+        return self.value > other.value
+
+    def __ge__(self, other: KWh):
+        return self.value >= other.value
+
+    def __lt__(self, other: KWh):
+        return self.value < other.value
+
+    def __eq__(self, other: KWh):
+        return self.value == other.value
+
+    def __neg__(self):
+        return self.value * -1
 
 
 class KW:
