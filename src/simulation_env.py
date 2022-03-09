@@ -41,11 +41,13 @@ class SimulationEnv(gym.Env):
         self.scheduling_time = scheduling_time
         self.action_replacement_time = action_replacement_time
         self.simulation = self._simulation()
-        self.simulation.send(None)
 
         battery = Battery()
         energy_systems = EnergySystems()
         self.prosumer = Prosumer(battery, energy_systems)
+
+        # start generator object
+        self.simulation.send(None)
 
     @staticmethod
     def _action_space() -> spaces.Box:
@@ -68,7 +70,6 @@ class SimulationEnv(gym.Env):
         return self.simulation.send(action)
 
     def _simulation(self) -> Generator[ObservationType, ActType, None]:
-        yield
         while True:
             if self.is_now_scheduling_time():
                 action = yield self._observation()
