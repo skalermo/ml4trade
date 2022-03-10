@@ -1,5 +1,6 @@
 from typing import Optional, Union, Tuple, Generator
 from datetime import datetime, timedelta, time
+import random
 
 import numpy as np
 import gym
@@ -78,10 +79,19 @@ class SimulationEnv(gym.Env):
             if self.is_now_action_replacement_time():
                 self.prosumer.set_new_actions()
 
-            # self.prosumer.consume_energy()
-            # self.prosumer.produce_energy()
+            self._run_in_random_order(
+                self.prosumer.consume_energy,
+                self.prosumer.produce_and_sell,
+            )
 
             self.cur_datetime += timedelta(hours=1)
+
+    @staticmethod
+    def _run_in_random_order(*ff: callable) -> None:
+        functions = list(ff)
+        random.shuffle(functions)
+        for f in functions:
+            f()
 
     def render(self, mode="human"):
         pass
