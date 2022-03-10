@@ -18,6 +18,9 @@ class kWh:
     def __lt__(self, other):
         return self.value < other.value
 
+    def __ge__(self, other):
+        return self.value >= other.value
+
 
 @dataclass(frozen=True, order=True, eq=True, repr=True)
 class kW:
