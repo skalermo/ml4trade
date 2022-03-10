@@ -70,6 +70,27 @@ class SimulationEnv(gym.Env):
         return self.simulation.send(action)
 
     def _simulation(self) -> Generator[ObservationType, ActType, None]:
+        yield
+        while True:
+            if self.is_now_scheduling_time():
+                action = yield self._observation()
+                self.prosumer.schedule(action)
+
+            if self.is_now_action_replacement_time():
+                self.prosumer.set_new_actions()
+
+            # self.prosumer.consume_energy()
+            # self.prosumer.produce_energy()
+
+            self.cur_datetime += timedelta(hours=1)
+
+    def _observation(self) -> ObservationType:
+        return np.zeros(self.shape), 0, False, {}
+
+    def step(self, action: ActType) -> ObservationType:
+        return self.simulation.send(action)
+
+    def _simulation(self) -> Generator[ObservationType, ActType, None]:
         while True:
             if self.is_now_scheduling_time():
                 action = yield self._observation()
