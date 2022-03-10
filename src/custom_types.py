@@ -18,6 +18,9 @@ class kWh:
     def __lt__(self, other):
         return self.value < other.value
 
+    def __ge__(self, other):
+        return self.value >= other.value
+
 
 @dataclass(frozen=True, order=True, eq=True, repr=True)
 class kW:
@@ -36,3 +39,9 @@ class kW:
 @dataclass(frozen=True, order=True, eq=True, repr=True)
 class Currency:
     value: float
+
+    def __add__(self, other: Currency):
+        return Currency(self.value + other.value)
+
+    def __sub__(self, other):
+        return Currency(self.value - other.value)
