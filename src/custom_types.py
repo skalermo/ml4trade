@@ -36,3 +36,9 @@ class kW:
 @dataclass(frozen=True, order=True, eq=True, repr=True)
 class Currency:
     value: float
+
+    def __add__(self, other: Currency):
+        return Currency(self.value + other.value)
+
+    def __sub__(self, other):
+        return Currency(self.value - other.value)
