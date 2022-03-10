@@ -1,18 +1,18 @@
-from src.energy_types import KWh
+from src.custom_types import kWh
 
 
 class Battery:
-    def __init__(self, capacity: KWh = 100, efficiency: float = 1.0, current_charge: KWh = 0):
+    def __init__(self, capacity: kWh = 100, efficiency: float = 1.0, current_charge: kWh = 0):
         self.capacity = capacity
         self.efficiency = efficiency
         self.current_charge = current_charge
 
-    def charge(self, amount: KWh):
-        charged_amount = min(amount, self.capacity - self.current_charge)  # efficiency
+    def charge(self, amount: kWh):
+        charged_amount = min(amount, self.capacity - self.current_charge)
         self.current_charge += charged_amount
         return charged_amount
 
-    def discharge(self, amount: KWh):
+    def discharge(self, amount: kWh):
         discharged_amount = min(amount, self.current_charge)
         self.current_charge -= discharged_amount
         return discharged_amount
