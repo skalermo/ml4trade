@@ -2,7 +2,6 @@ from src.custom_types import kWh, Currency
 from src.wallet import Wallet
 from src.battery import Battery
 
-
 class EnergyMarket:
     def __init__(self, buy_price: Currency, sell_price: Currency):
         self.buy_price = buy_price
