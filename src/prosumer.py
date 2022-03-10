@@ -39,6 +39,8 @@ class Prosumer:
         self.next_day_actions = actions
 
     def set_new_actions(self):
+        if self.next_day_actions is None:
+            return
         self.scheduled_trading_amounts = self.next_day_actions[0:24]
         self.scheduled_price_thresholds = self.next_day_actions[24:]
         self.next_day_actions = None
