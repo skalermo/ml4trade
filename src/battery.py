@@ -2,7 +2,7 @@ from src.custom_types import kWh
 
 
 class Battery:
-    def __init__(self, capacity: kWh = 100, efficiency: float = 1.0, current_charge: kWh = 0):
+    def __init__(self, capacity: kWh = kWh(100), efficiency: float = 1.0, current_charge: kWh = kWh(0)):
         assert efficiency > 0, "Efficiency must be greater than 0"
 
         self.capacity = capacity
