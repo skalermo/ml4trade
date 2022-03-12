@@ -45,3 +45,9 @@ class Currency:
 
     def __sub__(self, other):
         return Currency(self.value - other.value)
+
+    def __mul__(self, other: float) -> Currency:
+        return Currency(self.value * other)
+
+    def __truediv__(self, multiplier: float) -> Currency:
+        return Currency(self.value / multiplier)
