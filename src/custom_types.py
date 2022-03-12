@@ -57,3 +57,9 @@ class Currency:
 
     def __truediv__(self, other: float) -> Currency:
         return Currency(self.value / other)
+
+    def __abs__(self) -> Currency:
+        return Currency(abs(self.value))
+
+    def __round__(self, n=None):
+        return Currency(round(self.value, n))

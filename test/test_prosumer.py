@@ -34,7 +34,7 @@ class TestProsumer(unittest.TestCase):
 
         prosumer.produce_energy(kWh(10))
 
-        self.assertEqual(prosumer.energy_balance, kWh(10))
+        self.assertEqual(prosumer.energy_balance.value, kWh(10))
 
     # consume:
     # - buy
@@ -90,7 +90,7 @@ class TestProsumerSell(unittest.TestCase):
         prosumer.sell_energy(kWh(10), energy_market.sell_price)
 
         self.assertEqual(prosumer.wallet.balance, Currency(50) + kWh(10).to_cost(energy_market.sell_price))
-        self.assertEqual(prosumer.energy_balance, kWh(-10))
+        self.assertEqual(prosumer.energy_balance.value, kWh(-10))
 
     def test_sell_forced(self):
         battery = Battery(kWh(100), 1.0, kWh(50))
@@ -100,8 +100,11 @@ class TestProsumerSell(unittest.TestCase):
 
         prosumer.sell_energy(kWh(10), energy_market.sell_price, forced=True)
 
-        self.assertEqual(prosumer.wallet.balance, Currency(50) + kWh(10).to_cost(energy_market.sell_price_forced))
-        self.assertEqual(prosumer.energy_balance, kWh(-10))
+        self.assertAlmostEqual(
+            prosumer.wallet.balance,
+            Currency(50) + kWh(10).to_cost(energy_market.sell_price_forced),
+        )
+        self.assertEqual(prosumer.energy_balance.value, kWh(-10))
 
 
 class TestProsumerConsume(unittest.TestCase):

@@ -62,14 +62,14 @@ class Prosumer:
         power_produced = self.energy_systems.get_production_power(0)
         return power_produced.to_kwh()
 
-    def sell_energy(self, amount: kWh, price: Currency, forced: bool = False) -> float:
-        pass
+    def sell_energy(self, amount: kWh, price: Currency, forced: bool = False):
+        self.energy_market.sell(amount, price, self.wallet, self.energy_balance, forced=forced)
 
     def consume_energy(self, amount: kWh):
         pass
 
     def produce_energy(self, amount: kWh):
-        pass
+        self.energy_balance.add(amount)
 
     def _sell_energy(self, amount: kWh, _):
         pass
