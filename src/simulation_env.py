@@ -89,7 +89,7 @@ class SimulationEnv(gym.Env):
 
             if self.first_actions_set:
                 self._run_in_random_order([
-                    (self.prosumer.consume_energy, []),
+                    (self.prosumer.consume_energy, [self.cur_datetime]),
                     (self.prosumer.produce_and_sell, [self.cur_datetime]),
                 ])
 
