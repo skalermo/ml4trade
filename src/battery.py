@@ -16,3 +16,14 @@ class Battery:
         discharged_amount = min(amount, self.current_charge)
         self.current_charge -= discharged_amount
         return discharged_amount
+
+
+class EnergyBalance:
+    def __init__(self):
+        self.value = kWh(0)
+
+    def add(self, amount: kWh):
+        self.value += amount
+
+    def sub(self, amount: kWh):
+        self.value -= amount

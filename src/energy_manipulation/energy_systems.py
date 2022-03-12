@@ -22,4 +22,11 @@ class EnergySystems:
         return power
 
     def get_consumption_power(self, date) -> kW:
-        pass
+        if not self.systems:
+            return kW(0)
+
+        power = kW(0)
+        for system in self.systems:
+            if isinstance(system, ConsumptionSystem):
+                power += system.get_power(date)
+        return power

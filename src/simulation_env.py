@@ -89,8 +89,8 @@ class SimulationEnv(gym.Env):
 
             if self.first_actions_set:
                 self._run_in_random_order([
-                    (self.prosumer.consume_energy, []),
-                    (self.prosumer.produce_and_sell, [self.cur_datetime]),
+                    (self.prosumer.consume, [self.cur_datetime]),
+                    (self.prosumer.produce, [self.cur_datetime]),
                 ])
 
             self.cur_datetime += timedelta(hours=1)
