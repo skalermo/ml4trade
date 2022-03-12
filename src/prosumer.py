@@ -71,10 +71,6 @@ class Prosumer:
     def produce_energy(self, amount: kWh):
         self.energy_balance.add(amount)
 
-    def _sell_energy(self, amount: kWh, _):
-        pass
-        # self.energy_market.sell(amount, SELL_THRESHOLD, self.wallet, self.battery)
-
     def produce(self, _datetime: datetime):
         energy_produced = self._produce_energy(_datetime)
         self.produce_energy(energy_produced)
@@ -82,22 +78,26 @@ class Prosumer:
             self.get_scheduled_sell_amount(_datetime.time()),
             self.get_scheduled_price_threshold(_datetime.time()),
         )
+        self._restore_energy_balance()
+
+    def _restore_energy_balance(self):
         if self.energy_balance.value < kWh(0):
             energy_used = self.battery.discharge(abs(self.energy_balance.value))
             self.energy_balance.value += energy_used
         elif self.energy_balance.value > kWh(0):
             energy_used = self.battery.charge(self.energy_balance.value)
             self.energy_balance.value -= energy_used
+
         if self.energy_balance.value > kWh(0):
             self.sell_energy(
                 self.energy_balance.value,
-                self.get_scheduled_price_threshold(_datetime.time()),
+                Currency(float('inf')),
                 forced=True,
             )
         elif self.energy_balance.value < kWh(0):
             self.buy_energy(
                 abs(self.energy_balance.value),
-                self.get_scheduled_price_threshold(_datetime.time()),
+                Currency(float('0')),
                 forced=True,
             )
 
