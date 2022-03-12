@@ -27,6 +27,9 @@ class kWh:
     def __truediv__(self, other: float):
         return kWh(self.value / other)
 
+    def __abs__(self):
+        return kWh(abs(self.value))
+
 
 @dataclass(frozen=True, order=True, eq=True, repr=True)
 class kW:
