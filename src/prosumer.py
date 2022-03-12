@@ -3,7 +3,7 @@ from datetime import datetime, time
 
 import numpy as np
 
-from src.battery import Battery
+from src.battery import Battery, EnergyBalance
 from src.energy_manipulation.energy_systems import EnergySystems
 from src.energy_types import KWh
 from src.market import EnergyMarket
