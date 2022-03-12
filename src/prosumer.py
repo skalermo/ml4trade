@@ -32,7 +32,7 @@ class Prosumer:
         self.next_day_actions: Optional[np.ndarray] = None
         self.energy_balance = EnergyBalance()
 
-    def consume_energy(self, _datetime: datetime):
+    def consume(self, _datetime: datetime):
         consumption_power = self.energy_systems.get_consumption_power(_datetime.hour)
         bought_amount = self.get_scheduled_buy_amount(_datetime.time())
         self.energy_market.buy(bought_amount, BUY_THRESHOLD, self.wallet, self.energy_balance)
@@ -55,18 +55,27 @@ class Prosumer:
         #     if deficient_amount.value > 0:
         #         self.sell_energy(deficient_amount, 0.8*self.get_scheduled_price(hour))
 
-    def buy_energy(self, amount: kWh, price: float) -> float:
-        return self.energy_market.buy(amount, price)
+    def buy_energy(self, amount: kWh, price: Currency, forced: bool = False) -> float:
+        return self.energy_market.buy(amount, price, self.wallet, self.energy_balance, forced=forced)
 
     def _produce_energy(self, _) -> kWh:
         power_produced = self.energy_systems.get_production_power(0)
         return power_produced.to_kwh()
 
+    def sell_energy(self, amount: kWh, price: Currency, forced: bool = False) -> float:
+        pass
+
+    def consume_energy(self, amount: kWh):
+        pass
+
+    def produce_energy(self, amount: kWh):
+        pass
+
     def _sell_energy(self, amount: kWh, _):
         pass
         # self.energy_market.sell(amount, SELL_THRESHOLD, self.wallet, self.battery)
 
-    def produce_and_sell(self, _datetime: datetime):
+    def produce(self, _datetime: datetime):
         energy_produced = self._produce_energy(_datetime)
         self._sell_energy(energy_produced, _datetime)
 

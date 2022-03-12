@@ -34,8 +34,8 @@ class TestBattery(unittest.TestCase):
     def test_efficiency_cuts_down_energy_charged(self):
         battery = Battery(kWh(100), 0.25, kWh(50))
         charged = battery.charge(kWh(100))
-        # not sure whether we want to return amount of
-        # energy used or energy stored in battery
+        # charged amount shows how much energy was used to charge the battery
+        # not the amount actually stored into it
         self.assertEqual(charged, kWh(100))
         self.assertEqual(battery.current_charge, kWh(75))
 
