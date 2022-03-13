@@ -10,14 +10,23 @@ class EnergyMarket:
         self.sell_price = sell_price
         self.sell_price_forced = sell_price / 1.1
 
-    def buy(self, amount: kWh, price_threshold: Currency, client_wallet: Wallet, energy_balance: EnergyBalance, forced: bool = False):
-        # client buys `amount` of energy at buy price not higher than `price_threshold`
-        if self.buy_price <= price_threshold:
-            energy_balance.add(amount)
-            client_wallet.withdraw(amount.to_cost(self.buy_price))
+    def buy(self, amount: kWh, price_threshold: Currency,
+            client_wallet: Wallet, energy_balance: EnergyBalance,
+            forced: bool = False):
+        # if not forced client buys `amount` of energy at buy price not higher than `price_threshold`
+        if not forced and self.buy_price > price_threshold:
+            return
+        energy_balance.add(amount)
+        buy_price = self.buy_price if not forced else self.buy_price_forced
+        client_wallet.withdraw(amount.to_cost(buy_price))
 
-    def sell(self, amount: kWh, price_threshold: Currency, client_wallet: Wallet, energy_balance: EnergyBalance, forced: bool = False):
-        # client sells `amount` of energy at sell price not lower than `price_threshold`
-        if self.sell_price >= price_threshold:
-            energy_balance.sub(amount)
-            client_wallet.deposit(amount.to_cost(self.sell_price))
+    def sell(self, amount: kWh, price_threshold: Currency,
+             client_wallet: Wallet, energy_balance: EnergyBalance,
+             forced: bool = False):
+        # if not forced client sells `amount` of energy
+        # at sell price not lower than `price_threshold`
+        if not forced and self.sell_price < price_threshold:
+            return
+        energy_balance.sub(amount)
+        sell_price = self.sell_price if not forced else self.sell_price_forced
+        client_wallet.deposit(amount.to_cost(sell_price))

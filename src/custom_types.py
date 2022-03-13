@@ -21,6 +21,15 @@ class kWh:
     def __ge__(self, other):
         return self.value >= other.value
 
+    def __mul__(self, other: float):
+        return kWh(self.value * other)
+
+    def __truediv__(self, other: float):
+        return kWh(self.value / other)
+
+    def __abs__(self):
+        return kWh(abs(self.value))
+
 
 @dataclass(frozen=True, order=True, eq=True, repr=True)
 class kW:
@@ -45,3 +54,15 @@ class Currency:
 
     def __sub__(self, other):
         return Currency(self.value - other.value)
+
+    def __mul__(self, other: float) -> Currency:
+        return Currency(self.value * other)
+
+    def __truediv__(self, other: float) -> Currency:
+        return Currency(self.value / other)
+
+    def __abs__(self) -> Currency:
+        return Currency(abs(self.value))
+
+    def __round__(self, n=None):
+        return Currency(round(self.value, n))

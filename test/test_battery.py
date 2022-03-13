@@ -46,6 +46,10 @@ class TestBattery(unittest.TestCase):
         self.assertEqual(discharged, kWh(50))
         self.assertEqual(battery.current_charge, kWh(0))
 
+    def test_efficiency_cant_be_set_to_zero(self):
+        with self.assertRaises(AssertionError):
+            Battery(kWh(100), 0, kWh(50))
+
 
 if __name__ == '__main__':
     unittest.main()

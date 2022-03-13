@@ -62,22 +62,44 @@ class Prosumer:
         power_produced = self.energy_systems.get_production_power(0)
         return power_produced.to_kwh()
 
-    def sell_energy(self, amount: kWh, price: Currency, forced: bool = False) -> float:
-        pass
+    def sell_energy(self, amount: kWh, price: Currency, forced: bool = False):
+        self.energy_market.sell(amount, price, self.wallet, self.energy_balance, forced=forced)
 
     def consume_energy(self, amount: kWh):
         pass
 
     def produce_energy(self, amount: kWh):
-        pass
-
-    def _sell_energy(self, amount: kWh, _):
-        pass
-        # self.energy_market.sell(amount, SELL_THRESHOLD, self.wallet, self.battery)
+        self.energy_balance.add(amount)
 
     def produce(self, _datetime: datetime):
         energy_produced = self._produce_energy(_datetime)
-        self._sell_energy(energy_produced, _datetime)
+        self.produce_energy(energy_produced)
+        self.sell_energy(
+            self.get_scheduled_sell_amount(_datetime.time()),
+            self.get_scheduled_price_threshold(_datetime.time()),
+        )
+        self._restore_energy_balance()
+
+    def _restore_energy_balance(self):
+        if self.energy_balance.value < kWh(0):
+            energy_used = self.battery.discharge(abs(self.energy_balance.value))
+            self.energy_balance.value += energy_used
+        elif self.energy_balance.value > kWh(0):
+            energy_used = self.battery.charge(self.energy_balance.value)
+            self.energy_balance.value -= energy_used
+
+        if self.energy_balance.value > kWh(0):
+            self.sell_energy(
+                self.energy_balance.value,
+                Currency(float('inf')),
+                forced=True,
+            )
+        elif self.energy_balance.value < kWh(0):
+            self.buy_energy(
+                abs(self.energy_balance.value),
+                Currency(float('0')),
+                forced=True,
+            )
 
     def schedule(self, actions: np.ndarray):
         self.next_day_actions = actions
@@ -104,7 +126,7 @@ class Prosumer:
         scheduled_amount = self.scheduled_trading_amounts[_time.hour]
         if scheduled_amount >= 0:
             return kWh(0)
-        return kWh(scheduled_amount)
+        return kWh(abs(scheduled_amount))
 
     def get_scheduled_price_threshold(self, _time: time) -> Currency:
         if self.scheduled_price_thresholds is None:
