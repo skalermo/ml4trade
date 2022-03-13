@@ -1,3 +1,5 @@
-gym==0.22.0
+gym
 gym-anytrading==1.2.0
 stable-baselines3==1.2.0
+
+numpy
