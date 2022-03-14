@@ -11,6 +11,7 @@ class EnergySystems:
             systems = []
         self.systems = systems
 
+    # complete simulation of production and consumption systems
     def get_production_power(self, date) -> kW:
         if not self.systems:
             return kW(0)
