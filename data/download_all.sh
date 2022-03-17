@@ -9,7 +9,7 @@ do
     wget -rkN -np -nd -R "index.html*" -P ".data/weather/$year" "$weather_link/$year/"
 done
 
-unzip_output_dir=".data/weather_unzipped_flatted"
+unzip_output_dir=".data/weather_unzipped_flattened"
 mkdir -p "$unzip_output_dir"
 
 find . -name "*.zip" |
