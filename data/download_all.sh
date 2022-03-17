@@ -1,0 +1,19 @@
+mkdir -p ".data"
+
+energy_prices_link="https://drive.google.com/uc\?id\=1wU_zVNQoMtwc7XX1W3WZIbfBa5tuZ5oG\&export\=download"
+wget -N -O ".data/prices_pl.csv" "$energy_prices_link"
+
+weather_link="https://danepubliczne.imgw.pl/data/dane_pomiarowo_obserwacyjne/dane_meteorologiczne/terminowe/synop/"
+for year in {2016..2022}
+do
+    wget -rkN -np -nd -R "index.html*" -P ".data/weather/$year" "$weather_link/$year/"
+done
+
+unzip_output_dir=".data/weather_unzipped_flatted"
+mkdir -p "$unzip_output_dir"
+
+find . -name "*.zip" |
+while read filename
+do
+  unzip -n -d "$unzip_output_dir" "$filename"
+done
