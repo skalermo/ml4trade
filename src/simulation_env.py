@@ -25,9 +25,10 @@ START_TIME = datetime(
     hour=SCHEDULING_TIME.hour,
 )
 
-TRADE_AMOUNT_BOUND_LOW = -np.inf
-TRADE_AMOUNT_BOUND_HIGH = np.inf
-PRICE_THRESHOLD_MAX = np.inf
+BUY_AMOUNT_BOUND_HIGH = np.inf
+SELL_AMOUNT_BOUND_HIGH = np.inf
+BUY_PRICE_THRESHOLD_MAX = np.inf
+SELL_PRICE_THRESHOLD_MAX = np.inf
 
 
 class SimulationEnv(gym.Env):
@@ -62,9 +63,15 @@ class SimulationEnv(gym.Env):
         # Defines transactions for each hour for the next 24 hours
         # starting from ACTION_REPLACEMENT_TIME
         return spaces.Box(
-            low=np.array([TRADE_AMOUNT_BOUND_LOW] * 24 + [0] * 24),
-            high=np.array([TRADE_AMOUNT_BOUND_HIGH] * 24 + [PRICE_THRESHOLD_MAX] * 24)
+            low=np.array([0] * 96),
+            high=np.array(
+                [BUY_AMOUNT_BOUND_HIGH] * 24
+                + [SELL_AMOUNT_BOUND_HIGH] * 24
+                + [BUY_PRICE_THRESHOLD_MAX] * 24
+                + [SELL_PRICE_THRESHOLD_MAX] * 24
+            ),
         )
+    # 24 buy amount 24 sell amount 24 price buy thresholds 24 price sell thresholds
 
     def reset(self, *, seed: Optional[int] = None, return_info: bool = False, options: Optional[dict] = None) -> Union[
         ObsType, Tuple[ObsType, dict]]:

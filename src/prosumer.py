@@ -43,7 +43,7 @@ class Prosumer:
         self.consume_energy(energy_consumed)
         self.buy_energy(
             self.get_scheduled_buy_amount(_datetime.time()),
-            self.get_scheduled_price_threshold(_datetime.time()),
+            self.get_scheduled_buy_price_threshold(_datetime.time()),
         )
         self._restore_energy_balance()
 
@@ -62,7 +62,7 @@ class Prosumer:
         self.produce_energy(energy_produced)
         self.sell_energy(
             self.get_scheduled_sell_amount(_datetime.time()),
-            self.get_scheduled_price_threshold(_datetime.time()),
+            self.get_scheduled_sell_price_threshold(_datetime.time()),
         )
         self._restore_energy_balance()
 
@@ -93,8 +93,8 @@ class Prosumer:
     def set_new_actions(self) -> bool:
         if self.next_day_actions is None:
             return False
-        self.scheduled_trading_amounts = self.next_day_actions[0:24]
-        self.scheduled_price_thresholds = self.next_day_actions[24:]
+        self.scheduled_trading_amounts = self.next_day_actions[0:48]
+        self.scheduled_price_thresholds = self.next_day_actions[48:]
         self.next_day_actions = None
         return True
 
@@ -102,19 +102,24 @@ class Prosumer:
         if self.scheduled_trading_amounts is None:
             return kWh(0)
         scheduled_amount = self.scheduled_trading_amounts[_time.hour]
-        if scheduled_amount <= 0:
-            return kWh(0)
+        assert scheduled_amount >= 0
+
         return kWh(scheduled_amount)
 
     def get_scheduled_sell_amount(self, _time: time) -> kWh:
         if self.scheduled_trading_amounts is None:
             return kWh(0)
-        scheduled_amount = self.scheduled_trading_amounts[_time.hour]
-        if scheduled_amount >= 0:
-            return kWh(0)
-        return kWh(abs(scheduled_amount))
+        scheduled_amount = self.scheduled_trading_amounts[24 + _time.hour]
+        assert scheduled_amount >= 0
 
-    def get_scheduled_price_threshold(self, _time: time) -> Currency:
+        return kWh(scheduled_amount)
+
+    def get_scheduled_buy_price_threshold(self, _time: time) -> Currency:
         if self.scheduled_price_thresholds is None:
             return Currency(0)
         return Currency(self.scheduled_price_thresholds[_time.hour])
+
+    def get_scheduled_sell_price_threshold(self, _time: time) -> Currency:
+        if self.scheduled_price_thresholds is None:
+            return Currency(0)
+        return Currency(self.scheduled_price_thresholds[24 + _time.hour])

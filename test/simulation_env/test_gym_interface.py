@@ -22,8 +22,8 @@ class TestSimulationEnv(unittest.TestCase):
         env = SimulationEnv()
         action = env.action_space.sample()
         env.step(action)
-        self.assertTrue(np.array_equal(env.prosumer.scheduled_trading_amounts, action[0:24]))
-        self.assertTrue(np.array_equal(env.prosumer.scheduled_price_thresholds, action[24:]))
+        self.assertTrue(np.array_equal(env.prosumer.scheduled_trading_amounts, action[0:48]))
+        self.assertTrue(np.array_equal(env.prosumer.scheduled_price_thresholds, action[48:]))
         self.assertEqual(env.prosumer.next_day_actions, None)
 
 
