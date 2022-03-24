@@ -50,6 +50,9 @@ class TestBattery(unittest.TestCase):
         with self.assertRaises(AssertionError):
             Battery(kWh(100), 0, kWh(50))
 
+    def test_dummy(self):
+        self.fail()
+
 
 if __name__ == '__main__':
     unittest.main()
