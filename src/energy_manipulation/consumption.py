@@ -1,15 +1,17 @@
+from datetime import time
 from typing import Callable
+import pandas
 import random
 from src.custom_types import kW
 
 
-def _default_callback(date):
-    return kW(random.gauss(5.47, 0.3))
-    # 5,47 - average daily energy consumption per power consumer
-    # (1996 kWh per power consumer per year according to data from
-    # https://www.cire.pl/artykuly/serwis-informacyjny-cire-24/gus-zuzycie-energii-elektrycznej-w-gosp-domowych-wzroslo-o-3-rr-w-2020-r
+def _default_callback(time):
+    return kW(-10)
 
 
 class ConsumptionSystem:
-    def get_power(self, date, callback: Callable = _default_callback) -> kW:
-        return callback(date)
+
+    def get_power(self, _time: time, callback: Callable = _default_callback) -> kW:
+        df = pandas.read_table('https://github.com/skalermo/ml4trade/blob/consumption_system/consumption_energy.txt')
+
+        return callback(time)
