@@ -10,10 +10,18 @@ class TestConsumption(unittest.TestCase):
         consumption_system = ConsumptionSystem()
         power_sum = kW(0)
         for i in range(100):
-            power = consumption_system.get_power(datetime.date)
+            power = consumption_system.get_power(datetime.time(12))
             power_sum += power
         mean = power_sum.value / 100
-        self.assertAlmostEqual(mean, 5.47, 1)
+        self.assertAlmostEqual(mean, 0.24, 1)
+
+    def test_consumption_per_day(self):
+        consumption_system = ConsumptionSystem()
+        power_sum = kW(0)
+        for i in range(24):
+            power = consumption_system.get_power(datetime.time(i))
+            power_sum += power
+        self.assertAlmostEqual(power_sum.value, 5.38, 1)
 
 
 if __name__ == '__main__':

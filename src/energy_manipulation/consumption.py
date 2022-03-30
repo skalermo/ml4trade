@@ -7,7 +7,7 @@ from src.custom_types import kW
 
 def _default_callback(hour, df):
     consumed_energy = df.iat[hour, 1]
-    return kW(consumed_energy*abs(1+random.gauss(0, 0.3)))
+    return kW(consumed_energy*abs(1+random.gauss(0, 0.03)))
 
 
 class ConsumptionSystem:
