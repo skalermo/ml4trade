@@ -13,7 +13,7 @@ class TestConsumption(unittest.TestCase):
             power = consumption_system.get_power(datetime.time(12))
             power_sum += power
         mean = power_sum.value / 10
-        self.assertAlmostEqual(mean, 0.24, 1)
+        self.assertAlmostEqual(mean, 0.25, 1)
 
     def test_consumption_per_day(self):
         consumption_system = ConsumptionSystem()

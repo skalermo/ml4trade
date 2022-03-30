@@ -1,4 +1,4 @@
-hour	value
+hour	energy_kWh
 0	0.189
 1	0.184
 2	0.181

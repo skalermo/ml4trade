@@ -7,7 +7,7 @@ from src.energy_manipulation.energy_systems import EnergySystems
 from src.market import EnergyMarket
 from src.custom_types import Currency, kWh, kW
 
-from utils import load_from_setup
+from test.utils import load_from_setup
 
 
 def _setup(battery_current_charge: kWh = kWh(50)) -> dict:
