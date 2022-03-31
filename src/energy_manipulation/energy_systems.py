@@ -12,15 +12,14 @@ class EnergySystems:
             systems = []
         self.systems = systems
 
-    # complete simulation of production and consumption systems
-    def get_production_power(self, date) -> kW:
+    def get_production_power(self, _datetime: datetime) -> kW:
         if not self.systems:
             return kW(0)
 
         power = kW(0)
         for system in self.systems:
             if isinstance(system, ProductionSystem):
-                power += system.get_power(date)
+                power += system.get_power(_datetime)
         return power
 
     def get_consumption_power(self, _datetime: datetime) -> kW:
