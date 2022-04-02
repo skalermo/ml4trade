@@ -9,11 +9,11 @@ ENERGY_PRODUCTION_PATH = './data/.data/weather_unzipped_flattened/s_t_02_2022.cs
 MAX_WIND_POWER = kW(10)
 MAX_WIND_SPEED = 11
 WIND_TURBINE_EFFICIENCY = 0.15
-MAX_SOLAR_POWER = kW(500)
+MAX_SOLAR_POWER = kW(1)
 SOLAR_EFFICIENCY = 0.2
 
 
-def _default_callback(_datetime: datetime):
+def _default_callback(_datetime: datetime, df: DataFrame):
     return kW(5)
 
 
@@ -21,15 +21,15 @@ class ProductionSystem:
     def get_power(self, _datetime: datetime, callback: Callable = _default_callback) -> kW:
         df = pandas.read_csv(ENERGY_PRODUCTION_PATH, header=None, names=['code', 'year', 'month', 'day', 'hour',
                                                                          'cloudiness', 'wind_speed', 'temperature'],
-                             usecols=[0, 2, 3, 4, 5, 21, 25, 29])
-        df = df.loc[lambda t: t['code'] == 349190600]
-        df = df.loc([lambda t: t['year'] == datetime.year])
-        df = df.loc([lambda t: t['month'] == 2])
-        df = df.loc([lambda t: t['day'] == datetime.day])
-        df = df.loc([lambda t: t['hour'] == datetime.hour])
-        temperature = df.iloc[0, 7]
-        if temperature > -30 or temperature > 40:
-            return kW(0)
+                             usecols=[0, 2, 3, 4, 5, 21, 25, 29], encoding='ansi')
+        df = df.loc[df['code'] == 349190600]
+        df = df.loc[df['year'] == 2022]
+        df = df.loc[df['month'] == 2]
+        day = int(_datetime.strftime("%Y%m%d%H%M%S")[6:8])
+        df = df.loc[df['day'] == day]
+        hour = int(_datetime.strftime("%Y%m%d%H%M%S")[8:10])
+        df = df.loc[df['hour'] == hour]
+        print(df)
         return callback(_datetime, df)
 
 
@@ -39,7 +39,7 @@ class WindSystem (ProductionSystem):
         wind_speed = df.iloc[0, 6]
         if wind_speed > MAX_WIND_SPEED or wind_speed < 0:
             return power
-        power = kW(wind_speed*MAX_WIND_POWER.value*WIND_TURBINE_EFFICIENCY/MAX_WIND_SPEED)
+        power = kW(wind_speed*MAX_WIND_POWER.value/MAX_WIND_SPEED)
         return power
 
 
@@ -48,5 +48,5 @@ class SolarSystem (ProductionSystem):
         cloudiness = df.iloc[0, 5]
         if cloudiness == 9:
             cloudiness = 8
-        power = kW(MAX_SOLAR_POWER.value*SOLAR_EFFICIENCY*(1-cloudiness/8))
+        power = kW(MAX_SOLAR_POWER.value*(1-cloudiness/8))
         return power
