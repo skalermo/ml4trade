@@ -18,8 +18,11 @@ def _default_callback(_datetime: datetime, df: DataFrame):
 
 
 class ProductionSystem:
+    def __init__(self, weather_data_path: str = ENERGY_PRODUCTION_PATH):
+        self.weather_data_path = weather_data_path
+
     def get_power(self, _datetime: datetime, callback: Callable = _default_callback) -> kW:
-        df = pandas.read_csv(ENERGY_PRODUCTION_PATH, header=None, names=['code', 'year', 'month', 'day', 'hour',
+        df = pandas.read_csv(self.weather_data_path, header=None, names=['code', 'year', 'month', 'day', 'hour',
                                                                          'cloudiness', 'wind_speed', 'temperature'],
                              usecols=[0, 2, 3, 4, 5, 21, 25, 29], encoding='cp1250')
         df = df.loc[df['code'] == 349190600]
