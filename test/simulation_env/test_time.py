@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, time
 
 from src.simulation_env import SimulationEnv
-from test.utils import time_travel
+from utils import time_travel
 
 
 class TestSimulationEnv(unittest.TestCase):
