@@ -27,5 +27,6 @@ class TestProduceConsumeEnergy(unittest.TestCase):
 
         self.assertEqual(prosumer.energy_balance.value, kWh(10))
 
+
 if __name__ == '__main__':
     unittest.main()

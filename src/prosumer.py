@@ -117,9 +117,15 @@ class Prosumer:
     def get_scheduled_buy_price_threshold(self, _time: time) -> Currency:
         if self.scheduled_price_thresholds is None:
             return Currency(0)
-        return Currency(self.scheduled_price_thresholds[_time.hour])
+        scheduled_threshold = self.scheduled_price_thresholds[_time.hour]
+        assert scheduled_threshold >= 0
+
+        return Currency(scheduled_threshold)
 
     def get_scheduled_sell_price_threshold(self, _time: time) -> Currency:
         if self.scheduled_price_thresholds is None:
             return Currency(0)
-        return Currency(self.scheduled_price_thresholds[24 + _time.hour])
+        scheduled_threshold = self.scheduled_price_thresholds[24 + _time.hour]
+        assert scheduled_threshold >= 0
+
+        return Currency(scheduled_threshold)
