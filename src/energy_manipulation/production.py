@@ -21,7 +21,7 @@ class ProductionSystem:
     def get_power(self, _datetime: datetime, callback: Callable = _default_callback) -> kW:
         df = pandas.read_csv(ENERGY_PRODUCTION_PATH, header=None, names=['code', 'year', 'month', 'day', 'hour',
                                                                          'cloudiness', 'wind_speed', 'temperature'],
-                             usecols=[0, 2, 3, 4, 5, 21, 25, 29], encoding='ansi')
+                             usecols=[0, 2, 3, 4, 5, 21, 25, 29], encoding='cp1250')
         df = df.loc[df['code'] == 349190600]
         df = df.loc[df['year'] == 2022]
         df = df.loc[df['month'] == 2]
