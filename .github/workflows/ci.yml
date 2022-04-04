@@ -19,6 +19,8 @@ jobs:
       with:
         path: .cache/pip
         key: pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          pip-
 
     - name: Install dependencies
       if: steps.myCacheStep.outputs.cache-hit != 'true'
