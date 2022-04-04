@@ -11,15 +11,24 @@ WIND_TURBINE_EFFICIENCY = 0.15
 MAX_SOLAR_POWER = kW(1)
 SOLAR_EFFICIENCY = 0.2
 
+col_ids = {'code': 0,
+           'year': 2,
+           'month': 3,
+           'day': 4,
+           'hour': 5,
+           'cloudiness': 21,
+           'wind_speed': 25,
+           'temperature': 29}
+
 
 class ProductionSystem:
     def __init__(self, weather_data_path: str = ENERGY_PRODUCTION_PATH):
         self.weather_data_path = weather_data_path
+        self.df = pandas.read_csv(self.weather_data_path, header=None, names=col_ids.keys(), usecols=col_ids.values(),
+                                  encoding='cp1250')
 
-    def get_power(self, _datetime: datetime) -> kW:
-        df = pandas.read_csv(self.weather_data_path, header=None, names=['code', 'year', 'month', 'day', 'hour',
-                                                                         'cloudiness', 'wind_speed', 'temperature'],
-                             usecols=[0, 2, 3, 4, 5, 21, 25, 29], encoding='cp1250')
+    def calculate_power(self, _datetime: datetime) -> kW:
+        df = self.df
         df = df.loc[df['code'] == 349190600]
         df = df.loc[df['year'] == 2022]
         df = df.loc[df['month'] == 2]
@@ -27,27 +36,27 @@ class ProductionSystem:
         df = df.loc[df['day'] == day]
         hour = int(_datetime.strftime("%Y%m%d%H%M%S")[8:10])
         df = df.loc[df['hour'] == hour]
-        return self._default_callback(_datetime, df)
+        return self._calculate_power(_datetime, df)
 
     @staticmethod
-    def _default_callback(_datetime: datetime, df: DataFrame):
+    def _calculate_power(_datetime: datetime, df: DataFrame):
         return kW(5)
 
 
-class WindSystem (ProductionSystem):
-    def _default_callback(self, _datetime: datetime, df: DataFrame):
+class WindSystem(ProductionSystem):
+    def _calculate_power(self, _datetime: datetime, df: DataFrame):
         power = kW(0)
         wind_speed = df.iloc[0, 6]
         if wind_speed > MAX_WIND_SPEED or wind_speed < 0:
             return power
-        power = kW(wind_speed*MAX_WIND_POWER.value/MAX_WIND_SPEED)
+        power = kW(wind_speed * MAX_WIND_POWER.value / MAX_WIND_SPEED)
         return power
 
 
-class SolarSystem (ProductionSystem):
-    def _default_callback(self, _datetime: datetime, df: DataFrame):
+class SolarSystem(ProductionSystem):
+    def _calculate_power(self, _datetime: datetime, df: DataFrame):
         cloudiness = df.iloc[0, 5]
-        if cloudiness == 9:
-            cloudiness = 8
-        power = kW(MAX_SOLAR_POWER.value*(1-cloudiness/8))
+        if cloudiness == 9:     # 9 equals lack of observation (sky obscured)
+            cloudiness = 8      # 8 equals overcast
+        power = kW(MAX_SOLAR_POWER.value * (1 - cloudiness / 8))
         return power
