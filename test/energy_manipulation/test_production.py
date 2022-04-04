@@ -1,8 +1,7 @@
 import datetime
 import unittest
 
-from src.custom_types import kW
-from src.energy_manipulation.production import ProductionSystem, WindSystem
+from src.energy_manipulation.production import WindSystem
 
 
 class TestProduction(unittest.TestCase):

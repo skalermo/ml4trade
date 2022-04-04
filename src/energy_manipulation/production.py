@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Callable
 import pandas
 
 from pandas import DataFrame
@@ -13,15 +12,11 @@ MAX_SOLAR_POWER = kW(1)
 SOLAR_EFFICIENCY = 0.2
 
 
-def _default_callback(_datetime: datetime, df: DataFrame):
-    return kW(5)
-
-
 class ProductionSystem:
     def __init__(self, weather_data_path: str = ENERGY_PRODUCTION_PATH):
         self.weather_data_path = weather_data_path
 
-    def get_power(self, _datetime: datetime, callback: Callable = _default_callback) -> kW:
+    def get_power(self, _datetime: datetime) -> kW:
         df = pandas.read_csv(self.weather_data_path, header=None, names=['code', 'year', 'month', 'day', 'hour',
                                                                          'cloudiness', 'wind_speed', 'temperature'],
                              usecols=[0, 2, 3, 4, 5, 21, 25, 29], encoding='cp1250')
@@ -32,8 +27,11 @@ class ProductionSystem:
         df = df.loc[df['day'] == day]
         hour = int(_datetime.strftime("%Y%m%d%H%M%S")[8:10])
         df = df.loc[df['hour'] == hour]
-        print(df)
-        return callback(_datetime, df)
+        return self._default_callback(_datetime, df)
+
+    @staticmethod
+    def _default_callback(_datetime: datetime, df: DataFrame):
+        return kW(5)
 
 
 class WindSystem (ProductionSystem):
