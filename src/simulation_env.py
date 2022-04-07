@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, time
 import random
 
 import numpy as np
+import pandas as pd
 import gym
 from gym import spaces
 from gym.core import ObsType, ActType
@@ -37,6 +38,7 @@ class SimulationEnv(gym.Env):
             start_datetime: datetime = START_TIME,
             scheduling_time: time = SCHEDULING_TIME,
             action_replacement_time: time = ACTION_REPLACEMENT_TIME,
+            prices_df: pd.DataFrame,
             market_buy_price: float = 1.0,
             market_sell_price: float = 1.0,
     ):
@@ -51,7 +53,7 @@ class SimulationEnv(gym.Env):
 
         battery = Battery()
         energy_systems = EnergySystems()
-        self.energy_market = EnergyMarket(Currency(market_buy_price), Currency(market_sell_price))
+        self.energy_market = EnergyMarket()
         self.prosumer = Prosumer(battery, energy_systems, energy_market=self.energy_market)
 
         # start generator object
