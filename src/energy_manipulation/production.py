@@ -22,10 +22,8 @@ col_ids = {'code': 0,
 
 
 class ProductionSystem:
-    def __init__(self, weather_data_path: str = ENERGY_PRODUCTION_PATH):
-        self.weather_data_path = weather_data_path
-        self.df = pandas.read_csv(self.weather_data_path, header=None, names=col_ids.keys(), usecols=col_ids.values(),
-                                  encoding='cp1250')
+    def __init__(self, df: DataFrame):
+        self.df = df
 
     def calculate_power(self, _datetime: datetime) -> kW:
         df = self.df
