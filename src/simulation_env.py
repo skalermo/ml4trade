@@ -1,35 +1,41 @@
-from typing import Optional, Union, Tuple, Generator, List, Any
-from datetime import datetime, timedelta, time
+from typing import Optional, Union, Tuple, Generator, List, Any, Dict
+from datetime import timedelta
 import random
 
-import numpy as np
 import pandas as pd
-import gym
 from gym import spaces
 from gym.core import ObsType, ActType
 
 from src.custom_types import Currency
+from src.energy_manipulation.production import ProductionSystem
 from src.prosumer import Prosumer
 from src.battery import Battery
 from src.energy_manipulation.energy_systems import EnergySystems
 from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.constants import *
+from src.callback import Callback
 
 
 ObservationType = Tuple[ObsType, float, bool, dict]
+DfsCallbacksType = Tuple[pd.DataFrame, Callback]
+DfsCallbacksDictType = Dict[str, Union[DfsCallbacksType, List[DfsCallbacksType]]]
 
 
 class SimulationEnv(gym.Env):
     def __init__(
             self,
+            data_and_callbacks: DfsCallbacksDictType = None,
             start_datetime: datetime = START_TIME,
             scheduling_time: time = SCHEDULING_TIME,
             action_replacement_time: time = ACTION_REPLACEMENT_TIME,
-            # prices_df: pd.DataFrame,
+            # todo remove in the future
             market_buy_price: float = 1.0,
             market_sell_price: float = 1.0,
     ):
+        if data_and_callbacks is None:
+            data_and_callbacks = {}
+
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.shape = (1, 1)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
@@ -47,13 +53,28 @@ class SimulationEnv(gym.Env):
         self.simulation = self._simulation()
         self.first_actions_set = False
 
-        battery = Battery()
-        energy_systems = EnergySystems()
-        self.energy_market = EnergyMarket(Currency(market_buy_price), Currency(market_sell_price))
-        self.prosumer = Prosumer(battery, energy_systems, energy_market=self.energy_market)
+        self.prosumer = self._setup_systems(data_and_callbacks, market_buy_price, market_sell_price)
 
         # start generator object
         self.simulation.send(None)
+
+    @staticmethod
+    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, market_buy_price: float, market_sell_price: float) -> Prosumer:
+        battery = Battery()
+
+        # data_and_callbacks
+        # {
+        #     'market': (),
+        #     'production': [(), ...],
+        # }
+        systems = []
+        for df, callback in data_and_callbacks.get('production', []):
+            systems.append(ProductionSystem(df, callback))
+        energy_systems = EnergySystems(systems)
+
+        energy_market = EnergyMarket(Currency(market_buy_price), Currency(market_sell_price))
+        prosumer = Prosumer(battery, energy_systems, energy_market=energy_market)
+        return prosumer
 
     def reset(self, *, seed: Optional[int] = None, return_info: bool = False, options: Optional[dict] = None) -> Union[
         ObsType, Tuple[ObsType, dict]]:
