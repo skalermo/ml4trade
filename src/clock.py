@@ -1,27 +1,16 @@
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 
 
-_cur_datetime: datetime
-_cur_tick: int
-_tick_length: timedelta
+class Clock:
+    def __init__(self, start_datetime: datetime,
+                 start_tick: int = 0, tick_duration: timedelta = timedelta(hours=1)):
+        self.cur_datetime = start_datetime
+        self.cur_tick = start_tick
+        self.tick_duration = tick_duration
 
+    def tick(self) -> None:
+        self.cur_tick += 1
+        self.cur_datetime += self.tick_duration
 
-def init(start_datetime: datetime, start_tick: int = 0, tick_length: timedelta = timedelta(hours=1)):
-    global _cur_datetime, _cur_tick, _tick_length
-    _cur_datetime = start_datetime
-    _cur_tick = start_tick
-    _tick_length = tick_length
-
-
-def tick(times: int = 1):
-    global _cur_tick, _cur_datetime
-    _cur_tick += times
-    _cur_datetime += _tick_length * times
-
-
-def cur_datetime():
-    return _cur_datetime
-
-
-def cur_tick():
-    return _cur_tick
+    def is_it_time(self, time_to_check: time) -> bool:
+        return self.cur_datetime.time() == time_to_check
