@@ -14,10 +14,11 @@ energy_consumption_kWh = [
 
 
 class ConsumptionSystem:
-    def calculate_power(self, _time: time) -> kW:
-        return self._calculate_power(_time)
+    def calculate_power(self, idx: int) -> kW:
+        return self._calculate_power(idx)
 
     @staticmethod
-    def _calculate_power(_time: time) -> kW:
-        consumed_energy = energy_consumption_kWh[_time.hour]
+    def _calculate_power(idx: int) -> kW:
+        assert 0 <= idx < 24
+        consumed_energy = energy_consumption_kWh[idx]
         return kW(consumed_energy * abs(1 + random.gauss(0, 0.03)))
