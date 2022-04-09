@@ -1,41 +1,14 @@
-from typing import Tuple
-
-import numpy as np
-from pandas import DataFrame
-from gym_anytrading.envs import TradingEnv
-
 from src.custom_types import kWh, Currency
 from src.wallet import Wallet
 from src.battery import EnergyBalance
 
 
-class EnergyMarket(TradingEnv):
-    price_column = 'Fixing I Price [PLN/MWh]'
-
-    def __init__(self, df: DataFrame = None, window_size: int = 0, frame_bound: Tuple[int, int] = None):
-        if frame_bound is None:
-            frame_bound = (window_size, len(df))
-        self.frame_bound = frame_bound
-        super().__init__(df, window_size)
-
-        self.buy_price = 0
-        self.buy_price_forced = 0
-        self.sell_price = 0
-        self.sell_price_forced = 0
-
-    def _process_data(self) -> Tuple[DataFrame, np.ndarray]:
-        prices = self.df.loc[:, self.price_column].to_numpy()
-        assert len(prices) >= self.frame_bound[1] - (self.frame_bound[0] - self.window_size)
-
-        prices = prices[self.frame_bound[0] - self.window_size:self.frame_bound[1]]
-
-        diff = np.insert(np.diff(prices), 0, 0)
-        signal_features = np.column_stack((prices, diff))
-
-        return prices, signal_features
-
-    def _calculate_reward(self, action):
-        pass
+class EnergyMarket:
+    def __init__(self, buy_price: Currency, sell_price: Currency):
+        self.buy_price = buy_price
+        self.buy_price_forced = buy_price * 1.1
+        self.sell_price = sell_price
+        self.sell_price_forced = sell_price / 1.1
 
     def buy(self, amount: kWh, price_threshold: Currency,
             client_wallet: Wallet, energy_balance: EnergyBalance,
@@ -57,10 +30,3 @@ class EnergyMarket(TradingEnv):
         energy_balance.sub(amount)
         sell_price = self.sell_price if not forced else self.sell_price_forced
         client_wallet.deposit(amount.to_cost(sell_price))
-
-    def _update_profit(self, action):
-        raise NotImplementedError
-
-    def max_possible_profit(self):
-        raise NotImplementedError
-
