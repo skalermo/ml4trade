@@ -13,6 +13,7 @@ from src.prosumer import Prosumer
 from src.battery import Battery
 from src.energy_manipulation.energy_systems import EnergySystems
 from src.market import EnergyMarket
+from src.clock import Clock
 
 
 ObservationType = Tuple[ObsType, float, bool, dict]
@@ -45,9 +46,11 @@ class SimulationEnv(gym.Env):
         self.action_space = self._action_space()
         self.shape = (1, 1)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
-        self.cur_datetime = start_datetime
+
         self.scheduling_time = scheduling_time
         self.action_replacement_time = action_replacement_time
+        self._clock = Clock(start_datetime=start_datetime, start_tick=0, tick_duration=timedelta(hours=1))
+
         self.simulation = self._simulation()
         self.first_actions_set = False
 
@@ -87,22 +90,22 @@ class SimulationEnv(gym.Env):
 
     def _simulation(self) -> Generator[ObservationType, ActType, None]:
         while True:
-            if self.is_now_scheduling_time():
+            if self._clock.is_it_time(self.scheduling_time):
                 action = yield self._observation()
                 self.prosumer.schedule(action)
 
-            if self.is_now_action_replacement_time():
+            if self._clock.is_it_time(self.action_replacement_time):
                 are_actions_set = self.prosumer.set_new_actions()
                 if are_actions_set and not self.first_actions_set:
                     self.first_actions_set = True
 
             if self.first_actions_set:
                 self._run_in_random_order([
-                    (self.prosumer.consume, [self.cur_datetime]),
-                    (self.prosumer.produce, [self.cur_datetime]),
+                    (self.prosumer.consume, [self._clock.cur_datetime]),
+                    (self.prosumer.produce, [self._clock.cur_datetime]),
                 ])
 
-            self.cur_datetime += timedelta(hours=1)
+            self._clock.tick()
 
     @staticmethod
     def _run_in_random_order(functions_and_calldata: List[Tuple[callable, List[Any]]]) -> None:
@@ -112,9 +115,3 @@ class SimulationEnv(gym.Env):
 
     def render(self, mode="human"):
         pass
-
-    def is_now_scheduling_time(self) -> bool:
-        return self.cur_datetime.time().hour == self.scheduling_time.hour
-
-    def is_now_action_replacement_time(self) -> bool:
-        return self.cur_datetime.time().hour == self.action_replacement_time.hour
