@@ -1,10 +1,7 @@
 import unittest
 import os
 
-import pandas as pd
-
-from src.market import EnergyMarket, FORCED_MULTIPLIER
-from src.clock import SimulationClock
+from src.market import UNSCHEDULED_MULTIPLIER
 from src.custom_types import Currency
 from mock_callbacks.market_callbacks import PricesPlCallback
 
@@ -28,12 +25,12 @@ class TestMarket(unittest.TestCase):
         self.assertEqual(sell_price, Currency(108.27))
 
     def test_get_buy_price_forced(self):
-        buy_price_forced = self.market.get_buy_price_forced()
-        self.assertEqual(buy_price_forced, Currency(108.27) * FORCED_MULTIPLIER)
+        buy_price_unscheduled = self.market.get_buy_price_unscheduled()
+        self.assertEqual(buy_price_unscheduled, Currency(108.27) * UNSCHEDULED_MULTIPLIER)
 
     def test_get_sell_price_forced(self):
-        sell_price_forced = self.market.get_sell_price_forced()
-        self.assertEqual(sell_price_forced, Currency(108.27) / FORCED_MULTIPLIER)
+        sell_price_unscheduled = self.market.get_sell_price_unscheduled()
+        self.assertEqual(sell_price_unscheduled, Currency(108.27) / UNSCHEDULED_MULTIPLIER)
 
 
 if __name__ == '__main__':
