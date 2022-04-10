@@ -3,7 +3,7 @@ import os
 
 from src.market import UNSCHEDULED_MULTIPLIER
 from src.custom_types import Currency
-from mock_callbacks.market_callbacks import PricesPlCallback
+from utils import setup_default_market
 
 
 prices_pl_path = os.path.join(os.path.dirname(__file__), 'mock_data/prices_pl.csv')
@@ -11,10 +11,7 @@ prices_pl_path = os.path.join(os.path.dirname(__file__), 'mock_data/prices_pl.cs
 
 class TestMarket(unittest.TestCase):
     def setUp(self):
-        col = 'Fixing I Price [PLN/MWh]'
-        self.df = pd.read_csv(prices_pl_path, header=0, usecols=[col])
-        self.clock = SimulationClock()
-        self.market = EnergyMarket(self.df, PricesPlCallback(), self.clock.view())
+        self.market = setup_default_market()
 
     def test_get_buy_price(self):
         buy_price = self.market.get_buy_price()
