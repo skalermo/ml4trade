@@ -28,9 +28,6 @@ class SimulationEnv(gym.Env):
             start_datetime: datetime = START_TIME,
             scheduling_time: time = SCHEDULING_TIME,
             action_replacement_time: time = ACTION_REPLACEMENT_TIME,
-            # todo remove in the future
-            market_buy_price: float = 1.0,
-            market_sell_price: float = 1.0,
     ):
         if data_and_callbacks is None:
             data_and_callbacks = {}
