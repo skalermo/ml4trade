@@ -28,38 +28,30 @@ class Prosumer:
         self.next_day_actions: Optional[np.ndarray] = None
         self.energy_balance = EnergyBalance()
 
-    def _consume_energy(self, _) -> kWh:
+    def _consume_energy(self, _):
         power_produced = self.energy_systems.get_consumption_power(0)
-        return power_produced.to_kwh()
+        self.energy_balance.sub(power_produced.to_kwh())
 
     def buy_energy(self, amount: kWh, price: Currency, scheduled: bool = True):
         self.energy_market.buy(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
-    def consume_energy(self, amount: kWh):
-        self.energy_balance.sub(amount)
-
     def consume(self, _datetime: datetime):
-        energy_consumed = self._consume_energy(_datetime)
-        self.consume_energy(energy_consumed)
+        self._consume_energy(_datetime)
         self.buy_energy(
             self.get_scheduled_buy_amount(_datetime.time()),
             self.get_scheduled_buy_price_threshold(_datetime.time()),
         )
         self._restore_energy_balance()
 
-    def _produce_energy(self, _) -> kWh:
+    def _produce_energy(self, _):
         power_produced = self.energy_systems.get_production_power(0)
-        return power_produced.to_kwh()
+        self.energy_balance.add(power_produced.to_kwh())
 
     def sell_energy(self, amount: kWh, price: Currency, scheduled: bool = True):
         self.energy_market.sell(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
-    def produce_energy(self, amount: kWh):
-        self.energy_balance.add(amount)
-
     def produce(self, _datetime: datetime):
-        energy_produced = self._produce_energy(_datetime)
-        self.produce_energy(energy_produced)
+        self._produce_energy(_datetime)
         self.sell_energy(
             self.get_scheduled_sell_amount(_datetime.time()),
             self.get_scheduled_sell_price_threshold(_datetime.time()),
