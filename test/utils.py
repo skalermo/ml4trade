@@ -20,16 +20,12 @@ def load_from_setup(setup: dict, *args) -> tuple:
 def setup_default_market(df: pd.DataFrame = None, clock: SimulationClock = None) -> EnergyMarket:
     col = 'Fixing I Price [PLN/MWh]'
     if df is None:
-        _df = pd.read_csv(prices_pl_path, header=0, usecols=[col])
-    else:
-        _df = df
+        df = pd.read_csv(prices_pl_path, header=0, usecols=[col])
 
     if clock is None:
-        _clock = SimulationClock()
-    else:
-        _clock = clock
+        clock = SimulationClock()
 
-    market = EnergyMarket(_df, PricesPlCallback(), _clock.view())
+    market = EnergyMarket(df, PricesPlCallback(), clock.view())
     return market
 
 
