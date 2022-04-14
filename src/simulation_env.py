@@ -36,8 +36,6 @@ class SimulationEnv(gym.Env):
         self.shape = (1, 1)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
 
-        self.scheduling_time = scheduling_time
-        self.action_replacement_time = action_replacement_time
         self._clock = SimulationClock(
             start_datetime=start_datetime,
             scheduling_time=scheduling_time,
