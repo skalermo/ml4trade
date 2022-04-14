@@ -1,5 +1,5 @@
 from typing import Optional
-from datetime import datetime, time
+from datetime import datetime
 
 import numpy as np
 
@@ -23,10 +23,13 @@ class Prosumer:
         self.wallet = Wallet(initial_balance)
         self.hourly_energy_balance = 0
         self.energy_market = energy_market
-        self.scheduled_trading_amounts: Optional[np.ndarray] = None
-        self.scheduled_price_thresholds: Optional[np.ndarray] = None
-        self.next_day_actions: Optional[np.ndarray] = None
         self.energy_balance = EnergyBalance()
+
+        self.scheduled_buy_amounts: Optional[np.ndarray] = None
+        self.scheduled_sell_amounts: Optional[np.ndarray] = None
+        self.scheduled_buy_thresholds: Optional[np.ndarray] = None
+        self.scheduled_sell_thresholds: Optional[np.ndarray] = None
+        self.next_day_actions: Optional[np.ndarray] = None
 
     def _consume_energy(self, _):
         power_produced = self.energy_systems.get_consumption_power(0)
@@ -38,8 +41,8 @@ class Prosumer:
     def consume(self, _datetime: datetime):
         self._consume_energy(_datetime)
         self.buy_energy(
-            self.get_scheduled_buy_amount(_datetime.time()),
-            self.get_scheduled_buy_price_threshold(_datetime.time()),
+            self.scheduled_buy_amounts[_datetime.time().hour],
+            self.scheduled_buy_thresholds[_datetime.time().hour],
         )
         self._restore_energy_balance()
 
@@ -53,8 +56,8 @@ class Prosumer:
     def produce(self, _datetime: datetime):
         self._produce_energy(_datetime)
         self.sell_energy(
-            self.get_scheduled_sell_amount(_datetime.time()),
-            self.get_scheduled_sell_price_threshold(_datetime.time()),
+            self.scheduled_sell_amounts[_datetime.time().hour],
+            self.scheduled_sell_thresholds[_datetime.time().hour],
         )
         self._restore_energy_balance()
 
@@ -83,38 +86,8 @@ class Prosumer:
         self.next_day_actions = actions
 
     def set_new_actions(self):
-        self.scheduled_trading_amounts = self.next_day_actions[0:48]
-        self.scheduled_price_thresholds = self.next_day_actions[48:]
+        self.scheduled_buy_amounts = [kWh(a) for a in self.next_day_actions[0:24]]
+        self.scheduled_sell_amounts = [kWh(a) for a in self.next_day_actions[24:48]]
+        self.scheduled_buy_thresholds = [Currency(a) for a in self.next_day_actions[48:72]]
+        self.scheduled_sell_thresholds = [Currency(a) for a in self.next_day_actions[72:96]]
         self.next_day_actions = None
-
-    def get_scheduled_buy_amount(self, _time: time) -> kWh:
-        if self.scheduled_trading_amounts is None:
-            return kWh(0)
-        scheduled_amount = self.scheduled_trading_amounts[_time.hour]
-        assert scheduled_amount >= 0
-
-        return kWh(scheduled_amount)
-
-    def get_scheduled_sell_amount(self, _time: time) -> kWh:
-        if self.scheduled_trading_amounts is None:
-            return kWh(0)
-        scheduled_amount = self.scheduled_trading_amounts[24 + _time.hour]
-        assert scheduled_amount >= 0
-
-        return kWh(scheduled_amount)
-
-    def get_scheduled_buy_price_threshold(self, _time: time) -> Currency:
-        if self.scheduled_price_thresholds is None:
-            return Currency(0)
-        scheduled_threshold = self.scheduled_price_thresholds[_time.hour]
-        assert scheduled_threshold >= 0
-
-        return Currency(scheduled_threshold)
-
-    def get_scheduled_sell_price_threshold(self, _time: time) -> Currency:
-        if self.scheduled_price_thresholds is None:
-            return Currency(0)
-        scheduled_threshold = self.scheduled_price_thresholds[24 + _time.hour]
-        assert scheduled_threshold >= 0
-
-        return Currency(scheduled_threshold)

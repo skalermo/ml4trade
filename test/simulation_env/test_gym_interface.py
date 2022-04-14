@@ -21,10 +21,11 @@ class TestSimulationEnv(unittest.TestCase):
 
     def test_step_passes_action_to_prosumer(self):
         env = SimulationEnv(setup_default_dfs_and_callbacks())
-        action = env.action_space.sample()
-        env.step(action)
-        self.assertTrue(np.array_equal(env.prosumer.scheduled_trading_amounts, action[0:48]))
-        self.assertTrue(np.array_equal(env.prosumer.scheduled_price_thresholds, action[48:]))
+        env.step(env.action_space.sample())
+        self.assertIsNotNone(env.prosumer.scheduled_buy_amounts)
+        self.assertIsNotNone(env.prosumer.scheduled_sell_amounts)
+        self.assertIsNotNone(env.prosumer.scheduled_buy_thresholds)
+        self.assertIsNotNone(env.prosumer.scheduled_sell_thresholds)
         self.assertEqual(env.prosumer.next_day_actions, None)
 
 
