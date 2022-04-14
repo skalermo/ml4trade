@@ -57,3 +57,10 @@ class TestSetNewActions(unittest.TestCase):
             self.prosumer.scheduled_sell_thresholds,
             [Currency(a) for a in self.action[72:96]]
         ))
+
+    def test_next_day_actions(self):
+        self.assertIsNotNone(self.prosumer.next_day_actions)
+
+        self.prosumer.set_new_actions()
+
+        self.assertIsNone(self.prosumer.next_day_actions)
