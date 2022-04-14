@@ -82,13 +82,10 @@ class Prosumer:
     def schedule(self, actions: np.ndarray):
         self.next_day_actions = actions
 
-    def set_new_actions(self) -> bool:
-        if self.next_day_actions is None:
-            return False
+    def set_new_actions(self):
         self.scheduled_trading_amounts = self.next_day_actions[0:48]
         self.scheduled_price_thresholds = self.next_day_actions[48:]
         self.next_day_actions = None
-        return True
 
     def get_scheduled_buy_amount(self, _time: time) -> kWh:
         if self.scheduled_trading_amounts is None:

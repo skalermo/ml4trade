@@ -47,6 +47,7 @@ class SimulationEnv(gym.Env):
         )
 
         self.simulation = self._simulation()
+        self.first_actions_scheduled = False
         self.first_actions_set = False
 
         self.prosumer = self._setup_systems(data_and_callbacks, self._clock)
@@ -91,10 +92,12 @@ class SimulationEnv(gym.Env):
             if self._clock.is_it_scheduling_hour():
                 action = yield self._observation()
                 self.prosumer.schedule(action)
+                if not self.first_actions_scheduled:
+                    self.first_actions_scheduled = True
 
-            if self._clock.is_it_action_replacement_hour():
-                are_actions_set = self.prosumer.set_new_actions()
-                if are_actions_set and not self.first_actions_set:
+            if self._clock.is_it_action_replacement_hour() and self.first_actions_scheduled:
+                self.prosumer.set_new_actions()
+                if not self.first_actions_set:
                     self.first_actions_set = True
 
             if self.first_actions_set:
