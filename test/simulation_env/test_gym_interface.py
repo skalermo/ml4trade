@@ -12,7 +12,7 @@ class TestSimulationEnv(unittest.TestCase):
         env = SimulationEnv(setup_default_dfs_and_callbacks())
 
         model = A2C('MlpPolicy', env, verbose=1)
-        # model.learn(total_timesteps=3)
+        model.learn(total_timesteps=3)
 
         obs = env.reset()
         for _ in range(4):
