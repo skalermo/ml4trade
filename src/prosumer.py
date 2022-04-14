@@ -1,5 +1,4 @@
 from typing import Optional
-from datetime import datetime
 
 import numpy as np
 
@@ -8,6 +7,7 @@ from src.energy_manipulation.energy_systems import EnergySystems
 from src.market import EnergyMarket
 from src.wallet import Wallet
 from src.custom_types import Currency, kWh
+from src.clock import ClockView
 
 
 class Prosumer:
@@ -15,11 +15,13 @@ class Prosumer:
             self,
             battery: Battery,
             energy_systems: EnergySystems,
+            clock_view: ClockView,
             initial_balance: Currency = Currency(0),
             energy_market: Optional[EnergyMarket] = None,
     ):
         self.battery = battery
         self.energy_systems = energy_systems
+        self.clock_view = clock_view
         self.wallet = Wallet(initial_balance)
         self.hourly_energy_balance = 0
         self.energy_market = energy_market
@@ -31,33 +33,39 @@ class Prosumer:
         self.scheduled_sell_thresholds: Optional[np.ndarray] = None
         self.next_day_actions: Optional[np.ndarray] = None
 
-    def _consume_energy(self, _):
-        power_produced = self.energy_systems.get_consumption_power(0)
+    def _consume_energy(self):
+        power_produced = self.energy_systems.get_consumption_power(
+            self.clock_view.cur_tick()
+        )
         self.energy_balance.sub(power_produced.to_kwh())
 
     def buy_energy(self, amount: kWh, price: Currency, scheduled: bool = True):
         self.energy_market.buy(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
-    def consume(self, _datetime: datetime):
-        self._consume_energy(_datetime)
+    def consume(self):
+        self._consume_energy()
+        cur_hour = self.clock_view.cur_datetime().time().hour
         self.buy_energy(
-            self.scheduled_buy_amounts[_datetime.time().hour],
-            self.scheduled_buy_thresholds[_datetime.time().hour],
+            self.scheduled_buy_amounts[cur_hour],
+            self.scheduled_buy_thresholds[cur_hour],
         )
         self._restore_energy_balance()
 
-    def _produce_energy(self, _):
-        power_produced = self.energy_systems.get_production_power(0)
+    def _produce_energy(self):
+        power_produced = self.energy_systems.get_production_power(
+            self.clock_view.cur_tick()
+        )
         self.energy_balance.add(power_produced.to_kwh())
 
     def sell_energy(self, amount: kWh, price: Currency, scheduled: bool = True):
         self.energy_market.sell(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
-    def produce(self, _datetime: datetime):
-        self._produce_energy(_datetime)
+    def produce(self):
+        self._produce_energy()
+        cur_hour = self.clock_view.cur_datetime().time().hour
         self.sell_energy(
-            self.scheduled_sell_amounts[_datetime.time().hour],
-            self.scheduled_sell_thresholds[_datetime.time().hour],
+            self.scheduled_sell_amounts[cur_hour],
+            self.scheduled_sell_thresholds[cur_hour],
         )
         self._restore_energy_balance()
 

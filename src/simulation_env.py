@@ -72,7 +72,8 @@ class SimulationEnv(gym.Env):
         if df is not None:
             market = EnergyMarket(df, callback, clock.view())
 
-        prosumer = Prosumer(battery, energy_systems, energy_market=market)
+        prosumer = Prosumer(battery, energy_systems,
+                            clock_view=clock.view(), energy_market=market)
         return prosumer
 
     def reset(self, *, seed: Optional[int] = None, return_info: bool = False, options: Optional[dict] = None) -> Union[
@@ -99,18 +100,15 @@ class SimulationEnv(gym.Env):
                     self.first_actions_set = True
 
             if self.first_actions_set:
-                self._run_in_random_order([
-                    (self.prosumer.consume, [self._clock.cur_datetime]),
-                    (self.prosumer.produce, [self._clock.cur_datetime]),
-                ])
+                self._run_in_random_order([self.prosumer.consume, self.prosumer.produce])
 
             self._clock.tick()
 
     @staticmethod
-    def _run_in_random_order(functions_and_calldata: List[Tuple[callable, List[Any]]]) -> None:
+    def _run_in_random_order(functions_and_calldata: List[callable]) -> None:
         random.shuffle(functions_and_calldata)
-        for f, args in functions_and_calldata:
-            f(*args)
+        for f in functions_and_calldata:
+            f()
 
     def render(self, mode="human"):
         pass
