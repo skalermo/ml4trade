@@ -6,7 +6,6 @@ import pandas as pd
 from gym import spaces
 from gym.core import ObsType, ActType
 
-from src.custom_types import Currency
 from src.energy_manipulation.production import ProductionSystem
 from src.prosumer import Prosumer
 from src.battery import Battery
@@ -29,9 +28,6 @@ class SimulationEnv(gym.Env):
             start_datetime: datetime = START_TIME,
             scheduling_time: time = SCHEDULING_TIME,
             action_replacement_time: time = ACTION_REPLACEMENT_TIME,
-            # todo remove in the future
-            market_buy_price: float = 1.0,
-            market_sell_price: float = 1.0,
     ):
         if data_and_callbacks is None:
             data_and_callbacks = {}
@@ -53,13 +49,13 @@ class SimulationEnv(gym.Env):
         self.simulation = self._simulation()
         self.first_actions_set = False
 
-        self.prosumer = self._setup_systems(data_and_callbacks, market_buy_price, market_sell_price)
+        self.prosumer = self._setup_systems(data_and_callbacks, self._clock)
 
         # start generator object
         self.simulation.send(None)
 
     @staticmethod
-    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, market_buy_price: float, market_sell_price: float) -> Prosumer:
+    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, clock: SimulationClock) -> Prosumer:
         battery = Battery()
 
         # data_and_callbacks
@@ -72,8 +68,12 @@ class SimulationEnv(gym.Env):
             systems.append(ProductionSystem(df, callback))
         energy_systems = EnergySystems(systems)
 
-        energy_market = EnergyMarket(Currency(market_buy_price), Currency(market_sell_price))
-        prosumer = Prosumer(battery, energy_systems, energy_market=energy_market)
+        df, callback = data_and_callbacks.get('market', (None, None))
+        market = None
+        if df is not None:
+            market = EnergyMarket(df, callback, clock.view())
+
+        prosumer = Prosumer(battery, energy_systems, energy_market=market)
         return prosumer
 
     def reset(self, *, seed: Optional[int] = None, return_info: bool = False, options: Optional[dict] = None) -> Union[

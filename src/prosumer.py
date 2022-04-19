@@ -32,8 +32,8 @@ class Prosumer:
         power_produced = self.energy_systems.get_consumption_power(0)
         return power_produced.to_kwh()
 
-    def buy_energy(self, amount: kWh, price: Currency, forced: bool = False):
-        self.energy_market.buy(amount, price, self.wallet, self.energy_balance, forced=forced)
+    def buy_energy(self, amount: kWh, price: Currency, scheduled: bool = True):
+        self.energy_market.buy(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
     def consume_energy(self, amount: kWh):
         self.energy_balance.sub(amount)
@@ -51,8 +51,8 @@ class Prosumer:
         power_produced = self.energy_systems.get_production_power(0)
         return power_produced.to_kwh()
 
-    def sell_energy(self, amount: kWh, price: Currency, forced: bool = False):
-        self.energy_market.sell(amount, price, self.wallet, self.energy_balance, forced=forced)
+    def sell_energy(self, amount: kWh, price: Currency, scheduled: bool = True):
+        self.energy_market.sell(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
     def produce_energy(self, amount: kWh):
         self.energy_balance.add(amount)
@@ -78,13 +78,13 @@ class Prosumer:
             self.sell_energy(
                 self.energy_balance.value,
                 Currency(float('inf')),
-                forced=True,
+                scheduled=False,
             )
         elif self.energy_balance.value < kWh(0):
             self.buy_energy(
                 abs(self.energy_balance.value),
                 Currency(float('0')),
-                forced=True,
+                scheduled=False,
             )
 
     def schedule(self, actions: np.ndarray):
