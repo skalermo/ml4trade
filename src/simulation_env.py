@@ -36,8 +36,6 @@ class SimulationEnv(gym.Env):
         self.shape = (1, 1)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
 
-        self.scheduling_time = scheduling_time
-        self.action_replacement_time = action_replacement_time
         self._clock = SimulationClock(
             start_datetime=start_datetime,
             scheduling_time=scheduling_time,
@@ -47,6 +45,7 @@ class SimulationEnv(gym.Env):
         )
 
         self.simulation = self._simulation()
+        self.first_actions_scheduled = False
         self.first_actions_set = False
 
         self.prosumer = self._setup_systems(data_and_callbacks, self._clock)
@@ -73,7 +72,8 @@ class SimulationEnv(gym.Env):
         if df is not None:
             market = EnergyMarket(df, callback, clock.view())
 
-        prosumer = Prosumer(battery, energy_systems, energy_market=market)
+        prosumer = Prosumer(battery, energy_systems,
+                            clock_view=clock.view(), energy_market=market)
         return prosumer
 
     def reset(self, *, seed: Optional[int] = None, return_info: bool = False, options: Optional[dict] = None) -> Union[
@@ -91,25 +91,24 @@ class SimulationEnv(gym.Env):
             if self._clock.is_it_scheduling_hour():
                 action = yield self._observation()
                 self.prosumer.schedule(action)
+                if not self.first_actions_scheduled:
+                    self.first_actions_scheduled = True
 
-            if self._clock.is_it_action_replacement_hour():
-                are_actions_set = self.prosumer.set_new_actions()
-                if are_actions_set and not self.first_actions_set:
+            if self._clock.is_it_action_replacement_hour() and self.first_actions_scheduled:
+                self.prosumer.set_new_actions()
+                if not self.first_actions_set:
                     self.first_actions_set = True
 
             if self.first_actions_set:
-                self._run_in_random_order([
-                    (self.prosumer.consume, [self._clock.cur_datetime]),
-                    (self.prosumer.produce, [self._clock.cur_datetime]),
-                ])
+                self._run_in_random_order([self.prosumer.consume, self.prosumer.produce])
 
             self._clock.tick()
 
     @staticmethod
-    def _run_in_random_order(functions_and_calldata: List[Tuple[callable, List[Any]]]) -> None:
+    def _run_in_random_order(functions_and_calldata: List[callable]) -> None:
         random.shuffle(functions_and_calldata)
-        for f, args in functions_and_calldata:
-            f(*args)
+        for f in functions_and_calldata:
+            f()
 
     def render(self, mode="human"):
         pass

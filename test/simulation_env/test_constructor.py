@@ -1,5 +1,4 @@
 import unittest
-from datetime import datetime, time
 
 import numpy as np
 
@@ -14,6 +13,11 @@ class TestSimulationEnv(unittest.TestCase):
         threshold = env.action_space.sample()[48]
         self.assertTrue(0 <= amount < np.inf)
         self.assertTrue(0 <= threshold < np.inf)
+
+    def test_first_run_flags(self):
+        env = SimulationEnv()
+        self.assertFalse(env.first_actions_scheduled)
+        self.assertFalse(env.first_actions_set)
 
 
 if __name__ == '__main__':

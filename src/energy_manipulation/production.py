@@ -11,5 +11,3 @@ class ProductionSystem:
 
     def calculate_power(self, idx: int) -> kW:
         return self.cb.process(self.df, idx)
-
-#
