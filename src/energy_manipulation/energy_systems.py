@@ -32,3 +32,6 @@ class EnergySystems:
             if isinstance(system, ConsumptionSystem):
                 power += system.calculate_power(idx)
         return power
+
+    def consumption_observation(self) -> List[float]:
+        return self.systems[-1].observation()

@@ -1,11 +1,15 @@
-from typing import Optional, Union, Tuple, Generator, List, Any, Dict
+from typing import Optional, Union, Tuple, Generator, List, Dict
 from datetime import timedelta
 import random
+import itertools
 
 import pandas as pd
 from gym import spaces
 from gym.core import ObsType, ActType
 
+from gym_anytrading.envs import TradingEnv
+
+from src.energy_manipulation.consumption import ConsumptionSystem
 from src.energy_manipulation.production import ProductionSystem
 from src.prosumer import Prosumer
 from src.battery import Battery
@@ -44,17 +48,18 @@ class SimulationEnv(gym.Env):
             tick_duration=timedelta(hours=1)
         )
 
-        self.simulation = self._simulation()
+        self.prosumer, self.market, self.energy_systems = self._setup_systems(data_and_callbacks, self._clock)
+        self.prev_prosumer_balance = self.prosumer.wallet.balance
+
         self.first_actions_scheduled = False
         self.first_actions_set = False
-
-        self.prosumer = self._setup_systems(data_and_callbacks, self._clock)
+        self.simulation = self._simulation()
 
         # start generator object
         self.simulation.send(None)
 
     @staticmethod
-    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, clock: SimulationClock) -> Prosumer:
+    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, clock: SimulationClock) -> Tuple[Prosumer, EnergyMarket, EnergySystems]:
         battery = Battery()
 
         # data_and_callbacks
@@ -65,6 +70,9 @@ class SimulationEnv(gym.Env):
         systems = []
         for df, callback in data_and_callbacks.get('production', []):
             systems.append(ProductionSystem(df, callback))
+
+        systems.append(ConsumptionSystem(clock.view()))
+
         energy_systems = EnergySystems(systems)
 
         df, callback = data_and_callbacks.get('market', (None, None))
@@ -74,14 +82,30 @@ class SimulationEnv(gym.Env):
 
         prosumer = Prosumer(battery, energy_systems,
                             clock_view=clock.view(), energy_market=market)
-        return prosumer
+        return prosumer, market, energy_systems
 
     def reset(self, *, seed: Optional[int] = None, return_info: bool = False, options: Optional[dict] = None) -> Union[
         ObsType, Tuple[ObsType, dict]]:
         return np.zeros(self.shape)
 
     def _observation(self) -> ObservationType:
-        return np.zeros(self.shape), 0, False, {}
+        # obs:
+        # - history prices window (1 day backwards) - 24 floats
+        # - households energy consumption (1 day backwards) - 24 floats
+        # - weather forecast (1 day ahead) - some weather data tuple * 24
+        # reward:
+        # - cur balance - prev balance
+        # done:
+        # - if in any of the dfs the end of the data is reached
+        #   (need to find overlapping timestamps and common start time)
+        # additional info:
+        # - idk, no for now
+        market_obs = self.market.observation()
+        systems_obs = self.energy_systems.observation()
+        obs = list(itertools.chain.from_iterable([market_obs, systems_obs]))
+        reward = self.prosumer.wallet.balance - self.prev_prosumer_balance
+        self.prev_prosumer_balance = self.prosumer.wallet.balance
+        return obs, reward, False, {}
 
     def step(self, action: ActType) -> ObservationType:
         return self.simulation.send(action)
@@ -112,3 +136,6 @@ class SimulationEnv(gym.Env):
 
     def render(self, mode="human"):
         pass
+
+    # def get_end_tick(self, dfs: List[pd.DataFrame]) -> int:
+    #     return self._clock.get_end_tick()
