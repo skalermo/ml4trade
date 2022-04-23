@@ -23,7 +23,7 @@ class ConsumptionSystem:
 
     @staticmethod
     def _calculate_power(idx: int) -> kW:
-        consumed_energy = energy_consumption_kWh[idx]
+        consumed_energy = energy_consumption_kWh[idx % 24]
         return kW(consumed_energy * abs(1 + random.gauss(0, 0.03)))
 
     def observation(self) -> List[float]:

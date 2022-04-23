@@ -3,7 +3,8 @@ from typing import Optional
 import numpy as np
 
 from src.battery import Battery, EnergyBalance
-from src.energy_manipulation.energy_systems import EnergySystems
+from src.energy_manipulation.production import ProductionSystem
+from src.energy_manipulation.consumption import ConsumptionSystem
 from src.market import EnergyMarket
 from src.wallet import Wallet
 from src.custom_types import Currency, kWh
@@ -14,13 +15,15 @@ class Prosumer:
     def __init__(
             self,
             battery: Battery,
-            energy_systems: EnergySystems,
+            production_system: ProductionSystem,
+            consumption_system: ConsumptionSystem,
             clock_view: ClockView,
             initial_balance: Currency = Currency(0),
             energy_market: Optional[EnergyMarket] = None,
     ):
         self.battery = battery
-        self.energy_systems = energy_systems
+        self.production_system = production_system
+        self.consumption_system = consumption_system
         self.clock_view = clock_view
         self.wallet = Wallet(initial_balance)
         self.hourly_energy_balance = 0
@@ -62,15 +65,11 @@ class Prosumer:
         self._restore_energy_balance()
 
     def _consume_energy(self):
-        power_produced = self.energy_systems.get_consumption_power(
-            self.clock_view.cur_tick()
-        )
-        self.energy_balance.sub(power_produced.to_kwh())
+        power_consumed = self.consumption_system.calculate_power()
+        self.energy_balance.sub(power_consumed.to_kwh())
 
     def _produce_energy(self):
-        power_produced = self.energy_systems.get_production_power(
-            self.clock_view.cur_tick()
-        )
+        power_produced = self.production_system.calculate_power()
         self.energy_balance.add(power_produced.to_kwh())
 
     def buy_energy(self, amount: kWh, price: Currency, scheduled: bool = True):

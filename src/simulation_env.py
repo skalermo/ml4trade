@@ -6,13 +6,10 @@ import pandas as pd
 from gym import spaces
 from gym.core import ObsType, ActType
 
-from gym_anytrading.envs import TradingEnv
-
 from src.energy_manipulation.consumption import ConsumptionSystem
 from src.energy_manipulation.production import ProductionSystem
 from src.prosumer import Prosumer
 from src.battery import Battery
-from src.energy_manipulation.energy_systems import EnergySystems
 from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.constants import *
@@ -47,7 +44,7 @@ class SimulationEnv(gym.Env):
             tick_duration=timedelta(hours=1)
         )
 
-        self.prosumer, self.market, self.energy_systems = self._setup_systems(data_and_callbacks, self._clock)
+        self.prosumer, self.market, self.production_system, self.consumption_system = self._setup_systems(data_and_callbacks, self._clock)
         self.prev_prosumer_balance = self.prosumer.wallet.balance
 
         self.first_actions_scheduled = False
@@ -58,7 +55,8 @@ class SimulationEnv(gym.Env):
         self.simulation.send(None)
 
     @staticmethod
-    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, clock: SimulationClock) -> Tuple[Prosumer, EnergyMarket, EnergySystems]:
+    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, clock: SimulationClock)\
+            -> Tuple[Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
         battery = Battery()
 
         # data_and_callbacks
@@ -66,22 +64,23 @@ class SimulationEnv(gym.Env):
         #     'market': (),
         #     'production': [(), ...],
         # }
-        systems = []
-        for df, callback in data_and_callbacks.get('production', []):
-            systems.append(ProductionSystem(df, callback))
-
-        systems.append(ConsumptionSystem(clock.view()))
-
-        energy_systems = EnergySystems(systems)
+        # systems = []
+        # for df, callback in data_and_callbacks.get('production', []):
+        #     systems.append(ProductionSystem(df, callback, clock.view()))
+        #
+        # systems.append(ConsumptionSystem(clock.view()))
+        df, callback = data_and_callbacks.get('production')
+        production_system = ProductionSystem(df, callback, clock.view())
+        consumption_system = ConsumptionSystem(clock.view())
 
         df, callback = data_and_callbacks.get('market', (None, None))
         market = None
         if df is not None:
             market = EnergyMarket(df, callback, clock.view())
 
-        prosumer = Prosumer(battery, energy_systems,
+        prosumer = Prosumer(battery, production_system, consumption_system,
                             clock_view=clock.view(), energy_market=market)
-        return prosumer, market, energy_systems
+        return prosumer, market, production_system, consumption_system
 
     def reset(self, *, seed: Optional[int] = None, return_info: bool = False, options: Optional[dict] = None) -> Union[
         ObsType, Tuple[ObsType, dict]]:
@@ -100,9 +99,10 @@ class SimulationEnv(gym.Env):
         # additional info:
         # - idk, no for now
         market_obs = self.market.observation()
-        systems_obs = self.energy_systems.observation()
-        obs = list(itertools.chain.from_iterable([market_obs, systems_obs]))
-        reward = self.prosumer.wallet.balance - self.prev_prosumer_balance
+        production_obs = self.production_system.observation()
+        consumption_obs = self.consumption_system.observation()
+        obs = list(itertools.chain.from_iterable([market_obs, production_obs, consumption_obs]))
+        reward = (self.prosumer.wallet.balance - self.prev_prosumer_balance).value
         self.prev_prosumer_balance = self.prosumer.wallet.balance
         return obs, reward, False, {}
 
