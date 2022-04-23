@@ -1,6 +1,5 @@
 from typing import Optional, Union, Tuple, Generator, List, Dict
 from datetime import timedelta
-import random
 import itertools
 
 import pandas as pd
@@ -18,7 +17,7 @@ from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.constants import *
 from src.callback import Callback
-
+from src.utils import run_in_random_order
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 DfsCallbacksType = Tuple[pd.DataFrame, Callback]
@@ -124,15 +123,9 @@ class SimulationEnv(gym.Env):
                     self.first_actions_set = True
 
             if self.first_actions_set:
-                self._run_in_random_order([self.prosumer.consume, self.prosumer.produce])
+                run_in_random_order([self.prosumer.consume, self.prosumer.produce])
 
             self._clock.tick()
-
-    @staticmethod
-    def _run_in_random_order(functions_and_calldata: List[callable]) -> None:
-        random.shuffle(functions_and_calldata)
-        for f in functions_and_calldata:
-            f()
 
     def render(self, mode="human"):
         pass
