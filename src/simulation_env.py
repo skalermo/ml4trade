@@ -68,13 +68,8 @@ class SimulationEnv(gym.Env):
         # data_and_callbacks
         # {
         #     'market': (),
-        #     'production': [(), ...],
+        #     'production': (),
         # }
-        # systems = []
-        # for df, callback in data_and_callbacks.get('production', []):
-        #     systems.append(ProductionSystem(df, callback, clock.view()))
-        #
-        # systems.append(ConsumptionSystem(clock.view()))
         df, callback = data_and_callbacks.get('production')
         production_system = ProductionSystem(df, callback, clock.view())
         consumption_system = ConsumptionSystem(clock.view())
@@ -140,6 +135,3 @@ class SimulationEnv(gym.Env):
 
     def render(self, mode="human"):
         pass
-
-    # def get_end_tick(self, dfs: List[pd.DataFrame]) -> int:
-    #     return self._clock.get_end_tick()
