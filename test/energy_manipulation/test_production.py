@@ -11,7 +11,7 @@ from src.clock import SimulationClock
 from mock_callbacks.production_callbacks import ImgwWindCallback, ImgwSolarCallback, imgw_col_ids
 
 
-weather_data_path = os.path.join(os.path.dirname(__file__), '../mock_data/s_t_02_2022.csv')
+weather_data_path = os.path.join(os.path.dirname(__file__), '../mock_data/s_t_02-03_2022.csv')
 
 
 class TestProduction(unittest.TestCase):

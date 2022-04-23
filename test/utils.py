@@ -30,7 +30,7 @@ def setup_default_market(df: pd.DataFrame = None, clock: SimulationClock = None)
 
 
 def setup_default_dfs_and_callbacks() -> DfsCallbacksDictType:
-    weather_data_path = os.path.join(os.path.dirname(__file__), 'mock_data/s_t_02_2022.csv')
+    weather_data_path = os.path.join(os.path.dirname(__file__), 'mock_data/s_t_02-03_2022.csv')
 
     weather_df = pd.read_csv(weather_data_path, header=None, names=imgw_col_ids.keys(), usecols=imgw_col_ids.values(), encoding='cp1250')
     prices_col = 'Fixing I Price [PLN/MWh]'
