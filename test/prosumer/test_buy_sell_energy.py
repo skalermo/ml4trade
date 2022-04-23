@@ -1,7 +1,8 @@
 import unittest
 from src.battery import Battery
 from src.clock import SimulationClock
-from src.energy_manipulation.energy_systems import EnergySystems
+from src.energy_manipulation.production import ProductionSystem
+from src.energy_manipulation.consumption import ConsumptionSystem
 from src.custom_types import kWh, Currency
 from src.prosumer import Prosumer
 
@@ -11,9 +12,10 @@ from utils import setup_default_market
 class TestProsumerBuySell(unittest.TestCase):
     def setUp(self):
         battery = Battery()
-        energy_systems = EnergySystems()
+        production_system = ProductionSystem(None, None)
+        consumption_system = ConsumptionSystem(None)
         self.energy_market = setup_default_market()
-        self.prosumer = Prosumer(battery, energy_systems, SimulationClock().view(), Currency(50), self.energy_market)
+        self.prosumer = Prosumer(battery, production_system, consumption_system, SimulationClock().view(), Currency(50), self.energy_market)
 
     def test_buy(self):
         self.prosumer.buy_energy(kWh(10), self.energy_market.get_buy_price())

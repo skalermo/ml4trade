@@ -3,7 +3,8 @@ from datetime import datetime
 
 from src.prosumer import Prosumer
 from src.battery import Battery
-from src.energy_manipulation.energy_systems import EnergySystems
+from src.energy_manipulation.production import ProductionSystem
+from src.energy_manipulation.consumption import ConsumptionSystem
 from src.custom_types import Currency, kWh, kW
 from src.clock import SimulationClock
 
@@ -12,10 +13,11 @@ from utils import load_from_setup, setup_default_market
 
 def _setup(battery_current_charge: kWh = kWh(50)) -> dict:
     battery = Battery(kWh(100), 1.0, battery_current_charge)
-    energy_systems = EnergySystems()
+    production_system = ProductionSystem(None, None)
+    consumption_system = ConsumptionSystem(None)
     energy_market = setup_default_market()
     clock = SimulationClock(start_datetime=datetime(2022, 1, 1, hour=12))
-    prosumer = Prosumer(battery, energy_systems, clock.view(), Currency(50), energy_market)
+    prosumer = Prosumer(battery, production_system, consumption_system, clock.view(), Currency(50), energy_market)
 
     prosumer.scheduled_buy_amounts = [0.0] * 24
     prosumer.scheduled_buy_thresholds = [0.0] * 24
@@ -24,20 +26,18 @@ def _setup(battery_current_charge: kWh = kWh(50)) -> dict:
 
     return {
         'battery': battery,
-        'energy_systems': energy_systems,
         'energy_market': energy_market,
         'prosumer': prosumer,
     }
 
 
 class TestConsume(unittest.TestCase):
-
     def test_consume_less_than_bought_without_forced_sell(self):
         prosumer, energy_market = load_from_setup(_setup(), 'prosumer', 'energy_market')
         
         prosumer.scheduled_buy_amounts[12] = kWh(10)
         prosumer.scheduled_buy_thresholds[12] = energy_market.get_buy_price()
-        prosumer.energy_systems.get_consumption_power = lambda t: kW(5)
+        prosumer.consumption_system.calculate_power = lambda: kW(5)
 
         prosumer.consume()
 
@@ -50,7 +50,7 @@ class TestConsume(unittest.TestCase):
 
         prosumer.scheduled_buy_amounts[12] = kWh(10)
         prosumer.scheduled_buy_thresholds[12] = energy_market.get_buy_price()
-        prosumer.energy_systems.get_consumption_power = lambda t: kW(5)
+        prosumer.consumption_system.calculate_power = lambda: kW(5)
 
         prosumer.consume()
         expected_balance = Currency(50) \
@@ -65,7 +65,7 @@ class TestConsume(unittest.TestCase):
 
         prosumer.scheduled_buy_amounts[12] = kWh(10)
         prosumer.scheduled_buy_thresholds[12] = energy_market.get_buy_price()
-        prosumer.energy_systems.get_consumption_power = lambda t: kW(15)
+        prosumer.consumption_system.calculate_power = lambda: kW(15)
 
         prosumer.consume()
 
@@ -78,7 +78,7 @@ class TestConsume(unittest.TestCase):
 
         prosumer.scheduled_buy_amounts[12] = kWh(10)
         prosumer.scheduled_buy_thresholds[12] = energy_market.get_buy_price()
-        prosumer.energy_systems.get_consumption_power = lambda t: kW(15)
+        prosumer.consumption_system.calculate_power = lambda: kW(15)
 
         prosumer.consume()
         expected_balance = Currency(50) - kWh(10).to_cost(energy_market.get_buy_price()) - kWh(3).to_cost(
@@ -89,13 +89,12 @@ class TestConsume(unittest.TestCase):
 
 
 class TestProduce(unittest.TestCase):
-
     def test_produce_more_than_sold_without_forced_sell(self):
         prosumer, energy_market = load_from_setup(_setup(), 'prosumer', 'energy_market')
 
         prosumer.scheduled_sell_amounts[12] = kWh(10)
         prosumer.scheduled_sell_thresholds[12] = energy_market.get_sell_price()
-        prosumer.energy_systems.get_production_power = lambda t: kW(15)
+        prosumer.production_system.calculate_power = lambda: kW(15)
 
         prosumer.produce()
 
@@ -108,7 +107,7 @@ class TestProduce(unittest.TestCase):
 
         prosumer.scheduled_sell_amounts[12] = kWh(10)
         prosumer.scheduled_sell_thresholds[12] = energy_market.get_sell_price()
-        prosumer.energy_systems.get_production_power = lambda t: kW(15)
+        prosumer.production_system.calculate_power = lambda: kW(15)
 
         prosumer.produce()
 
@@ -122,7 +121,7 @@ class TestProduce(unittest.TestCase):
 
         prosumer.scheduled_sell_amounts[12] = kWh(10)
         prosumer.scheduled_sell_thresholds[12] = energy_market.get_sell_price()
-        prosumer.energy_systems.get_production_power = lambda t: kW(5)
+        prosumer.production_system.calculate_power = lambda: kW(5)
 
         prosumer.produce()
 
@@ -135,7 +134,7 @@ class TestProduce(unittest.TestCase):
 
         prosumer.scheduled_sell_amounts[12] = kWh(10)
         prosumer.scheduled_sell_thresholds[12] = energy_market.get_sell_price()
-        prosumer.energy_systems.get_production_power = lambda t: kW(5)
+        prosumer.production_system.calculate_power = lambda: kW(5)
 
         prosumer.produce()
 

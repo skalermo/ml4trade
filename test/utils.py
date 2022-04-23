@@ -7,7 +7,7 @@ from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.simulation_env import DfsCallbacksDictType
 from mock_callbacks.market_callbacks import PricesPlCallback
-from mock_callbacks.production_callbacks import ImgwWindCallback, ImgwSolarCallback, imgw_col_ids
+from mock_callbacks.production_callbacks import ImgwSolarCallback, imgw_col_ids
 
 
 prices_pl_path = os.path.join(os.path.dirname(__file__), 'mock_data/prices_pl.csv')
@@ -37,8 +37,6 @@ def setup_default_dfs_and_callbacks() -> DfsCallbacksDictType:
     prices_df = pd.read_csv(prices_pl_path, header=0, usecols=[prices_col])
 
     return {
-        'production': [
-            (weather_df, ImgwWindCallback()),
-        ],
+        'production': (weather_df, ImgwSolarCallback()),
         'market': (prices_df, PricesPlCallback()),
     }

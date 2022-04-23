@@ -34,11 +34,14 @@ class ImgwWindCallback(Callback):
 
     def process(self, df: DataFrame, idx: int) -> kW:
         # wind speed in meters per second
-        wind_speed = df.loc[0, 'wind_speed']
+        wind_speed = df.loc[idx, 'wind_speed']
         if wind_speed > MAX_WIND_SPEED or wind_speed < 0:
             return kW(0)
         power = kW(wind_speed * MAX_WIND_POWER.value / MAX_WIND_SPEED)
         return power
+
+    def observation(self, df: DataFrame, idx: int) -> List[float]:
+        return [df.loc[idx, 'wind_speed']]
 
 
 class ImgwSolarCallback(Callback):
@@ -51,8 +54,11 @@ class ImgwSolarCallback(Callback):
     def process(self, df: DataFrame, idx: int) -> kW:
         # cloudiness in oktas
         # https://en.wikipedia.org/wiki/Okta 
-        cloudiness = df.loc[0, 'cloudiness']
+        cloudiness = df.loc[idx, 'cloudiness']
         if cloudiness == 9:     # 9 equals lack of observation (sky obscured)
             cloudiness = 8      # 8 equals overcast
         power = kW(MAX_SOLAR_POWER.value * (1 - cloudiness / 8))
         return power
+
+    def observation(self, df: DataFrame, idx: int) -> List[float]:
+        return [df.loc[idx, 'cloudiness']]

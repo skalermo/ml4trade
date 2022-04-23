@@ -12,3 +12,6 @@ class Callback:
 
     def process(self, df: DataFrame, idx: int) -> Any:
         raise NotImplementedError
+
+    def observation(self, df: DataFrame, idx: int) -> List[float]:
+        pass

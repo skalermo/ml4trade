@@ -1,4 +1,4 @@
-from typing import Optional, Union, Tuple, Generator, List, Dict
+from typing import Union, Tuple, Generator, List, Dict
 from datetime import timedelta
 import itertools
 
