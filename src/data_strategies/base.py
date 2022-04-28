@@ -1,5 +1,4 @@
 from typing import Any, List
-from typing_extensions import Literal
 
 import pandas as pd
 
