@@ -1,43 +1,36 @@
-from typing import Union, Tuple, Generator, List, Dict
+from typing import Tuple, Generator, Dict
 from datetime import timedelta
 import itertools
 
-import pandas as pd
 from gym import spaces
 from gym.core import ObsType, ActType
 
-from src.energy_manipulation.consumption import ConsumptionSystem
-from src.energy_manipulation.production import ProductionSystem
+from src.consumption import ConsumptionSystem
+from src.production import ProductionSystem
 from src.prosumer import Prosumer
 from src.battery import Battery
 from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.constants import *
-from src.callback import Callback
+from src.data_strategies.base import DataStrategy
 from src.custom_types import Currency, kWh
 from src.utils import run_in_random_order
 
 ObservationType = Tuple[ObsType, float, bool, dict]
-DfsCallbacksType = Tuple[pd.DataFrame, Callback]
-DfsCallbacksDictType = Dict[str, Union[DfsCallbacksType, List[DfsCallbacksType]]]
 
 
 class SimulationEnv(gym.Env):
     def __init__(
             self,
-            data_and_callbacks: DfsCallbacksDictType = None,
+            data_strategies: Dict[str, DataStrategy] = None,
             start_datetime: datetime = START_TIME,
             scheduling_time: time = SCHEDULING_TIME,
             action_replacement_time: time = ACTION_REPLACEMENT_TIME,
             start_tick: int = 0,
             end_tick: int = 10_000,
     ):
-        if data_and_callbacks is None:
-            data_and_callbacks = {}
-
-        self.action_space = SIMULATION_ENV_ACTION_SPACE
-        self.shape = (49,)
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
+        if data_strategies is None:
+            data_strategies = {}
 
         self._clock = SimulationClock(
             start_datetime=start_datetime,
@@ -50,8 +43,14 @@ class SimulationEnv(gym.Env):
         self.start_tick = start_tick
         self.end_tick = end_tick
 
-        self.prosumer, self.market, self.production_system, self.consumption_system = self._setup_systems(data_and_callbacks, self._clock)
+        self.prosumer, self.market, self.production_system, self.consumption_system = self._setup_systems(data_strategies, self._clock)
         self.prev_prosumer_balance = self.prosumer.wallet.balance
+
+        obs_size = 0
+        for s in data_strategies.values():
+            obs_size += s.window_size()
+        self.action_space = SIMULATION_ENV_ACTION_SPACE
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float32)
 
         self.first_actions_scheduled = False
         self.first_actions_set = False
@@ -61,23 +60,14 @@ class SimulationEnv(gym.Env):
         self.simulation.send(None)
 
     @staticmethod
-    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, clock: SimulationClock)\
+    def _setup_systems(data_strategies: Dict[str, DataStrategy], clock: SimulationClock)\
             -> Tuple[Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
         battery = Battery()
 
-        # data_and_callbacks
-        # {
-        #     'market': (),
-        #     'production': (),
-        # }
-        df, callback = data_and_callbacks.get('production')
-        production_system = ProductionSystem(df, callback, clock.view())
+        production_system = ProductionSystem(data_strategies.get('production'), clock.view())
         consumption_system = ConsumptionSystem(clock.view())
 
-        df, callback = data_and_callbacks.get('market', (None, None))
-        market = None
-        if df is not None:
-            market = EnergyMarket(df, callback, clock.view())
+        market = EnergyMarket(data_strategies.get('market'), clock.view())
 
         prosumer = Prosumer(battery, production_system, consumption_system,
                             clock_view=clock.view(), energy_market=market)
