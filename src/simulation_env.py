@@ -14,7 +14,7 @@ from src.clock import SimulationClock
 from src.constants import *
 from src.data_strategies.base import DataStrategy
 from src.custom_types import Currency, kWh
-from src.utils import run_in_random_order
+from src.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 
@@ -38,6 +38,10 @@ class SimulationEnv(gym.Env):
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float32)
 
         self.start_tick = max([s.window_size() for s in data_strategies.values() if s.window_direction == 'backward'], default=0)
+
+        dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
+        episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
+        assert episode_hour_length <= min(dfs_lengths), 'Provided dataframe is too short'
 
         self._clock = SimulationClock(
             start_datetime=start_datetime,
