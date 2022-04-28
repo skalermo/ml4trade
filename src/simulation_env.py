@@ -1,20 +1,21 @@
-from typing import Optional, Union, Tuple, Generator, List, Any, Dict
+from typing import Union, Tuple, Generator, List, Dict
 from datetime import timedelta
-import random
+import itertools
 
 import pandas as pd
 from gym import spaces
 from gym.core import ObsType, ActType
 
+from src.energy_manipulation.consumption import ConsumptionSystem
 from src.energy_manipulation.production import ProductionSystem
 from src.prosumer import Prosumer
 from src.battery import Battery
-from src.energy_manipulation.energy_systems import EnergySystems
 from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.constants import *
 from src.callback import Callback
-
+from src.custom_types import Currency, kWh
+from src.utils import run_in_random_order
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 DfsCallbacksType = Tuple[pd.DataFrame, Callback]
@@ -28,60 +29,88 @@ class SimulationEnv(gym.Env):
             start_datetime: datetime = START_TIME,
             scheduling_time: time = SCHEDULING_TIME,
             action_replacement_time: time = ACTION_REPLACEMENT_TIME,
+            start_tick: int = 0,
+            end_tick: int = 10_000,
     ):
         if data_and_callbacks is None:
             data_and_callbacks = {}
 
         self.action_space = SIMULATION_ENV_ACTION_SPACE
-        self.shape = (1, 1)
+        self.shape = (49,)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
 
         self._clock = SimulationClock(
             start_datetime=start_datetime,
             scheduling_time=scheduling_time,
             action_replacement_time=action_replacement_time,
-            start_tick=0,
-            tick_duration=timedelta(hours=1)
+            start_tick=start_tick,
+            tick_duration=timedelta(hours=1),
         )
+        self.start_datetime = start_datetime
+        self.start_tick = start_tick
+        self.end_tick = end_tick
 
-        self.simulation = self._simulation()
+        self.prosumer, self.market, self.production_system, self.consumption_system = self._setup_systems(data_and_callbacks, self._clock)
+        self.prev_prosumer_balance = self.prosumer.wallet.balance
+
         self.first_actions_scheduled = False
         self.first_actions_set = False
-
-        self.prosumer = self._setup_systems(data_and_callbacks, self._clock)
+        self.simulation = self._simulation()
 
         # start generator object
         self.simulation.send(None)
 
     @staticmethod
-    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, clock: SimulationClock) -> Prosumer:
+    def _setup_systems(data_and_callbacks: DfsCallbacksDictType, clock: SimulationClock)\
+            -> Tuple[Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
         battery = Battery()
 
         # data_and_callbacks
         # {
         #     'market': (),
-        #     'production': [(), ...],
+        #     'production': (),
         # }
-        systems = []
-        for df, callback in data_and_callbacks.get('production', []):
-            systems.append(ProductionSystem(df, callback))
-        energy_systems = EnergySystems(systems)
+        df, callback = data_and_callbacks.get('production')
+        production_system = ProductionSystem(df, callback, clock.view())
+        consumption_system = ConsumptionSystem(clock.view())
 
         df, callback = data_and_callbacks.get('market', (None, None))
         market = None
         if df is not None:
             market = EnergyMarket(df, callback, clock.view())
 
-        prosumer = Prosumer(battery, energy_systems,
+        prosumer = Prosumer(battery, production_system, consumption_system,
                             clock_view=clock.view(), energy_market=market)
-        return prosumer
+        return prosumer, market, production_system, consumption_system
 
-    def reset(self, *, seed: Optional[int] = None, return_info: bool = False, options: Optional[dict] = None) -> Union[
-        ObsType, Tuple[ObsType, dict]]:
-        return np.zeros(self.shape)
+    def reset(self, **kwargs) -> ObsType:
+        self.prosumer.wallet.balance = Currency(10_000)
+        self.prosumer.battery.current_charge = kWh(0)
+        self._clock.cur_datetime = self.start_datetime
+        self._clock.cur_tick = self.start_tick
+
+        return self._observation()[0]
 
     def _observation(self) -> ObservationType:
-        return np.zeros(self.shape), 0, False, {}
+        # obs:
+        # - history prices window (1 day backwards) - 24 floats
+        # - households energy consumption (1 day backwards) - 24 floats
+        # - weather forecast (1 day ahead) - some weather data tuple * 24
+        # reward:
+        # - cur balance - prev balance
+        # done:
+        # - if in any of the dfs the end of the data is reached
+        #   (need to find overlapping timestamps and common start time)
+        # additional info:
+        # - idk, no for now
+        market_obs = self.market.observation()
+        production_obs = self.production_system.observation()
+        consumption_obs = self.consumption_system.observation()
+        obs = list(itertools.chain.from_iterable([market_obs, production_obs, consumption_obs]))
+        reward = (self.prosumer.wallet.balance - self.prev_prosumer_balance).value
+        self.prev_prosumer_balance = self.prosumer.wallet.balance
+        done = self._clock.cur_tick >= self.end_tick
+        return obs, reward, done, {}
 
     def step(self, action: ActType) -> ObservationType:
         return self.simulation.send(action)
@@ -100,15 +129,9 @@ class SimulationEnv(gym.Env):
                     self.first_actions_set = True
 
             if self.first_actions_set:
-                self._run_in_random_order([self.prosumer.consume, self.prosumer.produce])
+                run_in_random_order([self.prosumer.consume, self.prosumer.produce])
 
             self._clock.tick()
-
-    @staticmethod
-    def _run_in_random_order(functions_and_calldata: List[callable]) -> None:
-        random.shuffle(functions_and_calldata)
-        for f in functions_and_calldata:
-            f()
 
     def render(self, mode="human"):
         pass

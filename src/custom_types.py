@@ -1,4 +1,3 @@
-from __future__ import annotations
 from dataclasses import dataclass
 
 
@@ -6,7 +5,7 @@ from dataclasses import dataclass
 class kWh:
     value: float
 
-    def to_cost(self, price_per_kwh: Currency) -> Currency:
+    def to_cost(self, price_per_kwh: 'Currency') -> 'Currency':
         return Currency(self.value * price_per_kwh.value)
 
     def __add__(self, other):
@@ -35,10 +34,10 @@ class kWh:
 class kW:
     value: float
 
-    def __add__(self, other: kW):
+    def __add__(self, other: 'kW'):
         return kW(self.value + other.value)
 
-    def __sub__(self, other: kW):
+    def __sub__(self, other: 'kW'):
         return kW(self.value - other.value)
 
     def to_kwh(self) -> kWh:
@@ -49,19 +48,22 @@ class kW:
 class Currency:
     value: float
 
-    def __add__(self, other: Currency):
+    def __add__(self, other: 'Currency'):
         return Currency(self.value + other.value)
+
+    def __radd__(self, other: int):
+        return Currency(self.value + other)
 
     def __sub__(self, other):
         return Currency(self.value - other.value)
 
-    def __mul__(self, other: float) -> Currency:
+    def __mul__(self, other: float) -> 'Currency':
         return Currency(self.value * other)
 
-    def __truediv__(self, other: float) -> Currency:
+    def __truediv__(self, other: float) -> 'Currency':
         return Currency(self.value / other)
 
-    def __abs__(self) -> Currency:
+    def __abs__(self) -> 'Currency':
         return Currency(abs(self.value))
 
     def __round__(self, n=None):

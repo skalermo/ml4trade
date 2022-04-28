@@ -1,3 +1,5 @@
+from typing import List
+
 from pandas import DataFrame
 
 from src.custom_types import kWh, Currency
@@ -11,10 +13,11 @@ UNSCHEDULED_MULTIPLIER = 2.0
 
 
 class EnergyMarket:
-    def __init__(self, df: DataFrame, cb: Callback, clock_view: ClockView):
+    def __init__(self, df: DataFrame, cb: Callback, clock_view: ClockView, window_size: int = 24):
         self.df = df
         self.cb = cb
         self.clock_view = clock_view
+        self.window_size = window_size
 
     def buy(self, amount: kWh, price_threshold: Currency,
             client_wallet: Wallet, energy_balance: EnergyBalance,
@@ -48,3 +51,8 @@ class EnergyMarket:
 
     def get_sell_price_unscheduled(self):
         return self.get_sell_price() / UNSCHEDULED_MULTIPLIER
+
+    def observation(self) -> List[float]:
+        cur_tick = self.clock_view.cur_tick()
+        res = [self.cb.process(self.df, tick).value for tick in range(cur_tick - self.window_size + 1, cur_tick + 1)]
+        return res
