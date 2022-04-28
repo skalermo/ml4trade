@@ -2,7 +2,6 @@ import datetime
 import unittest
 
 from src.custom_types import kW
-from src.consumption import ConsumptionSystem
 from src.clock import SimulationClock
 from utils import setup_default_consumption_system
 

@@ -9,9 +9,8 @@ from src.custom_types import kW
 
 
 class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
-    def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
-                 window_direction: Literal['forward', 'backward'] = 'forward') -> None:
-        super().__init__(df, window_size, window_direction)
+    def __init__(self, df: pd.DataFrame = None, window_size: int = 1):
+        super().__init__(df, window_size)
 
         # avg energy consumption per household
         # for each hour of the day
