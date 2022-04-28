@@ -14,7 +14,7 @@ from src.clock import SimulationClock
 from src.constants import *
 from src.data_strategies.base import DataStrategy
 from src.custom_types import Currency, kWh
-from src.utils import run_in_random_order
+from src.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 
@@ -24,33 +24,37 @@ class SimulationEnv(gym.Env):
             self,
             data_strategies: Dict[str, DataStrategy] = None,
             start_datetime: datetime = START_TIME,
+            end_datetime: datetime = END_TIME,
             scheduling_time: time = SCHEDULING_TIME,
             action_replacement_time: time = ACTION_REPLACEMENT_TIME,
-            start_tick: int = 0,
-            end_tick: int = 10_000,
     ):
         if data_strategies is None:
             data_strategies = {}
-
-        self._clock = SimulationClock(
-            start_datetime=start_datetime,
-            scheduling_time=scheduling_time,
-            action_replacement_time=action_replacement_time,
-            start_tick=start_tick,
-            tick_duration=timedelta(hours=1),
-        )
-        self.start_datetime = start_datetime
-        self.start_tick = start_tick
-        self.end_tick = end_tick
-
-        self.prosumer, self.market, self.production_system, self.consumption_system = self._setup_systems(data_strategies, self._clock)
-        self.prev_prosumer_balance = self.prosumer.wallet.balance
 
         obs_size = 0
         for s in data_strategies.values():
             obs_size += s.window_size()
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float32)
+
+        self.start_tick = max([s.window_size() for s in data_strategies.values() if s.window_direction == 'backward'], default=0)
+
+        dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
+        episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
+        assert episode_hour_length <= min(dfs_lengths), 'Provided dataframe is too short'
+
+        self._clock = SimulationClock(
+            start_datetime=start_datetime,
+            scheduling_time=scheduling_time,
+            action_replacement_time=action_replacement_time,
+            start_tick=self.start_tick,
+            tick_duration=timedelta(hours=1),
+        )
+        self.start_datetime = start_datetime
+        self.end_datetime = end_datetime
+
+        self.prosumer, self.market, self.production_system, self.consumption_system = self._setup_systems(data_strategies, self._clock)
+        self.prev_prosumer_balance = self.prosumer.wallet.balance
 
         self.first_actions_scheduled = False
         self.first_actions_set = False
@@ -97,9 +101,11 @@ class SimulationEnv(gym.Env):
         production_obs = self.production_system.observation()
         consumption_obs = self.consumption_system.observation()
         obs = list(itertools.chain.from_iterable([market_obs, production_obs, consumption_obs]))
+
         reward = (self.prosumer.wallet.balance - self.prev_prosumer_balance).value
+
         self.prev_prosumer_balance = self.prosumer.wallet.balance
-        done = self._clock.cur_tick >= self.end_tick
+        done = self.end_datetime <= self._clock.cur_datetime
         return obs, reward, done, {}
 
     def step(self, action: ActType) -> ObservationType:

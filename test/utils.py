@@ -44,6 +44,6 @@ def setup_default_data_strategies() -> Dict[str, DataStrategy]:
 
     return {
         'production': ImgwSolarDataStrategy(weather_df),
-        'market': PricesPlDataStrategy(prices_df),
+        'market': PricesPlDataStrategy(prices_df, window_size=24, window_direction='backward'),
         'consumption': HouseholdEnergyConsumptionDataStrategy(),
     }
