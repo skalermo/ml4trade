@@ -8,15 +8,15 @@ from src.consumption import ConsumptionSystem
 from src.custom_types import Currency, kWh, kW
 from src.clock import SimulationClock
 
-from utils import load_from_setup, setup_default_market
+from utils import load_from_setup, setup_default_market, setup_default_consumption_system
 
 
 def _setup(battery_current_charge: kWh = kWh(50)) -> dict:
     battery = Battery(kWh(100), 1.0, battery_current_charge)
-    production_system = ProductionSystem(None, None)
-    consumption_system = ConsumptionSystem(None)
-    energy_market = setup_default_market()
     clock = SimulationClock(start_datetime=datetime(2022, 1, 1, hour=12))
+    production_system = ProductionSystem(None, clock.view())
+    consumption_system = setup_default_consumption_system(clock)
+    energy_market = setup_default_market(clock=clock)
     prosumer = Prosumer(battery, production_system, consumption_system, clock.view(), Currency(50), energy_market)
 
     prosumer.scheduled_buy_amounts = [0.0] * 24

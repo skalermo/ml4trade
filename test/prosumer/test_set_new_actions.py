@@ -9,15 +9,17 @@ from src.production import ProductionSystem
 from src.consumption import ConsumptionSystem
 from src.constants import SIMULATION_ENV_ACTION_SPACE
 from src.clock import SimulationClock
+from utils import setup_default_consumption_system
 
 
 class TestSetNewActions(unittest.TestCase):
     def setUp(self) -> None:
+        clock = SimulationClock()
         self.prosumer = Prosumer(
             battery=Battery(),
-            clock_view=SimulationClock().view(),
+            clock_view=clock.view(),
             production_system=ProductionSystem(None, None),
-            consumption_system=ConsumptionSystem(None),
+            consumption_system=setup_default_consumption_system(clock)
         )
         self.action = SIMULATION_ENV_ACTION_SPACE.sample()
         self.prosumer.schedule(self.action)
