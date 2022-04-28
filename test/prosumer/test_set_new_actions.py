@@ -5,8 +5,8 @@ import numpy as np
 from src.custom_types import kWh, Currency
 from src.prosumer import Prosumer
 from src.battery import Battery
-from src.energy_manipulation.production import ProductionSystem
-from src.energy_manipulation.consumption import ConsumptionSystem
+from src.production import ProductionSystem
+from src.consumption import ConsumptionSystem
 from src.constants import SIMULATION_ENV_ACTION_SPACE
 from src.clock import SimulationClock
 

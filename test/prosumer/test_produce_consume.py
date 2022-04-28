@@ -3,8 +3,8 @@ from datetime import datetime
 
 from src.prosumer import Prosumer
 from src.battery import Battery
-from src.energy_manipulation.production import ProductionSystem
-from src.energy_manipulation.consumption import ConsumptionSystem
+from src.production import ProductionSystem
+from src.consumption import ConsumptionSystem
 from src.custom_types import Currency, kWh, kW
 from src.clock import SimulationClock
 

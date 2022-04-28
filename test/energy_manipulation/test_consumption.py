@@ -2,7 +2,7 @@ import datetime
 import unittest
 
 from src.custom_types import kW
-from src.energy_manipulation.consumption import ConsumptionSystem
+from src.consumption import ConsumptionSystem
 from src.clock import SimulationClock
 
 
