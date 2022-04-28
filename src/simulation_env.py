@@ -65,7 +65,7 @@ class SimulationEnv(gym.Env):
         battery = Battery()
 
         production_system = ProductionSystem(data_strategies.get('production'), clock.view())
-        consumption_system = ConsumptionSystem(clock.view())
+        consumption_system = ConsumptionSystem(data_strategies.get('consumption'), clock.view())
 
         market = EnergyMarket(data_strategies.get('market'), clock.view())
 
