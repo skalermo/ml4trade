@@ -3,12 +3,12 @@ import unittest
 import numpy as np
 
 from src.simulation_env import SimulationEnv
-from utils import setup_default_dfs_and_callbacks
+from utils import setup_default_data_strategies
 
 
 class TestSimulationEnv(unittest.TestCase):
     def setUp(self) -> None:
-        self.env = SimulationEnv(setup_default_dfs_and_callbacks(), start_tick=24)
+        self.env = SimulationEnv(setup_default_data_strategies(), start_tick=24)
 
     def test_action_space(self):
         self.assertEqual(self.env.action_space.shape, (96,))

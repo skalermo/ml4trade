@@ -3,8 +3,8 @@ from typing import Optional
 import numpy as np
 
 from src.battery import Battery, EnergyBalance
-from src.energy_manipulation.production import ProductionSystem
-from src.energy_manipulation.consumption import ConsumptionSystem
+from src.production import ProductionSystem
+from src.consumption import ConsumptionSystem
 from src.market import EnergyMarket
 from src.wallet import Wallet
 from src.custom_types import Currency, kWh

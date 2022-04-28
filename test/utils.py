@@ -1,13 +1,13 @@
 from operator import itemgetter
 import os
+from typing import Dict
 
 import pandas as pd
 
 from src.market import EnergyMarket
 from src.clock import SimulationClock
-from src.simulation_env import DfsCallbacksDictType
-from mock_callbacks.market_callbacks import PricesPlCallback
-from mock_callbacks.production_callbacks import ImgwSolarCallback, imgw_col_ids
+from src.data_strategies import DataStrategy, PricesPlDataStrategy, ImgwSolarDataStrategy, HouseholdEnergyConsumptionDataStrategy, imgw_col_ids
+from src.consumption import ConsumptionSystem
 
 
 prices_pl_path = os.path.join(os.path.dirname(__file__), 'mock_data/prices_pl.csv')
@@ -25,11 +25,17 @@ def setup_default_market(df: pd.DataFrame = None, clock: SimulationClock = None)
     if clock is None:
         clock = SimulationClock()
 
-    market = EnergyMarket(df, PricesPlCallback(), clock.view())
+    market = EnergyMarket(PricesPlDataStrategy(df), clock.view())
     return market
 
 
-def setup_default_dfs_and_callbacks() -> DfsCallbacksDictType:
+def setup_default_consumption_system(clock: SimulationClock = None) -> ConsumptionSystem:
+    if clock is None:
+        clock = SimulationClock()
+    return ConsumptionSystem(HouseholdEnergyConsumptionDataStrategy(), clock.view())
+
+
+def setup_default_data_strategies() -> Dict[str, DataStrategy]:
     weather_data_path = os.path.join(os.path.dirname(__file__), 'mock_data/s_t_02-03_2022.csv')
 
     weather_df = pd.read_csv(weather_data_path, header=None, names=imgw_col_ids.keys(), usecols=imgw_col_ids.values(), encoding='cp1250')
@@ -37,6 +43,7 @@ def setup_default_dfs_and_callbacks() -> DfsCallbacksDictType:
     prices_df = pd.read_csv(prices_pl_path, header=0, usecols=[prices_col])
 
     return {
-        'production': (weather_df, ImgwSolarCallback()),
-        'market': (prices_df, PricesPlCallback()),
+        'production': ImgwSolarDataStrategy(weather_df),
+        'market': PricesPlDataStrategy(prices_df),
+        'consumption': HouseholdEnergyConsumptionDataStrategy(),
     }

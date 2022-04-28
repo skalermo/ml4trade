@@ -1,12 +1,12 @@
 import unittest
 from src.battery import Battery
-from src.energy_manipulation.production import ProductionSystem
-from src.energy_manipulation.consumption import ConsumptionSystem
+from src.production import ProductionSystem
+from src.consumption import ConsumptionSystem
 from src.custom_types import kW, kWh, Currency
 from src.prosumer import Prosumer
 from src.clock import SimulationClock
 
-from utils import setup_default_market
+from utils import setup_default_market, setup_default_consumption_system
 
 
 class TestProduceConsumeEnergy(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestProduceConsumeEnergy(unittest.TestCase):
         battery = Battery(kWh(100), 1.0, kWh(50))
         energy_market = setup_default_market()
         self.production = ProductionSystem(None, None)
-        self.consumption = ConsumptionSystem(None)
+        self.consumption = setup_default_consumption_system()
         self.prosumer = Prosumer(battery, self.production, self.consumption, SimulationClock().view(), Currency(50), energy_market)
 
     def test_consume_energy(self):

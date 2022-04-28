@@ -1,11 +1,9 @@
 from typing import List
 
-from pandas import DataFrame
-
 from src.custom_types import kWh, Currency
 from src.wallet import Wallet
 from src.battery import EnergyBalance
-from src.callback import Callback
+from src.data_strategies.base import DataStrategy
 from src.clock import ClockView
 
 
@@ -13,9 +11,8 @@ UNSCHEDULED_MULTIPLIER = 2.0
 
 
 class EnergyMarket:
-    def __init__(self, df: DataFrame, cb: Callback, clock_view: ClockView, window_size: int = 24):
-        self.df = df
-        self.cb = cb
+    def __init__(self, ds: DataStrategy, clock_view: ClockView, window_size: int = 24):
+        self.ds = ds
         self.clock_view = clock_view
         self.window_size = window_size
 
@@ -41,10 +38,10 @@ class EnergyMarket:
         client_wallet.deposit(amount.to_cost(sell_price))
 
     def get_buy_price(self):
-        return self.cb.process(self.df, self.clock_view.cur_tick())
+        return self.ds.process(self.clock_view.cur_tick())
 
     def get_sell_price(self):
-        return self.cb.process(self.df, self.clock_view.cur_tick())
+        return self.ds.process(self.clock_view.cur_tick())
 
     def get_buy_price_unscheduled(self):
         return self.get_buy_price() * UNSCHEDULED_MULTIPLIER
@@ -53,6 +50,4 @@ class EnergyMarket:
         return self.get_sell_price() / UNSCHEDULED_MULTIPLIER
 
     def observation(self) -> List[float]:
-        cur_tick = self.clock_view.cur_tick()
-        res = [self.cb.process(self.df, tick).value for tick in range(cur_tick - self.window_size + 1, cur_tick + 1)]
-        return res
+        return self.ds.observation(self.clock_view.cur_tick())

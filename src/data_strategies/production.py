@@ -1,8 +1,6 @@
 from typing import List
 
-from pandas import DataFrame
-
-from src.callback import Callback
+from src.data_strategies import DataStrategy
 from src.custom_types import kW
 
 
@@ -25,40 +23,37 @@ imgw_col_ids = {
 }
 
 
-class ImgwWindCallback(Callback):
-    def preprocess_data(self, df: DataFrame) -> None:
-        pass
-
+class ImgwWindDataStrategy(DataStrategy):
     def processed_columns(self) -> List[str]:
         return ['code', 'year', 'month', 'day', 'hour', 'wind_speed']
 
-    def process(self, df: DataFrame, idx: int) -> kW:
+    def process(self, idx: int) -> kW:
         # wind speed in meters per second
-        wind_speed = df.loc[idx, 'wind_speed']
+        wind_speed = self.df.loc[idx, 'wind_speed']
         if wind_speed > MAX_WIND_SPEED or wind_speed < 0:
             return kW(0)
         power = kW(wind_speed * MAX_WIND_POWER.value / MAX_WIND_SPEED)
         return power
 
-    def observation(self, df: DataFrame, idx: int) -> List[float]:
-        return [df.loc[idx, 'wind_speed']]
+    def observation(self, idx: int) -> List[float]:
+        return self.df.loc[idx:idx - self._window_size + 1, 'wind_speed']
 
 
-class ImgwSolarCallback(Callback):
-    def preprocess_data(self, df: DataFrame) -> None:
-        pass
+class ImgwSolarDataStrategy(DataStrategy):
+    def window_size(self) -> int:
+        return self._window_size
 
     def processed_columns(self) -> List[str]:
         return ['code', 'year', 'month', 'day', 'hour', 'cloudiness']
 
-    def process(self, df: DataFrame, idx: int) -> kW:
+    def process(self, idx: int) -> kW:
         # cloudiness in oktas
         # https://en.wikipedia.org/wiki/Okta 
-        cloudiness = df.loc[idx, 'cloudiness']
+        cloudiness = self.df.loc[idx, 'cloudiness']
         if cloudiness == 9:     # 9 equals lack of observation (sky obscured)
             cloudiness = 8      # 8 equals overcast
         power = kW(MAX_SOLAR_POWER.value * (1 - cloudiness / 8))
         return power
 
-    def observation(self, df: DataFrame, idx: int) -> List[float]:
-        return [df.loc[idx, 'cloudiness']]
+    def observation(self, idx: int) -> List[float]:
+        return self.df.loc[idx:idx - self._window_size + 1, 'cloudiness']
