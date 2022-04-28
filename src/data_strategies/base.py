@@ -5,9 +5,11 @@ import pandas as pd
 
 
 class DataStrategy:
-    def __init__(self, df: pd.DataFrame = None, window_size: int = 1):
+    def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
+                 window_direction: Literal['forward', 'backward'] = 'forward'):
         self.df = df
         self._window_size = window_size
+        self.window_direction = window_direction
 
     def window_size(self) -> int:
         return self._window_size

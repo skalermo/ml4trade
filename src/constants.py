@@ -13,6 +13,12 @@ START_TIME = datetime(
     day=8,
     hour=SCHEDULING_TIME.hour,
 )
+END_TIME = datetime(
+    year=2022,
+    month=3,
+    day=11,
+    hour=SCHEDULING_TIME.hour,
+)
 
 BUY_AMOUNT_BOUND_HIGH = np.inf
 SELL_AMOUNT_BOUND_HIGH = np.inf
