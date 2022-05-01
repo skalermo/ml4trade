@@ -1,19 +1,19 @@
 from typing import List
 
+import pandas as pd
+
 from src.data_strategies import DataStrategy
 from src.units import Currency
 
 
 class PricesPlDataStrategy(DataStrategy):
-    def preprocess_data(self) -> None:
-        pass
+    col = 'Fixing I Price [PLN/MWh]'
 
-    def processed_columns(self) -> list:
-        return ['Fixing I Price [PLN/MWh]']
+    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df[[self.col]]
 
     def process(self, idx: int) -> Currency:
-        # 2016-01-01 00:00:00
-        val = self.df.loc[idx, self.processed_columns()[0]]
+        val = self.df.loc[idx, self.col]
         return Currency(val)
 
     def observation(self, idx: int) -> List[float]:

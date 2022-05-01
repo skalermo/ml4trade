@@ -25,8 +25,7 @@ def setup_sim_env(cfg: DictConfig) -> SimulationEnv:
                              encoding='cp1250')
     prices_pl_path = f'{orig_cwd}/../data/.data/prices_pl.csv'
 
-    prices_col = 'Fixing I Price [PLN/MWh]'
-    prices_df = pd.read_csv(prices_pl_path, header=0, usecols=[prices_col])
+    prices_df = pd.read_csv(prices_pl_path, header=0)
 
     data_strategies = {
         'production': ImgwWindDataStrategy(weather_df, window_size=24, window_direction='forward'),
