@@ -36,13 +36,10 @@ class ImgwWindDataStrategy(DataStrategy):
         return power
 
     def observation(self, idx: int) -> List[float]:
-        return self.df.loc[idx:idx - self._window_size + 1, 'wind_speed']
+        return self.df.loc[idx - self._window_size + 1:idx, 'wind_speed']
 
 
 class ImgwSolarDataStrategy(DataStrategy):
-    def window_size(self) -> int:
-        return self._window_size
-
     def processed_columns(self) -> List[str]:
         return ['code', 'year', 'month', 'day', 'hour', 'cloudiness']
 
@@ -56,4 +53,4 @@ class ImgwSolarDataStrategy(DataStrategy):
         return power
 
     def observation(self, idx: int) -> List[float]:
-        return self.df.loc[idx:idx - self._window_size + 1, 'cloudiness']
+        return self.df.loc[idx - self._window_size + 1:idx, 'cloudiness']
