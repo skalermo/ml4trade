@@ -1,6 +1,6 @@
 from typing import List
 
-from src.custom_types import kWh, Currency
+from src.units import kWh, Currency
 from src.wallet import Wallet
 from src.battery import EnergyBalance
 from src.data_strategies.base import DataStrategy

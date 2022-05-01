@@ -5,7 +5,7 @@ from src.prosumer import Prosumer
 from src.battery import Battery
 from src.production import ProductionSystem
 from src.consumption import ConsumptionSystem
-from src.custom_types import Currency, kWh, kW
+from src.units import Currency, kWh, kW
 from src.clock import SimulationClock
 
 from utils import load_from_setup, setup_default_market, setup_default_consumption_system

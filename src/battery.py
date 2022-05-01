@@ -1,4 +1,4 @@
-from src.custom_types import kWh
+from src.units import kWh
 
 
 class Battery:

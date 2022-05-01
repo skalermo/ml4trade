@@ -13,7 +13,7 @@ from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.constants import *
 from src.data_strategies.base import DataStrategy
-from src.custom_types import Currency, kWh
+from src.units import Currency, kWh
 from src.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]

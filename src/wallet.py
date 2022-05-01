@@ -1,4 +1,4 @@
-from src.custom_types import Currency
+from src.units import Currency
 
 
 class Wallet:

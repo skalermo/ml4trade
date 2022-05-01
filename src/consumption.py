@@ -1,6 +1,6 @@
 from typing import List
 
-from src.custom_types import kW
+from src.units import kW
 from src.clock import ClockView
 from src.data_strategies import DataStrategy
 

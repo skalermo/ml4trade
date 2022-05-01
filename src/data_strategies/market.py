@@ -1,7 +1,7 @@
 from typing import List
 
 from src.data_strategies import DataStrategy
-from src.custom_types import Currency
+from src.units import Currency
 
 
 class PricesPlDataStrategy(DataStrategy):

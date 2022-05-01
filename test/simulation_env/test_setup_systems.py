@@ -2,7 +2,7 @@ import unittest
 
 from src.simulation_env import SimulationEnv
 from src.clock import SimulationClock
-from src.custom_types import kW
+from src.units import kW
 from utils import setup_default_data_strategies
 
 

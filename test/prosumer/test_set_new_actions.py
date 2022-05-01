@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.custom_types import kWh, Currency
+from src.units import kWh, Currency
 from src.prosumer import Prosumer
 from src.battery import Battery
 from src.production import ProductionSystem

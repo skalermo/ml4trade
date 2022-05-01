@@ -7,7 +7,7 @@ from src.production import ProductionSystem
 from src.consumption import ConsumptionSystem
 from src.market import EnergyMarket
 from src.wallet import Wallet
-from src.custom_types import Currency, kWh
+from src.units import Currency, kWh
 from src.clock import ClockView
 
 
