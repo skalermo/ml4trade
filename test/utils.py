@@ -37,7 +37,7 @@ def setup_default_consumption_system(clock: SimulationClock = None) -> Consumpti
 def setup_default_data_strategies() -> Dict[str, DataStrategy]:
     weather_data_path = os.path.join(os.path.dirname(__file__), 'mock_data/s_t_02-03_2022.csv')
 
-    weather_df = pd.read_csv(weather_data_path, header=None, names=imgw_col_ids.keys(), usecols=imgw_col_ids.values(), encoding='cp1250')
+    weather_df = pd.read_csv(weather_data_path, header=None, encoding='cp1250')
     prices_df = pd.read_csv(prices_pl_path, header=0)
 
     return {

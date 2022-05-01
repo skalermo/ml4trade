@@ -1,5 +1,7 @@
 from typing import List
 
+import pandas as pd
+
 from src.data_strategies import DataStrategy
 from src.units import kW
 
@@ -23,34 +25,44 @@ imgw_col_ids = {
 }
 
 
+def _preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.iloc[:, list(imgw_col_ids.values())]
+    df.columns = list(imgw_col_ids.keys())
+    return df
+
+
 class ImgwWindDataStrategy(DataStrategy):
-    def processed_columns(self) -> List[str]:
-        return ['code', 'year', 'month', 'day', 'hour', 'wind_speed']
+    col = 'wind_speed'
+
+    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        return _preprocess_data(df)
 
     def process(self, idx: int) -> kW:
         # wind speed in meters per second
-        wind_speed = self.df.loc[idx, 'wind_speed']
+        wind_speed = self.df.loc[idx, self.col]
         if wind_speed > MAX_WIND_SPEED or wind_speed < 0:
             return kW(0)
         power = kW(wind_speed * MAX_WIND_POWER.value / MAX_WIND_SPEED)
         return power
 
     def observation(self, idx: int) -> List[float]:
-        return self.df.loc[idx - self._window_size + 1:idx, 'wind_speed']
+        return self.df.loc[idx - self._window_size + 1:idx, self.col]
 
 
 class ImgwSolarDataStrategy(DataStrategy):
-    def processed_columns(self) -> List[str]:
-        return ['code', 'year', 'month', 'day', 'hour', 'cloudiness']
+    col = 'cloudiness'
+
+    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        return _preprocess_data(df)
 
     def process(self, idx: int) -> kW:
         # cloudiness in oktas
         # https://en.wikipedia.org/wiki/Okta 
-        cloudiness = self.df.loc[idx, 'cloudiness']
+        cloudiness = self.df.loc[idx, self.col]
         if cloudiness == 9:     # 9 equals lack of observation (sky obscured)
             cloudiness = 8      # 8 equals overcast
         power = kW(MAX_SOLAR_POWER.value * (1 - cloudiness / 8))
         return power
 
     def observation(self, idx: int) -> List[float]:
-        return self.df.loc[idx - self._window_size + 1:idx, 'cloudiness']
+        return self.df.loc[idx - self._window_size + 1:idx, self.col]
