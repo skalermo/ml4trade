@@ -2,7 +2,7 @@ import unittest
 import os
 
 from src.market import UNSCHEDULED_MULTIPLIER
-from src.custom_types import Currency
+from src.units import Currency
 from utils import setup_default_market
 
 

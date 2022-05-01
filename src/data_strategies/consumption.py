@@ -5,7 +5,7 @@ import random
 import pandas as pd
 
 from src.data_strategies import DataStrategy
-from src.custom_types import kW
+from src.units import kW
 
 
 class HouseholdEnergyConsumptionDataStrategy(DataStrategy):

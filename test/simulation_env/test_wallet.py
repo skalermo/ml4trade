@@ -1,7 +1,7 @@
 import unittest
 
 from src.wallet import Wallet
-from src.custom_types import Currency
+from src.units import Currency
 
 
 class TestWallet(unittest.TestCase):

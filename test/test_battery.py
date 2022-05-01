@@ -1,7 +1,7 @@
 import unittest
 
 from src.battery import Battery
-from src.custom_types import kWh
+from src.units import kWh
 
 
 class TestBattery(unittest.TestCase):

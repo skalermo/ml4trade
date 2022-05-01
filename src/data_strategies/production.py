@@ -1,7 +1,7 @@
 from typing import List
 
 from src.data_strategies import DataStrategy
-from src.custom_types import kW
+from src.units import kW
 
 
 MAX_WIND_POWER = kW(10)
