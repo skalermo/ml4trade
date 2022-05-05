@@ -30,6 +30,11 @@ class TestConsumption(unittest.TestCase):
         mean = power_sum.value / 10
         self.assertAlmostEqual(mean, 5.38, 1)
 
+    def test_data_length(self):
+        consumption_system = setup_default_consumption_system(window_size=26)
+        data_length = len(consumption_system.ds.energy_consumption_kWh)
+        self.assertEqual(data_length, 48)
+
 
 if __name__ == '__main__':
     unittest.main()

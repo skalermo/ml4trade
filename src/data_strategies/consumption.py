@@ -18,7 +18,7 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
             0.243, 0.246, 0.246, 0.242, 0.225, 0.208
         ]
 
-        extra_data = window_size // len(self.energy_consumption_kWh) + 1
+        extra_data = window_size // len(self.energy_consumption_kWh)
         self.energy_consumption_kWh += self.energy_consumption_kWh * extra_data
 
     def process(self, idx: int) -> kW:
