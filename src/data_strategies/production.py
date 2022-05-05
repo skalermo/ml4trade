@@ -3,6 +3,8 @@ from typing_extensions import Literal
 
 import pandas as pd
 
+import pandas as pd
+
 from src.data_strategies import DataStrategy
 from src.units import kW
 
