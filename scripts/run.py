@@ -1,9 +1,9 @@
 import os
 import sys
+from typing import List
 
 from datetime import datetime, time
 
-import numpy as np
 import pandas as pd
 from stable_baselines3 import A2C
 import hydra
@@ -13,18 +13,34 @@ from omegaconf import DictConfig, OmegaConf
 # you would just pip-install the project and import it
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data_strategies import ImgwWindDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy
+from src.data_strategies import ImgwWindDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, imgw_col_ids
 from src.simulation_env import SimulationEnv
 from src.units import *
 
 
+def get_all_scv_filenames(path: str) -> List[str]:
+    return [f for f in os.listdir(path) if f.endswith('.csv')]
+
+
 def setup_sim_env(cfg: DictConfig) -> SimulationEnv:
     orig_cwd = hydra.utils.get_original_cwd()
-    weather_data_path = f'{orig_cwd}/../data/.data/weather_unzipped_flattened/s_t_02_2022.csv'
-    weather_df = pd.read_csv(weather_data_path, header=None, encoding='cp1250')
-    prices_pl_path = f'{orig_cwd}/../data/.data/prices_pl.csv'
 
-    prices_df = pd.read_csv(prices_pl_path, header=0)
+    weather_data_path = f'{orig_cwd}/../data/.data/weather_unzipped_flattened'
+    filenames = get_all_scv_filenames(weather_data_path)
+    dfs = []
+    for f in filenames:
+        df = pd.read_csv(f'{weather_data_path}/{f}', header=None, encoding='cp1250',
+                         names=imgw_col_ids.keys(), usecols=imgw_col_ids.values())
+        dfs.append(df)
+    weather_df: pd.DataFrame = pd.concat(dfs, axis=0, ignore_index=True)
+    del dfs
+    weather_df = weather_df.loc[weather_df['code'] == 349190600]
+    weather_df.sort_values(by=['year', 'month', 'day', 'hour'], inplace=True)
+    weather_df.fillna(method='bfill', inplace=True)
+
+    prices_pl_path = f'{orig_cwd}/../data/.data/prices_pl.csv'
+    prices_df: pd.DataFrame = pd.read_csv(prices_pl_path, header=0)
+    prices_df.fillna(method='bfill', inplace=True)
 
     data_strategies = {
         'production': ImgwWindDataStrategy(weather_df, window_size=24, window_direction='forward'),

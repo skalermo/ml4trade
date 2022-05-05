@@ -33,20 +33,18 @@ def _preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
 
 class ImgwWindDataStrategy(DataStrategy):
     col = 'wind_speed'
-
-    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        return _preprocess_data(df)
+    col_idx = list(imgw_col_ids.keys()).index(col)
 
     def process(self, idx: int) -> kW:
         # wind speed in meters per second
-        wind_speed = self.df.loc[idx, self.col]
+        wind_speed = self.df.iat[idx, self.col_idx]
         if wind_speed > MAX_WIND_SPEED or wind_speed < 0:
             return kW(0)
         power = kW(wind_speed * MAX_WIND_POWER.value / MAX_WIND_SPEED)
         return power
 
     def observation(self, idx: int) -> List[float]:
-        return self.df.loc[idx - self._window_size + 1:idx, self.col]
+        return self.df.iloc[idx - self._window_size + 1:idx + 1, self.col_idx]
 
 
 class ImgwSolarDataStrategy(DataStrategy):

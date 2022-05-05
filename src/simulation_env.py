@@ -46,7 +46,7 @@ class SimulationEnv(gym.Env):
 
         dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
         episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
-        assert episode_hour_length <= min(dfs_lengths), 'Provided dataframe is too short'
+        assert episode_hour_length + 2 * self.start_tick <= min(dfs_lengths), 'Provided dataframe is too short'
 
         self._clock = SimulationClock(
             start_datetime=start_datetime,
@@ -58,6 +58,7 @@ class SimulationEnv(gym.Env):
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
         self.prosumer_init_balance = prosumer_init_balance
+        self.prev_prosumer_balance = prosumer_init_balance
         self.battery_init_charge = battery_init_charge
 
         (
@@ -67,8 +68,6 @@ class SimulationEnv(gym.Env):
             self.consumption_system
         ) = self._setup_systems(data_strategies, self._clock, prosumer_init_balance, battery_capacity,
                                 battery_efficiency, battery_init_charge)
-
-        self.prev_prosumer_balance = self.prosumer.wallet.balance
 
         self.first_actions_scheduled = False
         self.first_actions_set = False
@@ -99,6 +98,7 @@ class SimulationEnv(gym.Env):
 
     def reset(self, **kwargs) -> ObsType:
         self.prosumer.wallet.balance = self.prosumer_init_balance
+        self.prev_prosumer_balance = self.prosumer_init_balance
         self.prosumer.battery.current_charge = self.battery_init_charge
         self._clock.cur_datetime = self.start_datetime
         self._clock.cur_tick = self.start_tick

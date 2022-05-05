@@ -8,12 +8,13 @@ from src.units import Currency
 
 class PricesPlDataStrategy(DataStrategy):
     col = 'Fixing I Price [PLN/MWh]'
+    col_idx = 0
 
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         return df[[self.col]]
 
     def process(self, idx: int) -> Currency:
-        val = self.df.loc[idx, self.col]
+        val = self.df.iat[idx, self.col_idx]
         return Currency(val)
 
     def observation(self, idx: int) -> List[float]:
