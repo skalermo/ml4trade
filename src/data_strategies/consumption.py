@@ -1,8 +1,5 @@
 from typing import List
-from typing_extensions import Literal
 import random
-
-import pandas as pd
 
 from src.data_strategies import DataStrategy
 from src.units import kW
@@ -29,4 +26,4 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
         return kW(consumed_energy * abs(1 + random.gauss(0, 0.03)))
 
     def observation(self, idx: int) -> List[float]:
-        return self.energy_consumption_kWh[idx % 24:idx % 24 + self._window_size]
+        return self.energy_consumption_kWh[idx % 24:idx % 24 + self.window_size]

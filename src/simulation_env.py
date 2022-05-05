@@ -37,11 +37,11 @@ class SimulationEnv(gym.Env):
 
         obs_size = 0
         for s in data_strategies.values():
-            obs_size += s.window_size()
+            obs_size += s.observation_size()
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float32)
 
-        self.start_tick = max([s.window_size() for s in data_strategies.values() if s.window_direction == 'backward'],
+        self.start_tick = max([s.observation_size() for s in data_strategies.values() if s.window_direction == 'backward'],
                               default=0)
 
         dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]

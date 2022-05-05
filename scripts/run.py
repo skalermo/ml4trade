@@ -13,7 +13,7 @@ from omegaconf import DictConfig, OmegaConf
 # you would just pip-install the project and import it
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data_strategies import ImgwWindDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, imgw_col_ids
+from src.data_strategies import ImgwDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, imgw_col_ids
 from src.simulation_env import SimulationEnv
 from src.units import *
 
@@ -34,7 +34,8 @@ def setup_sim_env(cfg: DictConfig) -> SimulationEnv:
         dfs.append(df)
     weather_df: pd.DataFrame = pd.concat(dfs, axis=0, ignore_index=True)
     del dfs
-    weather_df = weather_df.loc[weather_df['code'] == 349190600]
+    # 352200375 - station_code for Warszawa Okecie
+    weather_df = weather_df.loc[weather_df['code'] == 352200375]
     weather_df.sort_values(by=['year', 'month', 'day', 'hour'], inplace=True)
     weather_df.fillna(method='bfill', inplace=True)
 
@@ -43,7 +44,7 @@ def setup_sim_env(cfg: DictConfig) -> SimulationEnv:
     prices_df.fillna(method='bfill', inplace=True)
 
     data_strategies = {
-        'production': ImgwWindDataStrategy(weather_df, window_size=24, window_direction='forward'),
+        'production': ImgwDataStrategy(weather_df, window_size=24, window_direction='forward'),
         'consumption': HouseholdEnergyConsumptionDataStrategy(window_size=24),
         'market': PricesPlDataStrategy(prices_df, window_size=24, window_direction='backward')
     }

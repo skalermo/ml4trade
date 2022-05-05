@@ -18,5 +18,4 @@ class PricesPlDataStrategy(DataStrategy):
         return Currency(val)
 
     def observation(self, idx: int) -> List[float]:
-        res = [self.process(i).value for i in range(idx - self._window_size + 1, idx + 1)]
-        return res
+        return self.df.iloc[idx - self.window_size + 1:idx + 1, self.col_idx]
