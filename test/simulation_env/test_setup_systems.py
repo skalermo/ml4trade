@@ -2,7 +2,7 @@ import unittest
 
 from src.simulation_env import SimulationEnv
 from src.clock import SimulationClock
-from src.units import kW, kWh, Currency
+from src.units import MW, MWh, Currency
 from utils import setup_default_data_strategies
 
 
@@ -11,12 +11,12 @@ class TestSetupSystems(unittest.TestCase):
         prosumer, *_ = SimulationEnv._setup_systems(
             setup_default_data_strategies(),
             SimulationClock(),
-            Currency(1), kWh(1), 0.1, kWh(1),
+            Currency(1), MWh(0.001), 0.1, MWh(0.001),
         )
-        self.assertEqual(prosumer.production_system.calculate_power(), kW(1))
+        self.assertEqual(prosumer.production_system.calculate_power(), MW(0.001))
         self.assertEqual(prosumer.wallet.balance, Currency(1))
-        self.assertEqual(prosumer.battery.current_charge, kWh(1))
-        self.assertEqual(prosumer.battery.capacity, kWh(1))
+        self.assertEqual(prosumer.battery.current_charge, MWh(0.001))
+        self.assertEqual(prosumer.battery.capacity, MWh(0.001))
         self.assertEqual(prosumer.battery.efficiency, 0.1)
 
 

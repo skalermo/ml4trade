@@ -4,15 +4,14 @@ from datetime import datetime
 from src.prosumer import Prosumer
 from src.battery import Battery
 from src.production import ProductionSystem
-from src.consumption import ConsumptionSystem
-from src.units import Currency, kWh, kW
+from src.units import Currency, MWh, MW
 from src.clock import SimulationClock
 
 from utils import load_from_setup, setup_default_market, setup_default_consumption_system
 
 
-def _setup(battery_current_charge: kWh = kWh(50)) -> dict:
-    battery = Battery(kWh(100), 1.0, battery_current_charge)
+def _setup(battery_current_charge: MWh = MWh(0.05)) -> dict:
+    battery = Battery(MWh(0.1), 1.0, battery_current_charge)
     clock = SimulationClock(start_datetime=datetime(2022, 1, 1, hour=12))
     production_system = ProductionSystem(None, clock.view())
     consumption_system = setup_default_consumption_system(clock)
@@ -35,113 +34,113 @@ class TestConsume(unittest.TestCase):
     def test_consume_less_than_bought_without_forced_sell(self):
         prosumer, energy_market = load_from_setup(_setup(), 'prosumer', 'energy_market')
         
-        prosumer.scheduled_buy_amounts[12] = kWh(10)
+        prosumer.scheduled_buy_amounts[12] = MWh(0.01)
         prosumer.scheduled_buy_thresholds[12] = energy_market.get_buy_price()
-        prosumer.consumption_system.calculate_power = lambda: kW(5)
+        prosumer.consumption_system.calculate_power = lambda: MW(0.005)
 
         prosumer.consume()
 
-        self.assertEqual(prosumer.wallet.balance, Currency(50) - kWh(10).to_cost(energy_market.get_buy_price()))
-        self.assertEqual(prosumer.battery.current_charge, kWh(55))
-        self.assertEqual(prosumer.energy_balance.value, kWh(0))
+        self.assertEqual(prosumer.wallet.balance, Currency(50) - MWh(0.01).to_cost(energy_market.get_buy_price()))
+        self.assertEqual(prosumer.battery.current_charge, MWh(0.055))
+        self.assertEqual(prosumer.energy_balance.value, MWh(0))
 
     def test_consume_less_than_bought_with_forced_sell(self):
-        prosumer, energy_market = load_from_setup(_setup(kWh(98)), 'prosumer', 'energy_market')
+        prosumer, energy_market = load_from_setup(_setup(MWh(0.098)), 'prosumer', 'energy_market')
 
-        prosumer.scheduled_buy_amounts[12] = kWh(10)
+        prosumer.scheduled_buy_amounts[12] = MWh(0.01)
         prosumer.scheduled_buy_thresholds[12] = energy_market.get_buy_price()
-        prosumer.consumption_system.calculate_power = lambda: kW(5)
+        prosumer.consumption_system.calculate_power = lambda: MW(0.005)
 
         prosumer.consume()
         expected_balance = Currency(50) \
-                           - kWh(10).to_cost(energy_market.get_buy_price()) \
-                           + kWh(3).to_cost(energy_market.get_sell_price_unscheduled())
+                           - MWh(0.01).to_cost(energy_market.get_buy_price()) \
+                           + MWh(0.003).to_cost(energy_market.get_sell_price_unscheduled())
         self.assertEqual(prosumer.wallet.balance, expected_balance)
-        self.assertEqual(prosumer.battery.current_charge, kWh(100))
-        self.assertEqual(prosumer.energy_balance.value, kWh(0))
+        self.assertEqual(prosumer.battery.current_charge, MWh(0.1))
+        self.assertEqual(prosumer.energy_balance.value, MWh(0))
 
     def test_consume_more_than_bought_without_forced_buy(self):
         prosumer, energy_market = load_from_setup(_setup(), 'prosumer', 'energy_market')
 
-        prosumer.scheduled_buy_amounts[12] = kWh(10)
+        prosumer.scheduled_buy_amounts[12] = MWh(0.01)
         prosumer.scheduled_buy_thresholds[12] = energy_market.get_buy_price()
-        prosumer.consumption_system.calculate_power = lambda: kW(15)
+        prosumer.consumption_system.calculate_power = lambda: MW(0.015)
 
         prosumer.consume()
 
-        self.assertEqual(prosumer.wallet.balance, Currency(50) - kWh(10).to_cost(energy_market.get_buy_price()))
-        self.assertEqual(prosumer.battery.current_charge, kWh(45))
-        self.assertEqual(prosumer.energy_balance.value, kWh(0))
+        self.assertEqual(prosumer.wallet.balance, Currency(50) - MWh(0.01).to_cost(energy_market.get_buy_price()))
+        self.assertAlmostEqual(prosumer.battery.current_charge.value, 0.045, 10)
+        self.assertEqual(prosumer.energy_balance.value, MWh(0))
 
     def test_consume_more_than_bought_with_forced_buy(self):
-        prosumer, energy_market = load_from_setup(_setup(kWh(2)), 'prosumer', 'energy_market')
+        prosumer, energy_market = load_from_setup(_setup(MWh(0.002)), 'prosumer', 'energy_market')
 
-        prosumer.scheduled_buy_amounts[12] = kWh(10)
+        prosumer.scheduled_buy_amounts[12] = MWh(0.01)
         prosumer.scheduled_buy_thresholds[12] = energy_market.get_buy_price()
-        prosumer.consumption_system.calculate_power = lambda: kW(15)
+        prosumer.consumption_system.calculate_power = lambda: MW(0.015)
 
         prosumer.consume()
-        expected_balance = Currency(50) - kWh(10).to_cost(energy_market.get_buy_price()) - kWh(3).to_cost(
+        expected_balance = Currency(50) - MWh(0.01).to_cost(energy_market.get_buy_price()) - MWh(0.003).to_cost(
             energy_market.get_buy_price_unscheduled())
         self.assertEqual(prosumer.wallet.balance, expected_balance)
-        self.assertEqual(prosumer.battery.current_charge, kWh(0))
-        self.assertEqual(prosumer.energy_balance.value, kWh(0))
+        self.assertEqual(prosumer.battery.current_charge, MWh(0))
+        self.assertEqual(prosumer.energy_balance.value, MWh(0))
 
 
 class TestProduce(unittest.TestCase):
     def test_produce_more_than_sold_without_forced_sell(self):
         prosumer, energy_market = load_from_setup(_setup(), 'prosumer', 'energy_market')
 
-        prosumer.scheduled_sell_amounts[12] = kWh(10)
+        prosumer.scheduled_sell_amounts[12] = MWh(0.01)
         prosumer.scheduled_sell_thresholds[12] = energy_market.get_sell_price()
-        prosumer.production_system.calculate_power = lambda: kW(15)
+        prosumer.production_system.calculate_power = lambda: MW(0.015)
 
         prosumer.produce()
 
-        self.assertEqual(prosumer.wallet.balance, Currency(50) + kWh(10).to_cost(energy_market.get_sell_price()))
-        self.assertEqual(prosumer.battery.current_charge, kWh(55))
-        self.assertEqual(prosumer.energy_balance.value, kWh(0))
+        self.assertEqual(prosumer.wallet.balance, Currency(50) + MWh(0.01).to_cost(energy_market.get_sell_price()))
+        self.assertEqual(prosumer.battery.current_charge, MWh(0.055))
+        self.assertEqual(prosumer.energy_balance.value, MWh(0))
 
     def test_produce_more_than_sold_with_forced_sell(self):
-        prosumer, energy_market = load_from_setup(_setup(kWh(98)), 'prosumer', 'energy_market')
+        prosumer, energy_market = load_from_setup(_setup(MWh(0.098)), 'prosumer', 'energy_market')
 
-        prosumer.scheduled_sell_amounts[12] = kWh(10)
+        prosumer.scheduled_sell_amounts[12] = MWh(0.01)
         prosumer.scheduled_sell_thresholds[12] = energy_market.get_sell_price()
-        prosumer.production_system.calculate_power = lambda: kW(15)
+        prosumer.production_system.calculate_power = lambda: MW(0.015)
 
         prosumer.produce()
 
-        expected_balance = Currency(50) + kWh(10).to_cost(energy_market.get_sell_price()) + kWh(3).to_cost(energy_market.get_sell_price_unscheduled())
+        expected_balance = Currency(50) + MWh(0.01).to_cost(energy_market.get_sell_price()) + MWh(0.003).to_cost(energy_market.get_sell_price_unscheduled())
         self.assertEqual(prosumer.wallet.balance, expected_balance)
-        self.assertEqual(prosumer.battery.current_charge, kWh(100))
-        self.assertEqual(prosumer.energy_balance.value, kWh(0))
+        self.assertEqual(prosumer.battery.current_charge, MWh(0.1))
+        self.assertEqual(prosumer.energy_balance.value, MWh(0))
 
     def test_produce_less_than_sold_without_forced_buy(self):
         prosumer, energy_market = load_from_setup(_setup(), 'prosumer', 'energy_market')
 
-        prosumer.scheduled_sell_amounts[12] = kWh(10)
+        prosumer.scheduled_sell_amounts[12] = MWh(0.01)
         prosumer.scheduled_sell_thresholds[12] = energy_market.get_sell_price()
-        prosumer.production_system.calculate_power = lambda: kW(5)
+        prosumer.production_system.calculate_power = lambda: MW(0.005)
 
         prosumer.produce()
 
-        self.assertEqual(prosumer.wallet.balance, Currency(50) + kWh(10).to_cost(energy_market.get_sell_price()))
-        self.assertEqual(prosumer.battery.current_charge, kWh(45))
-        self.assertEqual(prosumer.energy_balance.value, kWh(0))
+        self.assertEqual(prosumer.wallet.balance, Currency(50) + MWh(0.01).to_cost(energy_market.get_sell_price()))
+        self.assertAlmostEqual(prosumer.battery.current_charge.value, 0.045, 10)
+        self.assertEqual(prosumer.energy_balance.value, MWh(0))
 
     def test_produce_less_than_sold_with_forced_buy(self):
-        prosumer, energy_market = load_from_setup(_setup(kWh(2)), 'prosumer', 'energy_market')
+        prosumer, energy_market = load_from_setup(_setup(MWh(0.002)), 'prosumer', 'energy_market')
 
-        prosumer.scheduled_sell_amounts[12] = kWh(10)
+        prosumer.scheduled_sell_amounts[12] = MWh(0.01)
         prosumer.scheduled_sell_thresholds[12] = energy_market.get_sell_price()
-        prosumer.production_system.calculate_power = lambda: kW(5)
+        prosumer.production_system.calculate_power = lambda: MW(0.005)
 
         prosumer.produce()
 
-        expected_balance = Currency(50) + kWh(10).to_cost(energy_market.get_sell_price()) - kWh(3).to_cost(energy_market.get_buy_price_unscheduled())
+        expected_balance = Currency(50) + MWh(0.01).to_cost(energy_market.get_sell_price()) - MWh(0.003).to_cost(energy_market.get_buy_price_unscheduled())
         self.assertEqual(prosumer.wallet.balance, expected_balance)
-        self.assertEqual(prosumer.battery.current_charge, kWh(0))
-        self.assertEqual(prosumer.energy_balance.value, kWh(0))
+        self.assertEqual(prosumer.battery.current_charge, MWh(0))
+        self.assertEqual(prosumer.energy_balance.value, MWh(0))
 
 
 if __name__ == '__main__':

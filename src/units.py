@@ -2,17 +2,17 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, eq=True, repr=True)
-class kWh:
+class MWh:
     value: float
 
     def to_cost(self, price_per_kwh: 'Currency') -> 'Currency':
         return Currency(self.value * price_per_kwh.value)
 
     def __add__(self, other):
-        return kWh(self.value + other.value)
+        return MWh(self.value + other.value)
 
     def __sub__(self, other):
-        return kWh(self.value - other.value)
+        return MWh(self.value - other.value)
 
     def __lt__(self, other):
         return self.value < other.value
@@ -21,27 +21,27 @@ class kWh:
         return self.value >= other.value
 
     def __mul__(self, other: float):
-        return kWh(self.value * other)
+        return MWh(self.value * other)
 
     def __truediv__(self, other: float):
-        return kWh(self.value / other)
+        return MWh(self.value / other)
 
     def __abs__(self):
-        return kWh(abs(self.value))
+        return MWh(abs(self.value))
 
 
 @dataclass(frozen=True, order=True, eq=True, repr=True)
-class kW:
+class MW:
     value: float
 
-    def __add__(self, other: 'kW'):
-        return kW(self.value + other.value)
+    def __add__(self, other: 'MW'):
+        return MW(self.value + other.value)
 
-    def __sub__(self, other: 'kW'):
-        return kW(self.value - other.value)
+    def __sub__(self, other: 'MW'):
+        return MW(self.value - other.value)
 
-    def to_kwh(self) -> kWh:
-        return kWh(self.value)
+    def to_mwh(self) -> MWh:
+        return MWh(self.value)
 
 
 @dataclass(frozen=True, order=True, eq=True, repr=True)

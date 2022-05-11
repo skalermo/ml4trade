@@ -2,7 +2,7 @@ from typing import List
 import random
 
 from src.data_strategies import DataStrategy
-from src.units import kW
+from src.units import MW
 
 
 class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
@@ -11,19 +11,19 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
 
         # avg energy consumption per household
         # for each hour of the day
-        self.energy_consumption_kWh = [
-            0.189, 0.184, 0.181, 0.181, 0.182, 0.185,
-            0.194, 0.222, 0.238, 0.246, 0.246, 0.246,
-            0.248, 0.249, 0.246, 0.244, 0.244, 0.244,
-            0.243, 0.246, 0.246, 0.242, 0.225, 0.208
+        self.energy_consumption_MWh = [
+            0.000189, 0.000184, 0.000181, 0.000181, 0.000182, 0.000185,
+            0.000194, 0.000222, 0.000238, 0.000246, 0.000246, 0.000246,
+            0.000248, 0.000249, 0.000246, 0.000244, 0.000244, 0.000244,
+            0.000243, 0.000246, 0.000246, 0.000242, 0.000225, 0.000208
         ]
 
-        extra_data = window_size // len(self.energy_consumption_kWh)
-        self.energy_consumption_kWh += self.energy_consumption_kWh * extra_data
+        extra_data = window_size // len(self.energy_consumption_MWh)
+        self.energy_consumption_MWh += self.energy_consumption_MWh * extra_data
 
-    def process(self, idx: int) -> kW:
-        consumed_energy = self.energy_consumption_kWh[idx % 24]
-        return kW(consumed_energy * abs(1 + random.gauss(0, 0.03)))
+    def process(self, idx: int) -> MW:
+        consumed_energy = self.energy_consumption_MWh[idx % 24]
+        return MW(consumed_energy * abs(1 + random.gauss(0, 0.03)))
 
     def observation(self, idx: int) -> List[float]:
-        return self.energy_consumption_kWh[idx % 24:idx % 24 + self.window_size]
+        return self.energy_consumption_MWh[idx % 24:idx % 24 + self.window_size]

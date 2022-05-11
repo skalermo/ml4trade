@@ -13,7 +13,7 @@ from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.constants import *
 from src.data_strategies.base import DataStrategy
-from src.units import Currency, kWh
+from src.units import Currency, MWh
 from src.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]
@@ -28,8 +28,8 @@ class SimulationEnv(gym.Env):
             scheduling_time: time = SCHEDULING_TIME,
             action_replacement_time: time = ACTION_REPLACEMENT_TIME,
             prosumer_init_balance: Currency = Currency(10_000),
-            battery_capacity: kWh = kWh(100),
-            battery_init_charge: kWh = kWh(100),
+            battery_capacity: MWh = MWh(0.1),
+            battery_init_charge: MWh = MWh(0.1),
             battery_efficiency: float = 1.0,
     ):
         if data_strategies is None:
@@ -81,9 +81,9 @@ class SimulationEnv(gym.Env):
             data_strategies: Dict[str, DataStrategy],
             clock: SimulationClock,
             prosumer_init_balance: Currency,
-            battery_capacity: kWh,
+            battery_capacity: MWh,
             battery_efficiency: float,
-            battery_init_charge: kWh,
+            battery_init_charge: MWh,
     ) -> Tuple[Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
         battery = Battery(battery_capacity, battery_efficiency, battery_init_charge)
 
