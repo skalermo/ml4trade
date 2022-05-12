@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Union
 
 
 @dataclass(frozen=True, eq=True, repr=True)
@@ -23,7 +24,9 @@ class MWh:
     def __mul__(self, other: float):
         return MWh(self.value * other)
 
-    def __truediv__(self, other: float):
+    def __truediv__(self, other: Union['MWh', float]):
+        if isinstance(other, MWh):
+            return self.value / other.value
         return MWh(self.value / other)
 
     def __abs__(self):

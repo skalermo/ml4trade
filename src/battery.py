@@ -9,6 +9,10 @@ class Battery:
         self.efficiency = efficiency
         self.current_charge = init_charge
 
+    @property
+    def rel_current_charge(self):
+        return self.current_charge / self.capacity
+
     def charge(self, amount: MWh):
         charged_amount = min(amount * self.efficiency, self.capacity - self.current_charge)
         self.current_charge += charged_amount

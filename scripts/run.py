@@ -2,7 +2,7 @@ import os
 import sys
 from typing import List
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 import pandas as pd
 from stable_baselines3 import A2C
@@ -22,7 +22,7 @@ def get_all_scv_filenames(path: str) -> List[str]:
     return [f for f in os.listdir(path) if f.endswith('.csv')]
 
 
-def setup_sim_env(cfg: DictConfig) -> SimulationEnv:
+def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
     orig_cwd = hydra.utils.get_original_cwd()
 
     weather_data_path = f'{orig_cwd}/../data/.data/weather_unzipped_flattened'
@@ -49,7 +49,7 @@ def setup_sim_env(cfg: DictConfig) -> SimulationEnv:
         'market': PricesPlDataStrategy(prices_df, window_size=24, window_direction='backward')
     }
 
-    env = SimulationEnv(
+    env_train = SimulationEnv(
         data_strategies,
         start_datetime=datetime.fromisoformat(cfg.time.ep_start),
         end_datetime=datetime.fromisoformat(cfg.time.ep_end),
@@ -60,22 +60,32 @@ def setup_sim_env(cfg: DictConfig) -> SimulationEnv:
         battery_init_charge=MWh(cfg.battery.init_charge),
         battery_efficiency=cfg.battery.efficiency,
     )
-    return env
+    env_test = SimulationEnv(
+        data_strategies,
+        start_datetime=datetime.fromisoformat(cfg.time.ep_end),
+        end_datetime=datetime.fromisoformat(cfg.time.ep_end) + timedelta(days=30),
+        scheduling_time=time.fromisoformat(cfg.time.scheduling),
+        action_replacement_time=time.fromisoformat(cfg.time.action_repl),
+        prosumer_init_balance=Currency(cfg.wallet.init_balance),
+        battery_capacity=kWh(cfg.battery.capacity),
+        battery_init_charge=kWh(cfg.battery.init_charge),
+        battery_efficiency=cfg.battery.efficiency,
+    )
+    return env_train, env_test
 
 
 @hydra.main(config_path='conf', config_name='config')
 def main(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
-    env = setup_sim_env(cfg)
-    model = A2C('MlpPolicy', env, verbose=1)
+    env_train, env_test = setup_sim_env(cfg)
+    model = A2C('MlpPolicy', env_train, verbose=1)
     model.learn(total_timesteps=1_000)
 
-    obs = env.reset()
-    for i in range(100):
+    obs = env_test.reset()
+    done = False
+    while not done:
         action, _states = model.predict(obs)
-        obs, rewards, done, info = env.step(action)
-        if done:
-            break
+        obs, rewards, done, info = env_test.step(action)
 
 
 if __name__ == '__main__':
