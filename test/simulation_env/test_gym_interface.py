@@ -27,6 +27,21 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertIsNotNone(env.prosumer.scheduled_sell_thresholds)
         self.assertEqual(env.prosumer.next_day_actions, None)
 
+    def test_reset(self):
+        env = SimulationEnv(setup_default_data_strategies())
+        env.step(env.action_space.sample())
+        self.assertNotEqual(env.prosumer.wallet.balance, env.prosumer_init_balance)
+        self.assertNotEqual(env.prev_prosumer_balance, env.prosumer_init_balance)
+        self.assertNotEqual(env.prosumer.battery.current_charge, env.battery_init_charge)
+        self.assertNotEqual(env._clock.cur_datetime, env.start_datetime)
+        self.assertNotEqual(env._clock.cur_tick, env.start_tick)
+        env.reset()
+        self.assertEqual(env.prosumer.wallet.balance, env.prosumer_init_balance)
+        self.assertEqual(env.prev_prosumer_balance, env.prosumer_init_balance)
+        self.assertEqual(env.prosumer.battery.current_charge, env.battery_init_charge)
+        self.assertEqual(env._clock.cur_datetime, env.start_datetime)
+        self.assertEqual(env._clock.cur_tick, env.start_tick)
+
 
 if __name__ == '__main__':
     unittest.main()

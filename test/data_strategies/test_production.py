@@ -15,7 +15,7 @@ weather_data_path = os.path.join(os.path.dirname(__file__), '../mock_data/s_t_02
 
 class TestProduction(unittest.TestCase):
     def setUp(self):
-        self.df = pd.read_csv(weather_data_path, header=None, encoding='cp1250')
+        self.df = pd.read_csv(weather_data_path, header=None, encoding='cp1250', usecols=imgw_col_ids.values())
 
         self.clock = SimulationClock(datetime.datetime(2020, 1, 1, hour=0))
 

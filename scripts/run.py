@@ -1,9 +1,9 @@
 import os
 import sys
+from typing import List
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
-import numpy as np
 import pandas as pd
 from stable_baselines3 import A2C
 import hydra
@@ -13,26 +13,43 @@ from omegaconf import DictConfig, OmegaConf
 # you would just pip-install the project and import it
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data_strategies import ImgwWindDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy
+from src.data_strategies import ImgwDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, imgw_col_ids
 from src.simulation_env import SimulationEnv
 from src.units import *
 
 
-def setup_sim_env(cfg: DictConfig) -> SimulationEnv:
-    orig_cwd = hydra.utils.get_original_cwd()
-    weather_data_path = f'{orig_cwd}/../data/.data/weather_unzipped_flattened/s_t_02_2022.csv'
-    weather_df = pd.read_csv(weather_data_path, header=None, encoding='cp1250')
-    prices_pl_path = f'{orig_cwd}/../data/.data/prices_pl.csv'
+def get_all_scv_filenames(path: str) -> List[str]:
+    return [f for f in os.listdir(path) if f.endswith('.csv')]
 
-    prices_df = pd.read_csv(prices_pl_path, header=0)
+
+def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
+    orig_cwd = hydra.utils.get_original_cwd()
+
+    weather_data_path = f'{orig_cwd}/../data/.data/weather_unzipped_flattened'
+    filenames = get_all_scv_filenames(weather_data_path)
+    dfs = []
+    for f in filenames:
+        df = pd.read_csv(f'{weather_data_path}/{f}', header=None, encoding='cp1250',
+                         names=imgw_col_ids.keys(), usecols=imgw_col_ids.values())
+        dfs.append(df)
+    weather_df: pd.DataFrame = pd.concat(dfs, axis=0, ignore_index=True)
+    del dfs
+    # 352200375 - station_code for Warszawa Okecie
+    weather_df = weather_df.loc[weather_df['code'] == 352200375]
+    weather_df.sort_values(by=['year', 'month', 'day', 'hour'], inplace=True)
+    weather_df.fillna(method='bfill', inplace=True)
+
+    prices_pl_path = f'{orig_cwd}/../data/.data/prices_pl.csv'
+    prices_df: pd.DataFrame = pd.read_csv(prices_pl_path, header=0)
+    prices_df.fillna(method='bfill', inplace=True)
 
     data_strategies = {
-        'production': ImgwWindDataStrategy(weather_df, window_size=24, window_direction='forward'),
+        'production': ImgwDataStrategy(weather_df, window_size=24, window_direction='forward'),
         'consumption': HouseholdEnergyConsumptionDataStrategy(window_size=24),
         'market': PricesPlDataStrategy(prices_df, window_size=24, window_direction='backward')
     }
 
-    env = SimulationEnv(
+    env_train = SimulationEnv(
         data_strategies,
         start_datetime=datetime.fromisoformat(cfg.time.ep_start),
         end_datetime=datetime.fromisoformat(cfg.time.ep_end),
@@ -43,22 +60,32 @@ def setup_sim_env(cfg: DictConfig) -> SimulationEnv:
         battery_init_charge=kWh(cfg.battery.init_charge),
         battery_efficiency=cfg.battery.efficiency,
     )
-    return env
+    env_test = SimulationEnv(
+        data_strategies,
+        start_datetime=datetime.fromisoformat(cfg.time.ep_end),
+        end_datetime=datetime.fromisoformat(cfg.time.ep_end) + timedelta(days=30),
+        scheduling_time=time.fromisoformat(cfg.time.scheduling),
+        action_replacement_time=time.fromisoformat(cfg.time.action_repl),
+        prosumer_init_balance=Currency(cfg.wallet.init_balance),
+        battery_capacity=kWh(cfg.battery.capacity),
+        battery_init_charge=kWh(cfg.battery.init_charge),
+        battery_efficiency=cfg.battery.efficiency,
+    )
+    return env_train, env_test
 
 
 @hydra.main(config_path='conf', config_name='config')
 def main(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
-    env = setup_sim_env(cfg)
-    model = A2C('MlpPolicy', env, verbose=1)
+    env_train, env_test = setup_sim_env(cfg)
+    model = A2C('MlpPolicy', env_train, verbose=1)
     model.learn(total_timesteps=1_000)
 
-    obs = env.reset()
-    for i in range(100):
+    obs = env_test.reset()
+    done = False
+    while not done:
         action, _states = model.predict(obs)
-        obs, rewards, done, info = env.step(action)
-        if done:
-            break
+        obs, rewards, done, info = env_test.step(action)
 
 
 if __name__ == '__main__':

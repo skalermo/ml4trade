@@ -1,6 +1,5 @@
 from typing import Tuple, Generator, Dict
 from datetime import timedelta
-import itertools
 
 from gym import spaces
 from gym.core import ObsType, ActType
@@ -37,16 +36,16 @@ class SimulationEnv(gym.Env):
 
         obs_size = 0
         for s in data_strategies.values():
-            obs_size += s.window_size()
+            obs_size += s.observation_size()
         self.action_space = SIMULATION_ENV_ACTION_SPACE
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
 
-        self.start_tick = max([s.window_size() for s in data_strategies.values() if s.window_direction == 'backward'],
+        self.start_tick = max([s.observation_size() for s in data_strategies.values() if s.window_direction == 'backward'],
                               default=0)
 
         dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
         episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
-        assert episode_hour_length <= min(dfs_lengths), 'Provided dataframe is too short'
+        assert episode_hour_length + 2 * self.start_tick <= min(dfs_lengths), 'Provided dataframe is too short'
 
         self._clock = SimulationClock(
             start_datetime=start_datetime,
@@ -58,6 +57,7 @@ class SimulationEnv(gym.Env):
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
         self.prosumer_init_balance = prosumer_init_balance
+        self.prev_prosumer_balance = prosumer_init_balance
         self.battery_init_charge = battery_init_charge
 
         (
@@ -67,8 +67,6 @@ class SimulationEnv(gym.Env):
             self.consumption_system
         ) = self._setup_systems(data_strategies, self._clock, prosumer_init_balance, battery_capacity,
                                 battery_efficiency, battery_init_charge)
-
-        self.prev_prosumer_balance = self.prosumer.wallet.balance
 
         self.first_actions_scheduled = False
         self.first_actions_set = False
@@ -99,6 +97,7 @@ class SimulationEnv(gym.Env):
 
     def reset(self, **kwargs) -> ObsType:
         self.prosumer.wallet.balance = self.prosumer_init_balance
+        self.prev_prosumer_balance = self.prosumer_init_balance
         self.prosumer.battery.current_charge = self.battery_init_charge
         self._clock.cur_datetime = self.start_datetime
         self._clock.cur_tick = self.start_tick
@@ -109,7 +108,7 @@ class SimulationEnv(gym.Env):
         market_obs = self.market.observation()
         production_obs = self.production_system.observation()
         consumption_obs = self.consumption_system.observation()
-        obs = list(itertools.chain.from_iterable([market_obs, production_obs, consumption_obs]))
+        obs = [*market_obs, *production_obs, *consumption_obs, self.prosumer.battery.rel_current_charge]
 
         reward = (self.prosumer.wallet.balance - self.prev_prosumer_balance).value
 
