@@ -4,9 +4,9 @@ time:
   scheduling: '10:30:00'
   action_repl: '00:00:00'
 battery:
-  capacity: 100
+  capacity: 0.1
   efficiency: 1.0
-  init_charge: 50
+  init_charge: 0.05
 wallet:
   init_balance: 10_000
 

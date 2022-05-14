@@ -7,7 +7,7 @@ from src.production import ProductionSystem
 from src.consumption import ConsumptionSystem
 from src.market import EnergyMarket
 from src.wallet import Wallet
-from src.units import Currency, kWh
+from src.units import Currency, MWh
 from src.clock import ClockView
 
 
@@ -40,8 +40,8 @@ class Prosumer:
         self.next_day_actions = actions
 
     def set_new_actions(self):
-        self.scheduled_buy_amounts = [kWh(a) for a in self.next_day_actions[0:24]]
-        self.scheduled_sell_amounts = [kWh(a) for a in self.next_day_actions[24:48]]
+        self.scheduled_buy_amounts = [MWh(a) for a in self.next_day_actions[0:24]]
+        self.scheduled_sell_amounts = [MWh(a) for a in self.next_day_actions[24:48]]
         self.scheduled_buy_thresholds = [Currency(a) for a in self.next_day_actions[48:72]]
         self.scheduled_sell_thresholds = [Currency(a) for a in self.next_day_actions[72:96]]
         self.next_day_actions = None
@@ -66,33 +66,33 @@ class Prosumer:
 
     def _consume_energy(self):
         power_consumed = self.consumption_system.calculate_power()
-        self.energy_balance.sub(power_consumed.to_kwh())
+        self.energy_balance.sub(power_consumed.to_mwh())
 
     def _produce_energy(self):
         power_produced = self.production_system.calculate_power()
-        self.energy_balance.add(power_produced.to_kwh())
+        self.energy_balance.add(power_produced.to_mwh())
 
-    def buy_energy(self, amount: kWh, price: Currency, scheduled: bool = True):
+    def buy_energy(self, amount: MWh, price: Currency, scheduled: bool = True):
         self.energy_market.buy(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
-    def sell_energy(self, amount: kWh, price: Currency, scheduled: bool = True):
+    def sell_energy(self, amount: MWh, price: Currency, scheduled: bool = True):
         self.energy_market.sell(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
     def _restore_energy_balance(self):
-        if self.energy_balance.value < kWh(0):
+        if self.energy_balance.value < MWh(0):
             energy_used = self.battery.discharge(abs(self.energy_balance.value))
             self.energy_balance.value += energy_used
-        elif self.energy_balance.value > kWh(0):
+        elif self.energy_balance.value > MWh(0):
             energy_used = self.battery.charge(self.energy_balance.value)
             self.energy_balance.value -= energy_used
 
-        if self.energy_balance.value > kWh(0):
+        if self.energy_balance.value > MWh(0):
             self.sell_energy(
                 self.energy_balance.value,
                 Currency(float('inf')),
                 scheduled=False,
             )
-        elif self.energy_balance.value < kWh(0):
+        elif self.energy_balance.value < MWh(0):
             self.buy_energy(
                 abs(self.energy_balance.value),
                 Currency(float('0')),

@@ -1,6 +1,6 @@
 from typing import List
 
-from src.units import kWh, Currency
+from src.units import MWh, Currency
 from src.wallet import Wallet
 from src.battery import EnergyBalance
 from src.data_strategies.base import DataStrategy
@@ -16,7 +16,7 @@ class EnergyMarket:
         self.clock_view = clock_view
         self.window_size = window_size
 
-    def buy(self, amount: kWh, price_threshold: Currency,
+    def buy(self, amount: MWh, price_threshold: Currency,
             client_wallet: Wallet, energy_balance: EnergyBalance,
             scheduled: bool = True):
         # if scheduled client buys `amount` of energy at buy price not higher than `price_threshold`
@@ -26,7 +26,7 @@ class EnergyMarket:
         buy_price = self.get_buy_price() if scheduled else self.get_buy_price_unscheduled()
         client_wallet.withdraw(amount.to_cost(buy_price))
 
-    def sell(self, amount: kWh, price_threshold: Currency,
+    def sell(self, amount: MWh, price_threshold: Currency,
              client_wallet: Wallet, energy_balance: EnergyBalance,
              scheduled: bool = True):
         # if scheduled client sells `amount` of energy

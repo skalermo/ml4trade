@@ -3,15 +3,13 @@ from typing_extensions import Literal
 
 import pandas as pd
 
-import pandas as pd
-
 from src.data_strategies import DataStrategy
-from src.units import kW
+from src.units import MW
 
-MAX_WIND_POWER = kW(10)
+MAX_WIND_POWER = MW(0.01)
 MAX_WIND_SPEED = 11
 
-MAX_SOLAR_POWER = kW(1)
+MAX_SOLAR_POWER = MW(0.001)
 SOLAR_EFFICIENCY = 0.2
 
 imgw_col_ids = {
@@ -34,7 +32,7 @@ class ImgwDataStrategy(DataStrategy):
         self.imgwWindDataStrategy = ImgwWindDataStrategy(df, window_size, window_direction)
         self.imgwSolarDataStrategy = ImgwSolarDataStrategy(df, window_size, window_direction)
 
-    def process(self, idx: int) -> kW:
+    def process(self, idx: int) -> MW:
         return self.imgwSolarDataStrategy.process(idx) + self.imgwWindDataStrategy.process(idx)
 
     def observation(self, idx: int) -> List[float]:
@@ -54,12 +52,12 @@ class ImgwWindDataStrategy(DataStrategy):
     col = 'wind_speed'
     col_idx = list(imgw_col_ids.keys()).index(col)
 
-    def process(self, idx: int) -> kW:
+    def process(self, idx: int) -> MW:
         # wind speed in meters per second
         wind_speed = self.df.iat[idx, self.col_idx]
         if wind_speed > MAX_WIND_SPEED or wind_speed < 0:
-            return kW(0)
-        power = kW(wind_speed * MAX_WIND_POWER.value / MAX_WIND_SPEED)
+            return MW(0)
+        power = MW(wind_speed * MAX_WIND_POWER.value / MAX_WIND_SPEED)
         return power
 
     def observation(self, idx: int) -> List[float]:
@@ -70,13 +68,13 @@ class ImgwSolarDataStrategy(DataStrategy):
     col = 'cloudiness'
     col_idx = list(imgw_col_ids.keys()).index(col)
 
-    def process(self, idx: int) -> kW:
+    def process(self, idx: int) -> MW:
         # cloudiness in oktas
         # https://en.wikipedia.org/wiki/Okta 
         cloudiness = self.df.iat[idx, self.col_idx]
         if cloudiness == 9:  # 9 equals lack of observation (sky obscured)
             cloudiness = 8  # 8 equals overcast
-        power = kW(MAX_SOLAR_POWER.value * (1 - cloudiness / 8))
+        power = MW(MAX_SOLAR_POWER.value * (1 - cloudiness / 8))
         return power
 
     def observation(self, idx: int) -> List[float]:

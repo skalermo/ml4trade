@@ -56,8 +56,8 @@ def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
         scheduling_time=time.fromisoformat(cfg.time.scheduling),
         action_replacement_time=time.fromisoformat(cfg.time.action_repl),
         prosumer_init_balance=Currency(cfg.wallet.init_balance),
-        battery_capacity=kWh(cfg.battery.capacity),
-        battery_init_charge=kWh(cfg.battery.init_charge),
+        battery_capacity=MWh(cfg.battery.capacity),
+        battery_init_charge=MWh(cfg.battery.init_charge),
         battery_efficiency=cfg.battery.efficiency,
     )
     env_test = SimulationEnv(

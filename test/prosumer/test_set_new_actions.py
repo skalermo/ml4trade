@@ -2,11 +2,10 @@ import unittest
 
 import numpy as np
 
-from src.units import kWh, Currency
+from src.units import MWh, Currency
 from src.prosumer import Prosumer
 from src.battery import Battery
 from src.production import ProductionSystem
-from src.consumption import ConsumptionSystem
 from src.constants import SIMULATION_ENV_ACTION_SPACE
 from src.clock import SimulationClock
 from utils import setup_default_consumption_system
@@ -31,7 +30,7 @@ class TestSetNewActions(unittest.TestCase):
 
         self.assertTrue(np.array_equal(
             self.prosumer.scheduled_buy_amounts,
-            [kWh(a) for a in self.action[0:24]]
+            [MWh(a) for a in self.action[0:24]]
         ))
 
     def test_set_new_sell_amounts(self):
@@ -41,7 +40,7 @@ class TestSetNewActions(unittest.TestCase):
 
         self.assertTrue(np.array_equal(
             self.prosumer.scheduled_sell_amounts,
-            [kWh(a) for a in self.action[24:48]]
+            [MWh(a) for a in self.action[24:48]]
         ))
 
     def test_set_new_buy_thresholds(self):

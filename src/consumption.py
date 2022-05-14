@@ -1,6 +1,6 @@
 from typing import List
 
-from src.units import kW
+from src.units import MW
 from src.clock import ClockView
 from src.data_strategies import DataStrategy
 
@@ -10,7 +10,7 @@ class ConsumptionSystem:
         self.ds = ds
         self.clock_view = clock_view
 
-    def calculate_power(self) -> kW:
+    def calculate_power(self) -> MW:
         return self.ds.process(self.clock_view.cur_datetime().hour)
 
     def observation(self) -> List[float]:
