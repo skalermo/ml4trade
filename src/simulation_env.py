@@ -1,5 +1,4 @@
-from typing import Tuple, Generator, Dict
-from datetime import timedelta
+from typing import Tuple, Generator, Dict, List, Any
 
 from gym import spaces
 from gym.core import ObsType, ActType
@@ -16,10 +15,32 @@ from src.units import Currency, MWh
 from src.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]
+EnvHistory = Dict[str, List[Any]]
 env_history_keys = ('total_reward', 'wallet_balance', 'action', 'tick', 'datetime')
 
 
 class SimulationEnv(gym.Env):
+    # immutable properties
+    action_space: spaces.Box
+    observation_space: spaces.Box
+    start_tick: int
+    start_datetime: datetime
+    end_datetime: datetime
+    prosumer_init_balance: Currency
+    battery_init_charge: MWh
+    _clock: SimulationClock
+    prosumer: Prosumer
+    market: EnergyMarket
+    production_system: ProductionSystem
+    consumption_system: ConsumptionSystem
+    # resetable properties
+    prev_prosumer_balance: Currency
+    first_actions_scheduled: bool
+    first_actions_set: bool
+    total_reward: float
+    history: EnvHistory
+    simulation: Generator[None, ActType, None]
+
     def __init__(
             self,
             data_strategies: Dict[str, DataStrategy] = None,
