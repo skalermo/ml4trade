@@ -3,14 +3,14 @@ from typing import Tuple, Generator, Dict, List, Any
 from gym import spaces
 from gym.core import ObsType, ActType
 
-from src.consumption import ConsumptionSystem
-from src.production import ProductionSystem
-from src.prosumer import Prosumer
 from src.battery import Battery
-from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.constants import *
+from src.consumption import ConsumptionSystem
 from src.data_strategies.base import DataStrategy
+from src.market import EnergyMarket
+from src.production import ProductionSystem
+from src.prosumer import Prosumer
 from src.units import Currency, MWh
 from src.utils import run_in_random_order, timedelta_to_hours
 
@@ -59,7 +59,8 @@ class SimulationEnv(gym.Env):
         obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
-        self.start_tick = max([s.observation_size() for s in data_strategies.values() if s.window_direction == 'backward'])
+        self.start_tick = max([s.observation_size() for s in data_strategies.values()
+                               if s.window_direction == 'backward'])
 
         dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
         episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
