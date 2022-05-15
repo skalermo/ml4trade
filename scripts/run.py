@@ -8,6 +8,7 @@ import pandas as pd
 from stable_baselines3 import A2C
 import hydra
 from omegaconf import DictConfig, OmegaConf
+import quantstats as qs
 
 # normally you wouldn't need this
 # you would just pip-install the project and import it
@@ -63,7 +64,7 @@ def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
     env_test = SimulationEnv(
         data_strategies,
         start_datetime=datetime.fromisoformat(cfg.time.ep_end),
-        end_datetime=datetime.fromisoformat(cfg.time.ep_end) + timedelta(days=30),
+        end_datetime=datetime.fromisoformat(cfg.time.ep_end) + timedelta(days=365),
         scheduling_time=time.fromisoformat(cfg.time.scheduling),
         action_replacement_time=time.fromisoformat(cfg.time.action_repl),
         prosumer_init_balance=Currency(cfg.wallet.init_balance),
@@ -86,6 +87,12 @@ def main(cfg: DictConfig) -> None:
     while not done:
         action, _states = model.predict(obs)
         obs, rewards, done, info = env_test.step(action)
+
+    qs.extend_pandas()
+    net_worth = pd.Series(env_test.history['wallet_balance'], index=env_test.history['datetime'])
+    returns = net_worth.pct_change().iloc[1:]
+    qs.reports.full(returns)
+    qs.reports.html(returns, output='a2c_quantstats.html', download_filename='a2c_quantstats.html')
 
 
 if __name__ == '__main__':
