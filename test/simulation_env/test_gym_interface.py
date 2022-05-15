@@ -27,8 +27,27 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertIsNotNone(env.prosumer.scheduled_sell_thresholds)
         self.assertEqual(env.prosumer.next_day_actions, None)
 
+    def test_step_updates_total_reward(self):
+        env = SimulationEnv(setup_default_data_strategies())
+        total_reward_before = env.total_reward
+        env.step(env.action_space.sample())
+        self.assertEqual(env.total_reward, total_reward_before + env._calculate_reward())
+
+    def test_step_updates_history(self):
+        env = SimulationEnv(setup_default_data_strategies())
+        self.assertEqual(len(env.history['total_reward']), 0)
+        action = env.action_space.sample()
+        env.step(action)
+        self.assertEqual(len(env.history['total_reward']), 1)
+        self.assertEqual(env.history['total_reward'][0], env.total_reward)
+        self.assertEqual(env.history['wallet_balance'][0], env.prosumer.wallet.balance.value)
+        self.assertTrue((env.history['action'][0] == action).all())
+        self.assertEqual(env.history['tick'][0], env._clock.cur_tick)
+        self.assertEqual(env.history['datetime'][0], env._clock.cur_datetime)
+
     def test_reset(self):
         env = SimulationEnv(setup_default_data_strategies())
+        env.step(env.action_space.sample())
         env.step(env.action_space.sample())
         self.assertNotEqual(env.prosumer.wallet.balance, env.prosumer_init_balance)
         self.assertNotEqual(env.prev_prosumer_balance, env.prosumer_init_balance)
