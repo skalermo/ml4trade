@@ -16,6 +16,7 @@ from src.units import Currency, MWh
 from src.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]
+env_history_keys = ('total_reward', 'wallet_balance', 'action', 'tick', 'datetime')
 
 
 class SimulationEnv(gym.Env):
@@ -37,12 +38,16 @@ class SimulationEnv(gym.Env):
         obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
-
         self.start_tick = max([s.observation_size() for s in data_strategies.values() if s.window_direction == 'backward'])
 
         dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
         episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
         assert episode_hour_length + 2 * self.start_tick <= min(dfs_lengths), 'Provided dataframe is too short'
+
+        self.start_datetime = start_datetime
+        self.end_datetime = end_datetime
+        self.prosumer_init_balance = prosumer_init_balance
+        self.battery_init_charge = battery_init_charge
 
         self._clock = SimulationClock(
             start_datetime=start_datetime,
@@ -51,11 +56,6 @@ class SimulationEnv(gym.Env):
             start_tick=self.start_tick,
             tick_duration=timedelta(hours=1),
         )
-        self.start_datetime = start_datetime
-        self.end_datetime = end_datetime
-        self.prosumer_init_balance = prosumer_init_balance
-        self.prev_prosumer_balance = prosumer_init_balance
-        self.battery_init_charge = battery_init_charge
 
         (
             self.prosumer,
@@ -64,21 +64,7 @@ class SimulationEnv(gym.Env):
             self.consumption_system
         ) = self._setup_systems(data_strategies, self._clock, prosumer_init_balance, battery_capacity,
                                 battery_efficiency, battery_init_charge)
-
-        self.first_actions_scheduled = False
-        self.first_actions_set = False
-        self.simulation = self._simulation()
-        self.total_reward = 0
-        self.history = {
-            'total_reward': [],
-            'wallet_balance': [],
-            'action': [],
-            'tick': [],
-            'datetime': [],
-        }
-
-        # start generator object
-        self.simulation.send(None)
+        self.reset()
 
     @staticmethod
     def _setup_systems(
@@ -101,18 +87,21 @@ class SimulationEnv(gym.Env):
 
     def reset(self, **kwargs) -> ObsType:
         self.prosumer.wallet.balance = self.prosumer_init_balance
-        self.prev_prosumer_balance = self.prosumer_init_balance
         self.prosumer.battery.current_charge = self.battery_init_charge
+        self.prosumer.scheduled_buy_amounts = None
+        self.prosumer.scheduled_sell_amounts = None
+        self.prosumer.scheduled_buy_thresholds = None
+        self.prosumer.scheduled_sell_thresholds = None
+        self.prosumer.next_day_actions = None
         self._clock.cur_datetime = self.start_datetime
         self._clock.cur_tick = self.start_tick
+        self.prev_prosumer_balance = self.prosumer_init_balance
+        self.first_actions_scheduled = False
+        self.first_actions_set = False
         self.total_reward = 0
-        self.history = {
-            'total_reward': [],
-            'wallet_balance': [],
-            'action': [],
-            'tick': [],
-            'datetime': [],
-        }
+        self.history = {key: [] for key in env_history_keys}
+        self.simulation = self._simulation()
+        self.simulation.send(None)
 
         return self._observation()[0]
 
