@@ -70,32 +70,30 @@ class SimulationEnv(gym.Env):
         self.prosumer_init_balance = prosumer_init_balance
         self.battery_init_charge = battery_init_charge
 
-        self._clock = SimulationClock(
-            start_datetime=start_datetime,
-            scheduling_time=scheduling_time,
-            action_replacement_time=action_replacement_time,
-            start_tick=self.start_tick,
-            tick_duration=timedelta(hours=1),
-        )
-
         (
+            self._clock,
             self.prosumer,
             self.market,
             self.production_system,
             self.consumption_system
-        ) = self._setup_systems(data_strategies, self._clock, prosumer_init_balance, battery_capacity,
-                                battery_efficiency, battery_init_charge)
+        ) = self._setup_systems(data_strategies, self.start_tick, prosumer_init_balance,
+                                start_datetime, scheduling_time, action_replacement_time,
+                                battery_init_charge, battery_efficiency, battery_capacity)
         self.reset()
 
     @staticmethod
     def _setup_systems(
             data_strategies: Dict[str, DataStrategy],
-            clock: SimulationClock,
+            start_tick: int,
             prosumer_init_balance: Currency,
-            battery_capacity: MWh,
-            battery_efficiency: float,
+            start_datetime: datetime,
+            scheduling_time: time,
+            action_replacement_time: time,
             battery_init_charge: MWh,
-    ) -> Tuple[Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
+            battery_efficiency: float,
+            battery_capacity: MWh,
+    ) -> Tuple[SimulationClock, Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
+        clock = SimulationClock(start_datetime, scheduling_time, action_replacement_time, start_tick)
         battery = Battery(battery_capacity, battery_efficiency, battery_init_charge)
 
         production_system = ProductionSystem(data_strategies.get('production'), clock.view())
@@ -104,7 +102,7 @@ class SimulationEnv(gym.Env):
 
         prosumer = Prosumer(battery, production_system, consumption_system,
                             clock.view(), prosumer_init_balance, market)
-        return prosumer, market, production_system, consumption_system
+        return clock, prosumer, market, production_system, consumption_system
 
     def reset(self, **kwargs) -> ObsType:
         self.prosumer.wallet.balance = self.prosumer_init_balance
