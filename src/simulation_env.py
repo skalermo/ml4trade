@@ -34,14 +34,11 @@ class SimulationEnv(gym.Env):
         if data_strategies is None:
             data_strategies = {}
 
-        obs_size = 0
-        for s in data_strategies.values():
-            obs_size += s.observation_size()
+        obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
 
-        self.start_tick = max([s.observation_size() for s in data_strategies.values() if s.window_direction == 'backward'],
-                              default=0)
+        self.start_tick = max([s.observation_size() for s in data_strategies.values() if s.window_direction == 'backward'])
 
         dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
         episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
