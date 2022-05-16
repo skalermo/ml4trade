@@ -10,6 +10,7 @@ class DataStrategy:
         self.df = self.preprocess_data(df)
         self.window_size = window_size
         self.window_direction = window_direction
+        self.last_processed = None
 
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         return df

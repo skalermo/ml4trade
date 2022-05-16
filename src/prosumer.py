@@ -29,6 +29,7 @@ class Prosumer:
         self.energy_market = energy_market
         self.energy_balance = EnergyBalance()
 
+        self.history = {'unscheduled_buy_amounts': list(), 'unscheduled_sell_amounts': list()}
         self.scheduled_buy_amounts: Optional[np.ndarray] = None
         self.scheduled_sell_amounts: Optional[np.ndarray] = None
         self.scheduled_buy_thresholds: Optional[np.ndarray] = None
@@ -72,9 +73,13 @@ class Prosumer:
         self.energy_balance.add(power_produced.to_mwh())
 
     def buy_energy(self, amount: MWh, price: Currency, scheduled: bool = True):
+        if not scheduled:
+            self.history['unscheduled_buy_amounts'].append(amount)
         self.energy_market.buy(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
     def sell_energy(self, amount: MWh, price: Currency, scheduled: bool = True):
+        if not scheduled:
+            self.history['unscheduled_sell_amounts'].append(amount)
         self.energy_market.sell(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
 
     def _restore_energy_balance(self):

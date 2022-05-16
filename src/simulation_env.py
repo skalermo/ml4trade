@@ -35,6 +35,7 @@ class SimulationEnv(gym.Env):
     consumption_system: ConsumptionSystem
     # resetable properties
     prev_prosumer_balance: Currency
+    prev_step_prosumer_balance: Currency
     first_actions_scheduled: bool
     first_actions_set: bool
     total_reward: float
@@ -116,6 +117,7 @@ class SimulationEnv(gym.Env):
         self._clock.cur_datetime = self.start_datetime
         self._clock.cur_tick = self.start_tick
         self.prev_prosumer_balance = self.prosumer_init_balance
+        self.prev_step_prosumer_balance = self.prosumer_init_balance
         self.first_actions_scheduled = False
         self.first_actions_set = False
         self.total_reward = 0
@@ -135,21 +137,24 @@ class SimulationEnv(gym.Env):
         return obs, reward, done, {}
 
     def _calculate_reward(self) -> float:
-        balance_diff = self.prosumer.wallet.balance - self.prev_prosumer_balance
+        balance_diff = self.prosumer.wallet.balance - self.prev_step_prosumer_balance
         return balance_diff.value
 
-    def _update_history(self, action: ActType) -> None:
-        self.history['action'].append(action)
-        self.history['total_reward'].append(self.total_reward)
+    def _update_history(self) -> None:
         self.history['wallet_balance'].append(self.prosumer.wallet.balance.value)
         self.history['tick'].append(self._clock.cur_tick)
         self.history['datetime'].append(self._clock.cur_datetime)
+        self.history['energy_produced'].append(self.production_system.ds.last_processed)
+        self.history['energy_consumed'].append(self.consumption_system.ds.last_processed)
+        self.history['unscheduled_buy_amounts'] = self.prosumer.history['unscheduled_buy_amounts']
+        self.history['unscheduled_sell_amounts'] = self.prosumer.history['unscheduled_sell_amounts']
 
     def step(self, action: ActType) -> ObservationType:
-        self.prev_prosumer_balance = self.prosumer.wallet.balance
+        self.prev_step_prosumer_balance = self.prosumer.wallet.balance
         self.simulation.send(action)
         self.total_reward += self._calculate_reward()
-        self._update_history(action)
+        self.history['total_reward'].append(self.total_reward)
+        self.history['action'].append(action)
         return self._observation()
 
     def _simulation(self) -> Generator[None, ActType, None]:
@@ -168,6 +173,7 @@ class SimulationEnv(gym.Env):
             if self.first_actions_set:
                 run_in_random_order([self.prosumer.consume, self.prosumer.produce])
 
+            self._update_history()
             self._clock.tick()
 
     def render(self, mode="human"):
