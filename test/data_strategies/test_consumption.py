@@ -1,8 +1,8 @@
 import datetime
 import unittest
 
-from src.units import MW
-from src.clock import SimulationClock
+from ml4trade.units import MW
+from ml4trade.clock import SimulationClock
 from utils import setup_default_consumption_system
 
 

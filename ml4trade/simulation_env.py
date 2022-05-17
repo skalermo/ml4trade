@@ -4,16 +4,16 @@ from datetime import timedelta
 from gym import spaces
 from gym.core import ObsType, ActType
 
-from src.consumption import ConsumptionSystem
-from src.production import ProductionSystem
-from src.prosumer import Prosumer
-from src.battery import Battery
-from src.market import EnergyMarket
-from src.clock import SimulationClock
-from src.constants import *
-from src.data_strategies.base import DataStrategy
-from src.units import Currency, MWh
-from src.utils import run_in_random_order, timedelta_to_hours
+from ml4trade.consumption import ConsumptionSystem
+from ml4trade.production import ProductionSystem
+from ml4trade.prosumer import Prosumer
+from ml4trade.battery import Battery
+from ml4trade.market import EnergyMarket
+from ml4trade.clock import SimulationClock
+from ml4trade.constants import *
+from ml4trade.data_strategies.base import DataStrategy
+from ml4trade.units import Currency, MWh
+from ml4trade.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 

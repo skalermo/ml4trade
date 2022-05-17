@@ -1,4 +1,4 @@
-from src.units import MWh
+from ml4trade.units import MWh
 
 
 class Battery:

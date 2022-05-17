@@ -1,7 +1,7 @@
 import unittest
 
-from src.battery import Battery
-from src.units import MWh
+from ml4trade.battery import Battery
+from ml4trade.units import MWh
 
 
 class TestBattery(unittest.TestCase):

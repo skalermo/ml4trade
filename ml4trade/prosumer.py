@@ -2,13 +2,13 @@ from typing import Optional
 
 import numpy as np
 
-from src.battery import Battery, EnergyBalance
-from src.production import ProductionSystem
-from src.consumption import ConsumptionSystem
-from src.market import EnergyMarket
-from src.wallet import Wallet
-from src.units import Currency, MWh
-from src.clock import ClockView
+from ml4trade.battery import Battery, EnergyBalance
+from ml4trade.production import ProductionSystem
+from ml4trade.consumption import ConsumptionSystem
+from ml4trade.market import EnergyMarket
+from ml4trade.wallet import Wallet
+from ml4trade.units import Currency, MWh
+from ml4trade.clock import ClockView
 
 
 class Prosumer:

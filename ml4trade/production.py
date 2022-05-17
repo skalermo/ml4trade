@@ -1,8 +1,8 @@
 from typing import List
 
-from src.clock import ClockView
-from src.units import MW
-from src.data_strategies.base import DataStrategy
+from ml4trade.clock import ClockView
+from ml4trade.units import MW
+from ml4trade.data_strategies.base import DataStrategy
 
 
 class ProductionSystem:

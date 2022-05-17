@@ -1,11 +1,11 @@
 import unittest
 from datetime import datetime
 
-from src.prosumer import Prosumer
-from src.battery import Battery
-from src.production import ProductionSystem
-from src.units import Currency, MWh, MW
-from src.clock import SimulationClock
+from ml4trade.prosumer import Prosumer
+from ml4trade.battery import Battery
+from ml4trade.production import ProductionSystem
+from ml4trade.units import Currency, MWh, MW
+from ml4trade.clock import SimulationClock
 
 from utils import load_from_setup, setup_default_market, setup_default_consumption_system
 

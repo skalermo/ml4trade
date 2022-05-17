@@ -2,7 +2,7 @@ import unittest
 
 from stable_baselines3 import A2C
 
-from src.simulation_env import SimulationEnv
+from ml4trade.simulation_env import SimulationEnv
 from utils import setup_default_data_strategies
 
 
