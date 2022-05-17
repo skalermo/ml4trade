@@ -1,0 +1,14 @@
+from setuptools import setup, find_packages
+
+setup(
+    name='ml4trade',
+    version='0.1.0',
+    url='https://github.com/skalermo/smartdiffer',
+    author='skalermo',
+    author_email='skalermo@gmail.com',
+    description='Machine learning for trading',
+    packages=find_packages(),    
+    install_requires=[
+        'gym >= 0.22.0',
+    ],
+)
