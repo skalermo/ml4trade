@@ -14,9 +14,9 @@ class TestSimulationEnv(unittest.TestCase):
         )
         env._run_in_random_order = lambda *args: None
 
-        self.assertFalse(env.first_actions_set)
+        self.assertFalse(env._first_actions_set)
         env.step(env.action_space.sample())
-        self.assertTrue(env.first_actions_set)
+        self.assertTrue(env._first_actions_set)
 
 
 if __name__ == '__main__':

@@ -18,8 +18,8 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertTrue(0 <= threshold < np.inf)
 
     def test_first_run_flags(self):
-        self.assertFalse(self.env.first_actions_scheduled)
-        self.assertFalse(self.env.first_actions_set)
+        self.assertFalse(self.env._first_actions_scheduled)
+        self.assertFalse(self.env._first_actions_set)
 
 
 if __name__ == '__main__':
