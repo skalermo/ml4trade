@@ -28,7 +28,7 @@ class TestProduction(unittest.TestCase):
     def test_solar_production(self):
         solar_production_system = ProductionSystem(ImgwSolarDataStrategy(self.df), self.clock.view())
         power = solar_production_system.calculate_power()
-        calculated_power = MW(0.001)
+        calculated_power = MW(0.0002)
         self.assertEqual(power, calculated_power)
 
 

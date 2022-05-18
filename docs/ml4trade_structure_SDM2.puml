@@ -1,0 +1,87 @@
+@startuml
+
+hide empty methods
+hide empty fields
+
+title ml4trade structure
+
+interface gym_anytrading.TradingEnv {
+}
+
+class ml4trade.Unit {
+}
+
+class ml4trade.kW
+class ml4trade.kWh
+class ml4trade.Currency
+
+class ml4trade.SimulationEnv {
+  SimulationClock: clock
+}
+
+class ml4trade.DataStrategies {
+}
+
+class ml4trade.ConsumptionStrategy {
+}
+
+class ml4trade.ProductionStrategy {
+}
+
+class ml4trade.EnergyMarketStrategy {
+}
+
+class ml4trade.SimulationClock {
+}
+
+class ml4trade.EnergyMarket {
+}
+
+class ml4trade.Prosumer {
+  wallet: Currency
+  energy_market: EnergyMarket
+  battery: Battery
+  energy_systems: list[EnergySystem]
+}
+
+class ml4trade.EnergySystem {
+  systems: list[ProductionSystem, ConsumptionSystem]
+}
+
+class ml4trade.ProductionSystem {
+}
+
+class ml4trade.ConsumptionSystem {
+}
+
+class ml4trade.Battery {
+  capacity: kWh
+  current_charge: kWh
+  efficiency: float
+}
+
+class ml4trade.Wallet {
+}
+
+ml4trade.Unit <|-- ml4trade.kW
+ml4trade.Unit <|-- ml4trade.kWh
+ml4trade.Unit <|-- ml4trade.Currency
+
+gym_anytrading.TradingEnv <|-- ml4trade.SimulationEnv
+ml4trade.SimulationEnv "1" *-- "1" ml4trade.EnergyMarket
+ml4trade.SimulationEnv "1" *-- "1" ml4trade.Prosumer
+ml4trade.SimulationEnv "1" *-- "1" ml4trade.SimulationClock
+ml4trade.Prosumer "1" *-- "1" ml4trade.Battery
+ml4trade.Prosumer "1" *-- "1" ml4trade.EnergySystem
+ml4trade.Prosumer "1" *-- "1" ml4trade.Wallet
+ml4trade.EnergySystem "1" *-- "n" ml4trade.ProductionSystem
+ml4trade.EnergySystem "1" *-- "n" ml4trade.ConsumptionSystem
+
+ml4trade.DataStrategies <|-- ml4trade.ConsumptionStrategy
+ml4trade.DataStrategies <|-- ml4trade.ProductionStrategy
+ml4trade.DataStrategies <|-- ml4trade.EnergyMarketStrategy
+ml4trade.ConsumptionStrategy "1" *-- "1" ml4trade.ConsumptionSystem
+ml4trade.ProductionStrategy "1" *-- "1" ml4trade.ProductionSystem
+ml4trade.EnergyMarketStrategy "1" *-- "1" ml4trade.EnergyMarket
+
+@enduml
