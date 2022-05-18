@@ -1,6 +1,6 @@
 import unittest
 
-from stable_baselines3 import A2C
+from random_agent import RandomAgent
 
 from ml4trade.simulation_env import SimulationEnv
 from utils import setup_default_data_strategies
@@ -10,7 +10,7 @@ class TestSimulationEnv(unittest.TestCase):
     def test_gym_interface_works(self):
         env = SimulationEnv(setup_default_data_strategies())
 
-        model = A2C('MlpPolicy', env, verbose=1)
+        model = RandomAgent(env)
         model.learn(total_timesteps=3)
 
         obs = env.reset()
