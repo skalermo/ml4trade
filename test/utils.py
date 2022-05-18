@@ -6,7 +6,7 @@ import pandas as pd
 
 from src.market import EnergyMarket
 from src.clock import SimulationClock
-from src.data_strategies import DataStrategy, PricesPlDataStrategy, ImgwSolarDataStrategy, HouseholdEnergyConsumptionDataStrategy, imgw_col_ids
+from src.data_strategies import DataStrategy, PricesPlDataStrategy, ImgwSolarDataStrategy, HouseholdEnergyConsumptionDataStrategy
 from src.consumption import ConsumptionSystem
 
 
@@ -42,6 +42,6 @@ def setup_default_data_strategies() -> Dict[str, DataStrategy]:
 
     return {
         'production': ImgwSolarDataStrategy(weather_df),
-        'market': PricesPlDataStrategy(prices_df, window_size=24, window_direction='backward'),
+        'market': PricesPlDataStrategy(prices_df),
         'consumption': HouseholdEnergyConsumptionDataStrategy(),
     }
