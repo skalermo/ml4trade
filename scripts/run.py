@@ -47,7 +47,7 @@ def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
     data_strategies = {
         'production': ImgwDataStrategy(weather_df, window_size=24, window_direction='forward'),
         'consumption': HouseholdEnergyConsumptionDataStrategy(window_size=24),
-        'market': PricesPlDataStrategy(prices_df, window_size=24, window_direction='backward')
+        'market': PricesPlDataStrategy(prices_df)
     }
 
     env_train = SimulationEnv(
