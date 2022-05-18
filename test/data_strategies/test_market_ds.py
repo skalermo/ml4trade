@@ -16,7 +16,7 @@ class TestMarketDataStrategy(unittest.TestCase):
                     82.96, 98.12, 105.43, 120.09, 134.99, 137.05,
                     138.5, 142.25, 141.28, 142.24, 147.92, 145.02,
                     145.63, 145.02, 142.28, 134.39, 119.72, 105.68]
-        self.assertListEqual(list(self.market_ds.observation(11)), expected)
+        self.assertListEqual(list(self.market_ds.observation(10)), expected)
 
 
 if __name__ == '__main__':

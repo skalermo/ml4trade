@@ -22,6 +22,6 @@ class PricesPlDataStrategy(DataStrategy):
         return Currency(val)
 
     def observation(self, idx: int) -> List[float]:
-        start_idx = idx - self.scheduling_hour - 1
+        start_idx = idx - self.scheduling_hour
         end_idx = start_idx + self.window_size
         return self.df.iloc[start_idx:end_idx, self.col_idx]
