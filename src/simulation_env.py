@@ -34,14 +34,11 @@ class SimulationEnv(gym.Env):
         if data_strategies is None:
             data_strategies = {}
 
-        obs_size = 0
-        for s in data_strategies.values():
-            obs_size += s.observation_size()
+        obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
 
-        self.start_tick = max([s.observation_size() for s in data_strategies.values() if s.window_direction == 'backward'],
-                              default=0)
+        self.start_tick = max([s.observation_size() for s in data_strategies.values() if s.window_direction == 'backward'])
 
         dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
         episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
@@ -71,6 +68,14 @@ class SimulationEnv(gym.Env):
         self.first_actions_scheduled = False
         self.first_actions_set = False
         self.simulation = self._simulation()
+        self.total_reward = 0
+        self.history = {
+            'total_reward': [],
+            'wallet_balance': [],
+            'action': [],
+            'tick': [],
+            'datetime': [],
+        }
 
         # start generator object
         self.simulation.send(None)
@@ -88,7 +93,6 @@ class SimulationEnv(gym.Env):
 
         production_system = ProductionSystem(data_strategies.get('production'), clock.view())
         consumption_system = ConsumptionSystem(data_strategies.get('consumption'), clock.view())
-
         market = EnergyMarket(data_strategies.get('market'), clock.view())
 
         prosumer = Prosumer(battery, production_system, consumption_system,
@@ -101,6 +105,14 @@ class SimulationEnv(gym.Env):
         self.prosumer.battery.current_charge = self.battery_init_charge
         self._clock.cur_datetime = self.start_datetime
         self._clock.cur_tick = self.start_tick
+        self.total_reward = 0
+        self.history = {
+            'total_reward': [],
+            'wallet_balance': [],
+            'action': [],
+            'tick': [],
+            'datetime': [],
+        }
 
         return self._observation()[0]
 
@@ -109,20 +121,32 @@ class SimulationEnv(gym.Env):
         production_obs = self.production_system.observation()
         consumption_obs = self.consumption_system.observation()
         obs = [*market_obs, *production_obs, *consumption_obs, self.prosumer.battery.rel_current_charge]
-
-        reward = (self.prosumer.wallet.balance - self.prev_prosumer_balance).value
-
-        self.prev_prosumer_balance = self.prosumer.wallet.balance
+        reward = self._calculate_reward()
         done = self.end_datetime <= self._clock.cur_datetime
         return obs, reward, done, {}
 
-    def step(self, action: ActType) -> ObservationType:
-        return self.simulation.send(action)
+    def _calculate_reward(self) -> float:
+        balance_diff = self.prosumer.wallet.balance - self.prev_prosumer_balance
+        return balance_diff.value
 
-    def _simulation(self) -> Generator[ObservationType, ActType, None]:
+    def _update_history(self, action: ActType) -> None:
+        self.history['action'].append(action)
+        self.history['total_reward'].append(self.total_reward)
+        self.history['wallet_balance'].append(self.prosumer.wallet.balance.value)
+        self.history['tick'].append(self._clock.cur_tick)
+        self.history['datetime'].append(self._clock.cur_datetime)
+
+    def step(self, action: ActType) -> ObservationType:
+        self.prev_prosumer_balance = self.prosumer.wallet.balance
+        self.simulation.send(action)
+        self.total_reward += self._calculate_reward()
+        self._update_history(action)
+        return self._observation()
+
+    def _simulation(self) -> Generator[None, ActType, None]:
         while True:
             if self._clock.is_it_scheduling_hour():
-                action = yield self._observation()
+                action = yield
                 self.prosumer.schedule(action)
                 if not self.first_actions_scheduled:
                     self.first_actions_scheduled = True

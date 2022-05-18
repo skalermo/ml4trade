@@ -6,8 +6,8 @@ from typing import Union
 class MWh:
     value: float
 
-    def to_cost(self, price_per_kwh: 'Currency') -> 'Currency':
-        return Currency(self.value * price_per_kwh.value)
+    def to_cost(self, price_per_mwh: 'Currency') -> 'Currency':
+        return Currency(self.value * price_per_mwh.value)
 
     def __add__(self, other):
         return MWh(self.value + other.value)
