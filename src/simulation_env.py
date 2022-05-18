@@ -1,24 +1,46 @@
-from typing import Tuple, Generator, Dict
-from datetime import timedelta
+from typing import Tuple, Generator, Dict, List, Any
 
 from gym import spaces
 from gym.core import ObsType, ActType
 
-from src.consumption import ConsumptionSystem
-from src.production import ProductionSystem
-from src.prosumer import Prosumer
 from src.battery import Battery
-from src.market import EnergyMarket
 from src.clock import SimulationClock
 from src.constants import *
+from src.consumption import ConsumptionSystem
 from src.data_strategies.base import DataStrategy
+from src.market import EnergyMarket
+from src.production import ProductionSystem
+from src.prosumer import Prosumer
 from src.units import Currency, MWh
 from src.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]
+EnvHistory = Dict[str, List[Any]]
+env_history_keys = ('total_reward', 'wallet_balance', 'action', 'tick', 'datetime')
 
 
 class SimulationEnv(gym.Env):
+    # immutable properties
+    action_space: spaces.Box
+    observation_space: spaces.Box
+    start_tick: int
+    start_datetime: datetime
+    end_datetime: datetime
+    prosumer_init_balance: Currency
+    battery_init_charge: MWh
+    _clock: SimulationClock
+    prosumer: Prosumer
+    market: EnergyMarket
+    production_system: ProductionSystem
+    consumption_system: ConsumptionSystem
+    # resetable properties
+    prev_prosumer_balance: Currency
+    first_actions_scheduled: bool
+    first_actions_set: bool
+    total_reward: float
+    history: EnvHistory
+    simulation: Generator[None, ActType, None]
+
     def __init__(
             self,
             data_strategies: Dict[str, DataStrategy] = None,
@@ -37,58 +59,42 @@ class SimulationEnv(gym.Env):
         obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
-
-        self.start_tick = max([s.observation_size() for s in data_strategies.values() if s.window_direction == 'backward'])
+        self.start_tick = max([s.observation_size() for s in data_strategies.values()
+                               if s.window_direction == 'backward'])
 
         dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
         episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
         assert episode_hour_length + 2 * self.start_tick <= min(dfs_lengths), 'Provided dataframe is too short'
 
-        self._clock = SimulationClock(
-            start_datetime=start_datetime,
-            scheduling_time=scheduling_time,
-            action_replacement_time=action_replacement_time,
-            start_tick=self.start_tick,
-            tick_duration=timedelta(hours=1),
-        )
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
         self.prosumer_init_balance = prosumer_init_balance
-        self.prev_prosumer_balance = prosumer_init_balance
         self.battery_init_charge = battery_init_charge
 
         (
+            self._clock,
             self.prosumer,
             self.market,
             self.production_system,
             self.consumption_system
-        ) = self._setup_systems(data_strategies, self._clock, prosumer_init_balance, battery_capacity,
-                                battery_efficiency, battery_init_charge)
-
-        self.first_actions_scheduled = False
-        self.first_actions_set = False
-        self.simulation = self._simulation()
-        self.total_reward = 0
-        self.history = {
-            'total_reward': [],
-            'wallet_balance': [],
-            'action': [],
-            'tick': [],
-            'datetime': [],
-        }
-
-        # start generator object
-        self.simulation.send(None)
+        ) = self._setup_systems(data_strategies, self.start_tick, prosumer_init_balance,
+                                start_datetime, scheduling_time, action_replacement_time,
+                                battery_init_charge, battery_efficiency, battery_capacity)
+        self.reset()
 
     @staticmethod
     def _setup_systems(
             data_strategies: Dict[str, DataStrategy],
-            clock: SimulationClock,
+            start_tick: int,
             prosumer_init_balance: Currency,
-            battery_capacity: MWh,
-            battery_efficiency: float,
+            start_datetime: datetime,
+            scheduling_time: time,
+            action_replacement_time: time,
             battery_init_charge: MWh,
-    ) -> Tuple[Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
+            battery_efficiency: float,
+            battery_capacity: MWh,
+    ) -> Tuple[SimulationClock, Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
+        clock = SimulationClock(start_datetime, scheduling_time, action_replacement_time, start_tick)
         battery = Battery(battery_capacity, battery_efficiency, battery_init_charge)
 
         production_system = ProductionSystem(data_strategies.get('production'), clock.view())
@@ -97,22 +103,25 @@ class SimulationEnv(gym.Env):
 
         prosumer = Prosumer(battery, production_system, consumption_system,
                             clock.view(), prosumer_init_balance, market)
-        return prosumer, market, production_system, consumption_system
+        return clock, prosumer, market, production_system, consumption_system
 
     def reset(self, **kwargs) -> ObsType:
         self.prosumer.wallet.balance = self.prosumer_init_balance
-        self.prev_prosumer_balance = self.prosumer_init_balance
         self.prosumer.battery.current_charge = self.battery_init_charge
+        self.prosumer.scheduled_buy_amounts = None
+        self.prosumer.scheduled_sell_amounts = None
+        self.prosumer.scheduled_buy_thresholds = None
+        self.prosumer.scheduled_sell_thresholds = None
+        self.prosumer.next_day_actions = None
         self._clock.cur_datetime = self.start_datetime
         self._clock.cur_tick = self.start_tick
+        self.prev_prosumer_balance = self.prosumer_init_balance
+        self.first_actions_scheduled = False
+        self.first_actions_set = False
         self.total_reward = 0
-        self.history = {
-            'total_reward': [],
-            'wallet_balance': [],
-            'action': [],
-            'tick': [],
-            'datetime': [],
-        }
+        self.history = {key: [] for key in env_history_keys}
+        self.simulation = self._simulation()
+        self.simulation.send(None)
 
         return self._observation()[0]
 

@@ -3,6 +3,7 @@ import unittest
 from stable_baselines3 import A2C
 
 from src.simulation_env import SimulationEnv
+from src.constants import START_TIME
 from utils import setup_default_data_strategies
 
 
@@ -45,7 +46,7 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertEqual(env.history['tick'][0], env._clock.cur_tick)
         self.assertEqual(env.history['datetime'][0], env._clock.cur_datetime)
 
-    def test_reset(self):
+    def test_reset_sets_initial_values(self):
         env = SimulationEnv(setup_default_data_strategies())
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())
@@ -60,6 +61,16 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertEqual(env.prosumer.battery.current_charge, env.battery_init_charge)
         self.assertEqual(env._clock.cur_datetime, env.start_datetime)
         self.assertEqual(env._clock.cur_tick, env.start_tick)
+
+        self.assertEqual(env.total_reward, 0)
+        self.assertEqual(len(env.history['total_reward']), 0)
+
+    def test_reset_starts_new_simulation(self):
+        start_datetime = START_TIME.replace(hour=0)
+        env = SimulationEnv(setup_default_data_strategies(), start_datetime=start_datetime)
+        env.reset()
+        self.assertNotEqual(env._clock.cur_datetime, start_datetime)
+        self.assertTrue(env._clock.is_it_scheduling_hour())
 
 
 if __name__ == '__main__':
