@@ -12,7 +12,7 @@ from ml4trade.clock import SimulationClock
 from ml4trade.constants import *
 from ml4trade.data_strategies import DataStrategy
 from ml4trade.units import Currency, MWh
-from ml4trade.utils import run_in_random_order, timedelta_to_hours
+from ml4trade.utils import run_in_random_order, calc_start_idx, dfs_are_long_enough
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 EnvHistory = Dict[str, List[Any]]
@@ -59,12 +59,8 @@ class SimulationEnv(gym.Env):
         obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
-        self._start_tick = max([s.observation_size() for s in data_strategies.values()
-                                if s.window_direction == 'backward'])
-
-        dfs_lengths = [len(s.df) for s in data_strategies.values() if s.df is not None]
-        episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
-        assert episode_hour_length + 2 * self._start_tick <= min(dfs_lengths), 'Provided dataframe is too short'
+        self._start_tick = calc_start_idx(list(data_strategies.values()), scheduling_time)
+        assert dfs_are_long_enough(list(data_strategies.values()), start_datetime, end_datetime, self._start_tick), 'Provided dataframe is too short'
 
         self._start_datetime = start_datetime
         self._end_datetime = end_datetime

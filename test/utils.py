@@ -6,7 +6,7 @@ import pandas as pd
 
 from ml4trade.market import EnergyMarket
 from ml4trade.clock import SimulationClock
-from ml4trade.data_strategies import DataStrategy, PricesPlDataStrategy, ImgwSolarDataStrategy, HouseholdEnergyConsumptionDataStrategy, imgw_col_ids
+from ml4trade.data_strategies import DataStrategy, PricesPlDataStrategy, ImgwSolarDataStrategy, HouseholdEnergyConsumptionDataStrategy
 from ml4trade.consumption import ConsumptionSystem
 
 
@@ -42,6 +42,6 @@ def setup_default_data_strategies() -> Dict[str, DataStrategy]:
 
     return {
         'production': ImgwSolarDataStrategy(weather_df),
-        'market': PricesPlDataStrategy(prices_df, window_size=24, window_direction='backward'),
+        'market': PricesPlDataStrategy(prices_df),
         'consumption': HouseholdEnergyConsumptionDataStrategy(),
     }
