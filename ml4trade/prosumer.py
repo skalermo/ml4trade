@@ -26,7 +26,6 @@ class Prosumer:
         self.consumption_system = consumption_system
         self.clock_view = clock_view
         self.wallet = Wallet(initial_balance)
-        self.hourly_energy_balance = 0
         self.energy_market = energy_market
         self.energy_balance = EnergyBalance()
 

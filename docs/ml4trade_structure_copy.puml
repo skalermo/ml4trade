@@ -14,8 +14,8 @@ class ml4trade.Unit {
   value: float
 }
 
-class ml4trade.kW
-class ml4trade.kWh
+class ml4trade.MW
+class ml4trade.MWh
 class ml4trade.Currency
 
 class ml4trade.SimulationEnv {
@@ -35,13 +35,13 @@ class ml4trade.DataStrategies {
 class ml4trade.ConsumptionStrategy {
   preprocess_data()
   process()
-  observation() -> list[kWh]
+  observation() -> list[MWh]
 }
 
 class ml4trade.ProductionStrategy {
   preprocess_data()
   process()
-  observation() -> list[kWh]
+  observation() -> list[MWh]
 }
 
 class ml4trade.EnergyMarketStrategy {
@@ -57,8 +57,8 @@ class ml4trade.SimulationClock {
 }
 
 class ml4trade.EnergyMarket {
-  buy(amount: kWh, price: Currency)
-  sell(amount: kWh, price: Currency)
+  buy(amount: MWh, price: Currency)
+  sell(amount: MWh, price: Currency)
   observation() -> list[Currency]
 }
 
@@ -68,8 +68,8 @@ class ml4trade.Prosumer {
   battery: Battery
   energy_systems: list[EnergySystem]
   ---
-  _buy(amount: kWh, price: Currency, scheduled: bool)
-  _sell(amount: kWh, price: Currency, scheduled: bool)
+  _buy(amount: MWh, price: Currency, scheduled: bool)
+  _sell(amount: MWh, price: Currency, scheduled: bool)
   ---
   consume_energy()
   produce_energy()
@@ -80,26 +80,26 @@ class ml4trade.Prosumer {
 class ml4trade.EnergySystem {
   systems: list[ProductionSystem, ConsumptionSystem]
 
-  get_production_power(date: Date) -> kW
-  fet_consumption_power(date: Date) -> kW
+  get_production_power(date: Date) -> MW
+  fet_consumption_power(date: Date) -> MW
 }
 
 class ml4trade.ProductionSystem {
-  calculate_power(date: Date) -> kW
-  observation() -> list[kWh]
+  calculate_power(date: Date) -> MW
+  observation() -> list[MWh]
 }
 class ml4trade.ConsumptionSystem {
-  calculate_power(date: Date) -> kW
-  observation() -> list[kWh]
+  calculate_power(date: Date) -> MW
+  observation() -> list[MWh]
 }
 
 class ml4trade.Battery {
-  capacity: kWh
-  current_charge: kWh
+  capacity: MWh
+  current_charge: MWh
   efficiency: float
   
-  charge(amount: kWh) -> kWh
-  discharge(amount: kWh) -> kWh
+  charge(amount: MWh) -> MWh
+  discharge(amount: MWh) -> MWh
 }
 
 class ml4trade.Wallet {
@@ -107,8 +107,8 @@ class ml4trade.Wallet {
   withdraw(amount: Currency)
 }
 
-ml4trade.Unit <|-- ml4trade.kW
-ml4trade.Unit <|-- ml4trade.kWh
+ml4trade.Unit <|-- ml4trade.MW
+ml4trade.Unit <|-- ml4trade.MWh
 ml4trade.Unit <|-- ml4trade.Currency
 
 gym_anytrading.TradingEnv <|-- ml4trade.SimulationEnv

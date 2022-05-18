@@ -19,8 +19,8 @@ interface ml4trade.Unit {
   value: float
 }
 class ml4trade.Ah
-class ml4trade.KW
-class ml4trade.KWh
+class ml4trade.MW
+class ml4trade.MWh
 class ml4trade.Currency
 
 class ml4trade.SimulationEnv {
@@ -28,8 +28,8 @@ class ml4trade.SimulationEnv {
 }
 
 class ml4trade.EnergyMarket {
-  buy(amount: KWh, price: Currency) -> Currency
-  sell(amount: KWh, price: Currency) -> Currency
+  buy(amount: MWh, price: Currency) -> Currency
+  sell(amount: MWh, price: Currency) -> Currency
   get_current_buy_price() -> Currency
   get_current_sell_price() -> Currency
 }
@@ -40,8 +40,8 @@ class ml4trade.Prosumer {
   battery_system: BatterySystem
   energy_system: EnergySystem
   ---
-  _buy(amount: KWh, price: Currency, forced: bool) -> Currency
-  _sell(amount: KWh, price: Currency, forced: bool) -> Currency
+  _buy(amount: MWh, price: Currency, forced: bool) -> Currency
+  _sell(amount: MWh, price: Currency, forced: bool) -> Currency
   ---
   consume_energy()
   produce_energy()
@@ -54,11 +54,11 @@ class ml4trade.BatterySystem
 class ml4trade.EnergySystem {
   systems: list[PowerSystem]
 
-  get_power(date: Date) -> KW
+  get_power(date: Date) -> MW
 }
 
 interface ml4trade.PowerSystem {
-  get_power(date: Date, callback: Callable) -> KW
+  get_power(date: Date, callback: Callable) -> MW
 }
 class ml4trade.ProductionSystem
 class ml4trade.ConsumptionSystem
@@ -78,8 +78,8 @@ interface stable_baselines3.Agent {
 }
 
 ml4trade.Unit <|-- ml4trade.Ah
-ml4trade.Unit <|-- ml4trade.KW
-ml4trade.Unit <|-- ml4trade.KWh
+ml4trade.Unit <|-- ml4trade.MW
+ml4trade.Unit <|-- ml4trade.MWh
 ml4trade.Unit <|-- ml4trade.Currency
 
 gym.Env <|-- ml4trade.SimulationEnv
