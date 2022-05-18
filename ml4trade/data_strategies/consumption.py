@@ -1,8 +1,8 @@
 from typing import List
 import random
 
-from src.data_strategies import DataStrategy
-from src.units import MW
+from ml4trade.data_strategies import DataStrategy
+from ml4trade.units import MW
 
 
 class HouseholdEnergyConsumptionDataStrategy(DataStrategy):

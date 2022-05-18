@@ -2,7 +2,7 @@ import random
 from datetime import timedelta, datetime, time
 from typing import List
 
-from src.data_strategies import DataStrategy
+from ml4trade.data_strategies import DataStrategy
 
 
 def run_in_random_order(functions: List[callable]) -> None:

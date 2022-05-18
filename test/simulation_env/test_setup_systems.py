@@ -1,8 +1,8 @@
 import unittest
 
-from src.simulation_env import SimulationEnv
-from src.units import MW, MWh, Currency
-from src.constants import START_TIME, SCHEDULING_TIME, ACTION_REPLACEMENT_TIME
+from ml4trade.simulation_env import SimulationEnv
+from ml4trade.units import MW, MWh, Currency
+from ml4trade.constants import START_TIME, SCHEDULING_TIME, ACTION_REPLACEMENT_TIME
 from utils import setup_default_data_strategies
 
 

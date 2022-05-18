@@ -1,8 +1,8 @@
 import unittest
 from datetime import timedelta
 
-from src.simulation_env import SimulationEnv
-from src.constants import START_TIME
+from ml4trade.simulation_env import SimulationEnv
+from ml4trade.constants import START_TIME
 from utils import setup_default_data_strategies
 
 

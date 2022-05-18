@@ -1,7 +1,7 @@
 import unittest
 
-from src.utils import calc_start_idx
-from src.constants import SCHEDULING_TIME
+from ml4trade.utils import calc_start_idx
+from ml4trade.constants import SCHEDULING_TIME
 from utils import setup_default_data_strategies
 
 

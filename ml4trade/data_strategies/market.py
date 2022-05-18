@@ -2,8 +2,8 @@ from typing import List
 
 import pandas as pd
 
-from src.data_strategies import DataStrategy
-from src.units import Currency
+from ml4trade.data_strategies import DataStrategy
+from ml4trade.units import Currency
 
 
 class PricesPlDataStrategy(DataStrategy):
