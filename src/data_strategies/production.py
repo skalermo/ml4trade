@@ -3,7 +3,7 @@ from typing_extensions import Literal
 
 import pandas as pd
 
-from src.data_strategies import DataStrategy
+from src.data_strategies import DataStrategy, update_last_processed
 from src.units import MW, MWh
 
 MAX_WIND_POWER = MW(0.01)
@@ -32,9 +32,9 @@ class ImgwDataStrategy(DataStrategy):
         self.imgwWindDataStrategy = ImgwWindDataStrategy(df, window_size, window_direction)
         self.imgwSolarDataStrategy = ImgwSolarDataStrategy(df, window_size, window_direction)
 
+    @update_last_processed
     def process(self, idx: int) -> MWh:
-        self.last_processed = self.imgwSolarDataStrategy.process(idx) + self.imgwWindDataStrategy.process(idx)
-        return self.last_processed
+        return self.imgwSolarDataStrategy.process(idx) + self.imgwWindDataStrategy.process(idx)
 
     def observation(self, idx: int) -> List[float]:
         return self.imgwWindDataStrategy.observation(idx) + self.imgwSolarDataStrategy.observation(idx)

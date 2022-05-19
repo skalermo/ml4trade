@@ -2,7 +2,7 @@ from typing import List
 
 import pandas as pd
 
-from src.data_strategies import DataStrategy
+from src.data_strategies import DataStrategy, update_last_processed
 from src.units import Currency
 
 
@@ -13,6 +13,7 @@ class PricesPlDataStrategy(DataStrategy):
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         return df[[self.col]]
 
+    @update_last_processed
     def process(self, idx: int) -> Currency:
         val = self.df.iat[idx, self.col_idx]
         return Currency(val)

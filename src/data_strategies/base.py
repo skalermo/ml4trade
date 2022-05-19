@@ -1,7 +1,21 @@
-from typing import Any, List
+from typing import Any, List, Callable, TypeVar
 from typing_extensions import Literal
+from functools import wraps
 
 import pandas as pd
+
+C = TypeVar('C', bound=Callable)
+
+
+# decorator for saving result returned by fn()
+def update_last_processed(fn: C) -> C:
+    @wraps(fn)
+    def inner(*args, **kwargs):
+        res = fn(*args, **kwargs)
+        self = args[0]
+        self.last_processed = res
+        return res
+    return inner
 
 
 class DataStrategy:

@@ -140,7 +140,7 @@ class SimulationEnv(gym.Env):
         balance_diff = self.prosumer.wallet.balance - self.prev_step_prosumer_balance
         return balance_diff.value
 
-    def _update_history(self) -> None:
+    def _update_history_for_last_tick(self) -> None:
         self.history['wallet_balance'].append(self.prosumer.wallet.balance.value)
         self.history['tick'].append(self._clock.cur_tick)
         self.history['datetime'].append(self._clock.cur_datetime)
@@ -173,7 +173,7 @@ class SimulationEnv(gym.Env):
             if self.first_actions_set:
                 run_in_random_order([self.prosumer.consume, self.prosumer.produce])
 
-            self._update_history()
+            self._update_history_for_last_tick()
             self._clock.tick()
 
     def render(self, mode="human"):
