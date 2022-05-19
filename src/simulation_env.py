@@ -16,7 +16,12 @@ from src.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 EnvHistory = Dict[str, List[Any]]
-env_history_keys = ('total_reward', 'wallet_balance', 'action', 'tick', 'datetime')
+env_history_keys = (
+    'total_reward', 'action', 'wallet_balance', 'tick', 'datetime',
+    'energy_produced', 'energy_consumed', 'price', 'scheduled_buy_amounts',
+    'scheduled_sell_amounts', 'unscheduled_buy_amounts', 'unscheduled_sell_amounts',
+    'battery',
+)
 
 
 class SimulationEnv(gym.Env):
@@ -146,8 +151,20 @@ class SimulationEnv(gym.Env):
         self.history['datetime'].append(self._clock.cur_datetime)
         self.history['energy_produced'].append(self.production_system.ds.last_processed)
         self.history['energy_consumed'].append(self.consumption_system.ds.last_processed)
-        self.history['unscheduled_buy_amounts'] = self.prosumer.history['unscheduled_buy_amounts']
-        self.history['unscheduled_sell_amounts'] = self.prosumer.history['unscheduled_sell_amounts']
+        self.history['price'].append(self.market.get_buy_price())
+        self.history['scheduled_buy_amounts'] = self.prosumer.last_scheduled_buy_transaction
+        self.history['scheduled_sell_amounts'] = self.prosumer.last_scheduled_sell_transaction
+        if self.prosumer.last_unscheduled_buy_transaction is not None:
+            self.history['unscheduled_buy_amounts'].append(self.prosumer.last_unscheduled_buy_transaction)
+            self.prosumer.last_unscheduled_buy_transaction = None
+        else:
+            self.history['unscheduled_buy_amounts'].append((0, False))
+        if self.prosumer.last_unscheduled_sell_transaction is not None:
+            self.history['unscheduled_sell_amounts'].append(self.prosumer.last_unscheduled_sell_transaction)
+            self.prosumer.last_unscheduled_sell_transaction = None
+        else:
+            self.history['unscheduled_sell_amounts'].append((0, False))
+        self.history['battery'].append(self.prosumer.battery.rel_current_charge)
 
     def step(self, action: ActType) -> ObservationType:
         self.prev_step_prosumer_balance = self.prosumer.wallet.balance
@@ -177,4 +194,7 @@ class SimulationEnv(gym.Env):
             self._clock.tick()
 
     def render(self, mode="human"):
+        NotImplemented('Use render_all!')
+
+    def render_all(self):
         pass
