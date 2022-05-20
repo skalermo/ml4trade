@@ -13,7 +13,7 @@ class TestSetupSystems(unittest.TestCase):
             START_TIME, SCHEDULING_TIME, ACTION_REPLACEMENT_TIME,
             MWh(0.001), 0.1, MWh(0.001), MW(0.001), 0.2, MW(0.01), 11,
         )
-        self.assertEqual(prosumer.production_system.calculate_power(), MW(0.001))
+        self.assertEqual(prosumer.production_system.calculate_power(), MW(0.0002))
         self.assertEqual(prosumer.wallet.balance, Currency(1))
         self.assertEqual(prosumer.battery.current_charge, MWh(0.001))
         self.assertEqual(prosumer.battery.capacity, MWh(0.001))

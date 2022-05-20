@@ -64,7 +64,8 @@ class SimulationEnv(gym.Env):
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
         self._start_tick = calc_start_idx(list(data_strategies.values()), scheduling_time)
-        assert dfs_are_long_enough(list(data_strategies.values()), start_datetime, end_datetime, self._start_tick), 'Provided dataframe is too short'
+        assert dfs_are_long_enough(list(data_strategies.values()), start_datetime, end_datetime, self._start_tick), \
+            'Provided dataframe is too short'
 
         self._start_datetime = start_datetime
         self._end_datetime = end_datetime
@@ -79,8 +80,8 @@ class SimulationEnv(gym.Env):
             self._consumption_system
         ) = self._setup_systems(data_strategies, self._start_tick, prosumer_init_balance,
                                 start_datetime, scheduling_time, action_replacement_time,
-                                battery_init_charge, battery_efficiency, battery_capacity, max_solar_power, solar_efficiency,
-                                max_wind_power, max_wind_speed)
+                                battery_init_charge, battery_efficiency, battery_capacity, max_solar_power,
+                                solar_efficiency, max_wind_power, max_wind_speed)
         self.reset()
 
     @staticmethod
