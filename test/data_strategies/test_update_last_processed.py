@@ -1,7 +1,7 @@
 import unittest
 from typing import List
 
-from src.data_strategies import DataStrategy, update_last_processed
+from ml4trade.data_strategies import DataStrategy, update_last_processed
 
 
 class TestDataStrategy(DataStrategy):

@@ -3,8 +3,8 @@ from typing_extensions import Literal
 
 import pandas as pd
 
-from src.data_strategies import DataStrategy, update_last_processed
-from src.units import MW, MWh
+from ml4trade.data_strategies import DataStrategy, update_last_processed
+from ml4trade.units import MW
 
 MAX_WIND_POWER = MW(0.01)
 MAX_WIND_SPEED = 11

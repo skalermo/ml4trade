@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from src.constants import env_history_keys
+from ml4trade.constants import env_history_keys
 
 
 def render_all(history: dict):

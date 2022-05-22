@@ -1,10 +1,10 @@
 from typing import List
 
-from src.units import MWh, Currency
-from src.wallet import Wallet
-from src.battery import EnergyBalance
-from src.data_strategies.base import DataStrategy
-from src.clock import ClockView
+from ml4trade.units import MWh, Currency
+from ml4trade.wallet import Wallet
+from ml4trade.battery import EnergyBalance
+from ml4trade.data_strategies.base import DataStrategy
+from ml4trade.clock import ClockView
 
 
 UNSCHEDULED_MULTIPLIER = 2.0

@@ -14,9 +14,9 @@ import quantstats as qs
 # you would just pip-install the project and import it
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data_strategies import ImgwDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, imgw_col_ids
-from src.simulation_env import SimulationEnv
-from src.units import *
+from ml4trade.data_strategies import ImgwDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, imgw_col_ids
+from ml4trade.simulation_env import SimulationEnv
+from ml4trade.units import *
 
 
 def get_all_scv_filenames(path: str) -> List[str]:
@@ -47,7 +47,7 @@ def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
     data_strategies = {
         'production': ImgwDataStrategy(weather_df, window_size=24, window_direction='forward'),
         'consumption': HouseholdEnergyConsumptionDataStrategy(window_size=24),
-        'market': PricesPlDataStrategy(prices_df, window_size=24, window_direction='backward')
+        'market': PricesPlDataStrategy(prices_df)
     }
 
     env_train = SimulationEnv(
@@ -89,11 +89,12 @@ def main(cfg: DictConfig) -> None:
         obs, rewards, done, info = env_test.step(action)
 
     env_test.render_all()
-    # qs.extend_pandas()
-    # net_worth = pd.Series(env_test.history['wallet_balance'], index=env_test.history['datetime'])
-    # returns = net_worth.pct_change().iloc[1:]
-    # qs.reports.full(returns)
-    # qs.reports.html(returns, output='a2c_quantstats.html', download_filename='a2c_quantstats.html')
+
+    qs.extend_pandas()
+    net_worth = pd.Series(env_test.history['wallet_balance'], index=env_test.history['datetime'])
+    returns = net_worth.pct_change().iloc[1:]
+    qs.reports.full(returns)
+    qs.reports.html(returns, output='a2c_quantstats.html', download_filename='a2c_quantstats.html')
 
 
 if __name__ == '__main__':

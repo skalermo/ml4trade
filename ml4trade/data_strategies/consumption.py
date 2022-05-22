@@ -1,7 +1,7 @@
 from typing import List
 import random
 
-from src.data_strategies import DataStrategy, update_last_processed
+from ml4trade.data_strategies import DataStrategy, update_last_processed
 
 
 class HouseholdEnergyConsumptionDataStrategy(DataStrategy):

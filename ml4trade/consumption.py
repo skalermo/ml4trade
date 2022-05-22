@@ -1,8 +1,8 @@
 from typing import List
 
-from src.units import MWh
-from src.clock import ClockView
-from src.data_strategies import DataStrategy
+from ml4trade.units import MWh
+from ml4trade.clock import ClockView
+from ml4trade.data_strategies import DataStrategy
 
 
 class ConsumptionSystem:

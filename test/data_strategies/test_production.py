@@ -4,10 +4,10 @@ import datetime
 
 import pandas as pd
 
-from src.production import ProductionSystem
-from src.units import MWh
-from src.clock import SimulationClock
-from src.data_strategies import ImgwWindDataStrategy, ImgwSolarDataStrategy, imgw_col_ids
+from ml4trade.production import ProductionSystem
+from ml4trade.units import MWh
+from ml4trade.clock import SimulationClock
+from ml4trade.data_strategies import ImgwWindDataStrategy, ImgwSolarDataStrategy, imgw_col_ids
 
 
 weather_data_path = os.path.join(os.path.dirname(__file__), '../mock_data/s_t_02-03_2022.csv')
