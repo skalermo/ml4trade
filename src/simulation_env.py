@@ -1,6 +1,5 @@
 from typing import Tuple, Generator, Dict, List, Any
 
-import matplotlib.pyplot as plt
 from gym import spaces
 from gym.core import ObsType, ActType
 
@@ -14,6 +13,7 @@ from src.production import ProductionSystem
 from src.prosumer import Prosumer
 from src.units import Currency, MWh
 from src.utils import run_in_random_order, timedelta_to_hours
+from src.rendering import render_all as _render_all
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 EnvHistory = Dict[str, List[Any]]
@@ -190,47 +190,4 @@ class SimulationEnv(gym.Env):
         NotImplemented('Use render_all()!')
 
     def render_all(self):
-        for k in env_history_keys:
-            # self.history[k] = self.history[k][-24*7-10:-10]
-            self.history[k] = self.history[k][24:-10]
-        print(self.history)
-        plt.style.use('ggplot')
-        fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
-        ax[0, 0].plot(self.history['datetime'], self.history['wallet_balance'])
-
-        # ax[0, 1].plot(self.history['datetime'], self.history['wallet_balance'])
-        succeeded_ratio_list = [0] * 24
-        simulation_duration_in_days = len(self.history['datetime']) / 24
-        for idx, dt in enumerate(self.history['datetime']):
-            buy_succeeded = self.history['scheduled_buy_amounts'][idx][1]
-            sell_succeeded = self.history['scheduled_sell_amounts'][idx][1]
-            if buy_succeeded or sell_succeeded:
-                succeeded_ratio_list[dt.hour] += 1
-        succeeded_ratio_list = [x / simulation_duration_in_days for x in succeeded_ratio_list]
-        # ax[1, 0].plot(range(1, 24+1), succeeded_ratio_list)
-        ax[1, 0].plot(self.history['datetime'], list(map(lambda x: x[1], self.history['scheduled_buy_amounts'])))
-        ax[1, 0].plot(self.history['datetime'], list(map(lambda x: x[1], self.history['scheduled_sell_amounts'])))
-        # ax[1, 1].plot(self.history['datetime'], self.history['unscheduled_buy_amounts'])
-        # ax[1, 1].plot(self.history['datetime'], self.history['unscheduled_sell_amounts'])
-        battery_stats_per_hour = [[]] * 24
-        battery_history_last_2_days = self.history['battery'][-48:]
-        for h in range(0, 24):
-            battery_stats_per_hour[h] = battery_history_last_2_days
-        # ax[0, 1].fill_between(range(0, 24), np.mean(battery_stats_per_hour) - np.std(battery_stats_per_hour),
-        #                       np.mean(battery_stats_per_hour) + np.std(battery_stats_per_hour),
-        #                       alpha=0.2)
-        ax[0, 1].plot(range(0, 48), battery_history_last_2_days)
-
-        labels = []
-        for i in range(0, 24, 4):
-            labels.append(i)
-            labels.append(' ')
-            labels.append(' ')
-            labels.append(' ')
-        ax[0, 1].set_xticks(range(0, 48), labels=labels*2)
-
-        # ax[1, 0].hist(self.history['battery'])
-        plt.sca(ax[0, 0])
-        plt.xticks(rotation=45)
-
-        plt.show()
+        _render_all(self.history)

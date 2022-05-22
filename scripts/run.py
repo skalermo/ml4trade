@@ -88,11 +88,12 @@ def main(cfg: DictConfig) -> None:
         action, _states = model.predict(obs)
         obs, rewards, done, info = env_test.step(action)
 
-    qs.extend_pandas()
-    net_worth = pd.Series(env_test.history['wallet_balance'], index=env_test.history['datetime'])
-    returns = net_worth.pct_change().iloc[1:]
-    qs.reports.full(returns)
-    qs.reports.html(returns, output='a2c_quantstats.html', download_filename='a2c_quantstats.html')
+    env_test.render_all()
+    # qs.extend_pandas()
+    # net_worth = pd.Series(env_test.history['wallet_balance'], index=env_test.history['datetime'])
+    # returns = net_worth.pct_change().iloc[1:]
+    # qs.reports.full(returns)
+    # qs.reports.html(returns, output='a2c_quantstats.html', download_filename='a2c_quantstats.html')
 
 
 if __name__ == '__main__':
