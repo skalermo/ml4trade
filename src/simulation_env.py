@@ -144,7 +144,7 @@ class SimulationEnv(gym.Env):
         self.history['datetime'].append(self._clock.cur_datetime)
         self.history['energy_produced'].append(self.production_system.ds.last_processed)
         self.history['energy_consumed'].append(self.consumption_system.ds.last_processed)
-        self.history['price'].append(self.market.get_buy_price())
+        self.history['price'].append(self.market.ds.last_processed)
         self.history['scheduled_buy_amounts'].append(self.prosumer.last_scheduled_buy_transaction)
         self.history['scheduled_sell_amounts'].append(self.prosumer.last_scheduled_sell_transaction)
         if self.prosumer.last_unscheduled_buy_transaction is not None:

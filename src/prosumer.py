@@ -77,16 +77,16 @@ class Prosumer:
     def buy_energy(self, amount: MWh, price: Currency, scheduled: bool = True):
         succeeded = self.energy_market.buy(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
         if scheduled:
-            self.last_scheduled_buy_transaction = (amount, succeeded)
+            self.last_scheduled_buy_transaction = (amount.value, succeeded)
         else:
-            self.last_unscheduled_buy_transaction = (amount, True)
+            self.last_unscheduled_buy_transaction = (amount.value, True)
 
     def sell_energy(self, amount: MWh, price: Currency, scheduled: bool = True):
         succeeded = self.energy_market.sell(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
         if scheduled:
-            self.last_scheduled_sell_transaction = (amount, succeeded)
+            self.last_scheduled_sell_transaction = (amount.value, succeeded)
         else:
-            self.last_unscheduled_sell_transaction = (amount, True)
+            self.last_unscheduled_sell_transaction = (amount.value, True)
 
     def _restore_energy_balance(self):
         if self.energy_balance.value < MWh(0):
