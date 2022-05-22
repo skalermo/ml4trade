@@ -39,7 +39,6 @@ class SimulationEnv(gym.Env):
     production_system: ProductionSystem
     consumption_system: ConsumptionSystem
     # resetable properties
-    prev_prosumer_balance: Currency
     prev_step_prosumer_balance: Currency
     first_actions_scheduled: bool
     first_actions_set: bool
@@ -121,7 +120,6 @@ class SimulationEnv(gym.Env):
         self.prosumer.next_day_actions = None
         self._clock.cur_datetime = self.start_datetime
         self._clock.cur_tick = self.start_tick
-        self.prev_prosumer_balance = self.prosumer_init_balance
         self.prev_step_prosumer_balance = self.prosumer_init_balance
         self.first_actions_scheduled = False
         self.first_actions_set = False
@@ -152,8 +150,8 @@ class SimulationEnv(gym.Env):
         self.history['energy_produced'].append(self.production_system.ds.last_processed)
         self.history['energy_consumed'].append(self.consumption_system.ds.last_processed)
         self.history['price'].append(self.market.get_buy_price())
-        self.history['scheduled_buy_amounts'] = self.prosumer.last_scheduled_buy_transaction
-        self.history['scheduled_sell_amounts'] = self.prosumer.last_scheduled_sell_transaction
+        self.history['scheduled_buy_amounts'].append(self.prosumer.last_scheduled_buy_transaction)
+        self.history['scheduled_sell_amounts'].append(self.prosumer.last_scheduled_sell_transaction)
         if self.prosumer.last_unscheduled_buy_transaction is not None:
             self.history['unscheduled_buy_amounts'].append(self.prosumer.last_unscheduled_buy_transaction)
             self.prosumer.last_unscheduled_buy_transaction = None

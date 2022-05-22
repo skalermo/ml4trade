@@ -1,4 +1,5 @@
 import unittest
+from datetime import timedelta
 
 from stable_baselines3 import A2C
 
@@ -41,23 +42,23 @@ class TestSimulationEnv(unittest.TestCase):
         env.step(action)
         self.assertEqual(len(env.history['total_reward']), 1)
         self.assertEqual(env.history['total_reward'][0], env.total_reward)
-        self.assertEqual(env.history['wallet_balance'][0], env.prosumer.wallet.balance.value)
         self.assertTrue((env.history['action'][0] == action).all())
-        self.assertEqual(env.history['tick'][0], env._clock.cur_tick)
-        self.assertEqual(env.history['datetime'][0], env._clock.cur_datetime)
+        self.assertEqual(env.history['wallet_balance'][-1], env.prosumer.wallet.balance.value)
+        self.assertEqual(env.history['tick'][-1], env._clock.cur_tick - 1)
+        self.assertEqual(env.history['datetime'][-1], env._clock.cur_datetime - timedelta(hours=1))
 
     def test_reset_sets_initial_values(self):
         env = SimulationEnv(setup_default_data_strategies())
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())
         self.assertNotEqual(env.prosumer.wallet.balance, env.prosumer_init_balance)
-        self.assertNotEqual(env.prev_prosumer_balance, env.prosumer_init_balance)
+        self.assertNotEqual(env.prev_step_prosumer_balance, env.prosumer_init_balance)
         self.assertNotEqual(env.prosumer.battery.current_charge, env.battery_init_charge)
         self.assertNotEqual(env._clock.cur_datetime, env.start_datetime)
         self.assertNotEqual(env._clock.cur_tick, env.start_tick)
         env.reset()
         self.assertEqual(env.prosumer.wallet.balance, env.prosumer_init_balance)
-        self.assertEqual(env.prev_prosumer_balance, env.prosumer_init_balance)
+        self.assertEqual(env.prev_step_prosumer_balance, env.prosumer_init_balance)
         self.assertEqual(env.prosumer.battery.current_charge, env.battery_init_charge)
         self.assertEqual(env._clock.cur_datetime, env.start_datetime)
         self.assertEqual(env._clock.cur_tick, env.start_tick)
