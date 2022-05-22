@@ -142,3 +142,16 @@ def _plot_unscheduled(history: dict, ax, fig, xlabel, ylabel, title):
 
     plt.sca(ax)
     plt.xticks(rotation=90)
+
+
+if __name__ == '__main__':
+    import json
+    from datetime import datetime
+
+    history_file = '../../env_history.json'
+    with open(history_file, 'r') as f:
+        _history = json.load(f)
+
+    _history['datetime'] = list(map(datetime.fromisoformat, _history['datetime']))
+    _history['battery'] = list(map(lambda x: x * 100, _history['battery']))
+    render_all(_history)

@@ -191,3 +191,15 @@ class SimulationEnv(gym.Env):
 
     def render_all(self):
         _render_all(self.history)
+
+    def save_history(self, path: str = 'env_history.json'):
+        import json
+
+        class CustomEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                return json.JSONEncoder.default(self, obj)
+
+        with open(path, 'w') as f:
+            json.dump(self.history, f, indent=2, cls=CustomEncoder, default=str)
