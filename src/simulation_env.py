@@ -17,12 +17,6 @@ from src.utils import run_in_random_order, timedelta_to_hours
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 EnvHistory = Dict[str, List[Any]]
-env_history_keys = (
-    'total_reward', 'action', 'wallet_balance', 'tick', 'datetime',
-    'energy_produced', 'energy_consumed', 'price', 'scheduled_buy_amounts',
-    'scheduled_sell_amounts', 'unscheduled_buy_amounts', 'unscheduled_sell_amounts',
-    'battery',
-)
 
 
 class SimulationEnv(gym.Env):
