@@ -2,7 +2,6 @@ from typing import List
 import random
 
 from src.data_strategies import DataStrategy, update_last_processed
-from src.units import MWh
 
 
 class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
@@ -22,8 +21,8 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
         self.energy_consumption_MWh += self.energy_consumption_MWh * extra_data
 
     @update_last_processed
-    def process(self, idx: int) -> MWh:
-        consumed_energy = MWh(self.energy_consumption_MWh[idx % 24])
+    def process(self, idx: int) -> float:
+        consumed_energy = self.energy_consumption_MWh[idx % 24]
         return consumed_energy * abs(1 + random.gauss(0, 0.03))
 
     def observation(self, idx: int) -> List[float]:

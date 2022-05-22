@@ -69,12 +69,10 @@ class Prosumer:
         self._restore_energy_balance()
 
     def _consume_energy(self):
-        power_consumed = self.consumption_system.calculate_power()
-        self.energy_balance.sub(power_consumed.to_mwh())
+        self.energy_balance.sub(self.consumption_system.calculate_energy())
 
     def _produce_energy(self):
-        power_produced = self.production_system.calculate_power()
-        self.energy_balance.add(power_produced.to_mwh())
+        self.energy_balance.add(self.production_system.calculate_energy())
 
     def buy_energy(self, amount: MWh, price: Currency, scheduled: bool = True):
         succeeded = self.energy_market.buy(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)

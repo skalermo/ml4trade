@@ -40,10 +40,10 @@ class EnergyMarket:
         return True
 
     def get_buy_price(self):
-        return self.ds.process(self.clock_view.cur_tick())
+        return Currency(self.ds.process(self.clock_view.cur_tick()))
 
     def get_sell_price(self):
-        return self.ds.process(self.clock_view.cur_tick())
+        return Currency(self.ds.process(self.clock_view.cur_tick()))
 
     def get_buy_price_unscheduled(self):
         return self.get_buy_price() * UNSCHEDULED_MULTIPLIER

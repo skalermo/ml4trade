@@ -29,7 +29,7 @@ class DataStrategy:
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         return df
 
-    def process(self, idx: int) -> Any:
+    def process(self, idx: int) -> float:
         raise NotImplementedError
 
     def observation(self, idx: int) -> List[float]:

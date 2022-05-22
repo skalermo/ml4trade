@@ -5,7 +5,7 @@ import datetime
 import pandas as pd
 
 from src.production import ProductionSystem
-from src.units import MW
+from src.units import MWh
 from src.clock import SimulationClock
 from src.data_strategies import ImgwWindDataStrategy, ImgwSolarDataStrategy, imgw_col_ids
 
@@ -21,15 +21,15 @@ class TestProduction(unittest.TestCase):
 
     def test_wind_production(self):
         wind_production_system = ProductionSystem(ImgwWindDataStrategy(self.df), self.clock.view())
-        power = wind_production_system.calculate_power()
-        calculated_power = MW(0.002 * 10 / 11)
-        self.assertEqual(power, calculated_power)
+        energy = wind_production_system.calculate_energy()
+        calculated_energy = MWh(0.002 * 10 / 11)
+        self.assertEqual(energy, calculated_energy)
 
     def test_solar_production(self):
         solar_production_system = ProductionSystem(ImgwSolarDataStrategy(self.df), self.clock.view())
-        power = solar_production_system.calculate_power()
-        calculated_power = MW(0.001)
-        self.assertEqual(power, calculated_power)
+        energy = solar_production_system.calculate_energy()
+        calculated_energy = MWh(0.001)
+        self.assertEqual(energy, calculated_energy)
 
 
 if __name__ == '__main__':
