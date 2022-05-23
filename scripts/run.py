@@ -60,6 +60,10 @@ def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
         battery_capacity=MWh(cfg.battery.capacity),
         battery_init_charge=MWh(cfg.battery.init_charge),
         battery_efficiency=cfg.battery.efficiency,
+        max_solar_power=MW(cfg.energy_systems.max_solar_power),
+        solar_efficiency=cfg.energy_systems.solar_efficiency,
+        max_wind_power=MW(cfg.energy_systems.max_wind_power),
+        max_wind_speed=cfg.energy_systems.max_wind_speed,
     )
     env_test = SimulationEnv(
         data_strategies,
@@ -71,6 +75,10 @@ def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
         battery_capacity=MWh(cfg.battery.capacity),
         battery_init_charge=MWh(cfg.battery.init_charge),
         battery_efficiency=cfg.battery.efficiency,
+        max_solar_power=MW(cfg.energy_systems.max_solar_power),
+        solar_efficiency=cfg.energy_systems.solar_efficiency,
+        max_wind_power=MW(cfg.energy_systems.max_wind_power),
+        max_wind_speed=cfg.energy_systems.max_wind_speed,
     )
     return env_train, env_test
 

@@ -49,15 +49,23 @@ def _preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 class ImgwWindDataStrategy(DataStrategy):
+
+    def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
+                window_direction: Literal['forward', 'backward'] = 'forward', max_wind_power: MW = MW(0.01),
+                max_wind_speed: float = 11):
+        super().__init__(df, window_size, window_direction)
+        self.max_wind_power = max_wind_power
+        self.max_wind_speed = max_wind_speed
+
     col = 'wind_speed'
     col_idx = list(imgw_col_ids.keys()).index(col)
 
     def process(self, idx: int) -> MW:
         # wind speed in meters per second
         wind_speed = self.df.iat[idx, self.col_idx]
-        if wind_speed > MAX_WIND_SPEED or wind_speed < 0:
+        if wind_speed > self.max_wind_speed or wind_speed < 0:
             return MW(0)
-        power = MW(wind_speed * MAX_WIND_POWER.value / MAX_WIND_SPEED)
+        power = MW(wind_speed * self.max_wind_power.value / self.max_wind_speed)
         return power
 
     def observation(self, idx: int) -> List[float]:
@@ -65,6 +73,14 @@ class ImgwWindDataStrategy(DataStrategy):
 
 
 class ImgwSolarDataStrategy(DataStrategy):
+
+    def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
+                window_direction: Literal['forward', 'backward'] = 'forward', max_solar_power: MW = MW(0.001),
+                solar_efficiency: float = 0.2):
+        super().__init__(df, window_size, window_direction)
+        self.max_solar_power = max_solar_power
+        self.solar_efficiency = solar_efficiency
+
     col = 'cloudiness'
     col_idx = list(imgw_col_ids.keys()).index(col)
 
@@ -74,7 +90,7 @@ class ImgwSolarDataStrategy(DataStrategy):
         cloudiness = self.df.iat[idx, self.col_idx]
         if cloudiness == 9:  # 9 equals lack of observation (sky obscured)
             cloudiness = 8  # 8 equals overcast
-        power = MW(MAX_SOLAR_POWER.value * (1 - cloudiness / 8))
+        power = MW(self.max_solar_power.value * (1 - cloudiness / 8) * self.solar_efficiency)
         return power
 
     def observation(self, idx: int) -> List[float]:
