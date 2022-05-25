@@ -9,7 +9,7 @@ class TestMarketDataStrategy(unittest.TestCase):
         self.market_ds = setup_default_data_strategies()['market']
 
     def test_process(self):
-        self.assertEqual(self.market_ds.process(7), Currency(98.12))
+        self.assertEqual(self.market_ds.process(7), 98.12)
 
     def test_observation(self):
         expected = [108.27, 94.74, 85.05, 79.35, 75.17, 79.5,

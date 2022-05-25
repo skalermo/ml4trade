@@ -1,8 +1,7 @@
 from typing import List
 import random
 
-from ml4trade.data_strategies import DataStrategy
-from ml4trade.units import MW
+from ml4trade.data_strategies import DataStrategy, update_last_processed
 
 
 class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
@@ -21,9 +20,10 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
         extra_data = window_size // len(self.energy_consumption_MWh)
         self.energy_consumption_MWh += self.energy_consumption_MWh * extra_data
 
-    def process(self, idx: int) -> MW:
+    @update_last_processed
+    def process(self, idx: int) -> float:
         consumed_energy = self.energy_consumption_MWh[idx % 24]
-        return MW(consumed_energy * abs(1 + random.gauss(0, 0.03)))
+        return consumed_energy * abs(1 + random.gauss(0, 0.03))
 
     def observation(self, idx: int) -> List[float]:
         return self.energy_consumption_MWh[idx % 24:idx % 24 + self.window_size]

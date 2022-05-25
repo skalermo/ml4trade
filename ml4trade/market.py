@@ -18,30 +18,32 @@ class EnergyMarket:
 
     def buy(self, amount: MWh, price_threshold: Currency,
             client_wallet: Wallet, energy_balance: EnergyBalance,
-            scheduled: bool = True):
+            scheduled: bool = True) -> bool:
         # if scheduled client buys `amount` of energy at buy price not higher than `price_threshold`
         if scheduled and self.get_buy_price() > price_threshold:
-            return
+            return False
         energy_balance.add(amount)
         buy_price = self.get_buy_price() if scheduled else self.get_buy_price_unscheduled()
         client_wallet.withdraw(amount.to_cost(buy_price))
+        return True
 
     def sell(self, amount: MWh, price_threshold: Currency,
              client_wallet: Wallet, energy_balance: EnergyBalance,
-             scheduled: bool = True):
+             scheduled: bool = True) -> bool:
         # if scheduled client sells `amount` of energy
         # at sell price not lower than `price_threshold`
         if scheduled and self.get_sell_price() < price_threshold:
-            return
+            return False
         energy_balance.sub(amount)
         sell_price = self.get_sell_price() if scheduled else self.get_sell_price_unscheduled()
         client_wallet.deposit(amount.to_cost(sell_price))
+        return True
 
     def get_buy_price(self):
-        return self.ds.process(self.clock_view.cur_tick())
+        return Currency(self.ds.process(self.clock_view.cur_tick()))
 
     def get_sell_price(self):
-        return self.ds.process(self.clock_view.cur_tick())
+        return Currency(self.ds.process(self.clock_view.cur_tick()))
 
     def get_buy_price_unscheduled(self):
         return self.get_buy_price() * UNSCHEDULED_MULTIPLIER
