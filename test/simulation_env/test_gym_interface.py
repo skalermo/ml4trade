@@ -55,13 +55,16 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertNotEqual(env._prosumer.battery.current_charge, env._battery_init_charge)
         self.assertNotEqual(env._clock.cur_datetime, env._start_datetime)
         self.assertNotEqual(env._clock.cur_tick, env._start_tick)
+
+        # force reset() to immediately yield
+        env._clock.scheduling_time = env._start_datetime
         env.reset()
+
         self.assertEqual(env._prosumer.wallet.balance, env._prosumer_init_balance)
         self.assertEqual(env._prev_prosumer_balance, env._prosumer_init_balance)
         self.assertEqual(env._prosumer.battery.current_charge, env._battery_init_charge)
         self.assertEqual(env._clock.cur_datetime, env._start_datetime)
         self.assertEqual(env._clock.cur_tick, env._start_tick)
-
         self.assertEqual(env._total_reward, 0)
         self.assertEqual(len(env.history['total_reward']), 0)
 
