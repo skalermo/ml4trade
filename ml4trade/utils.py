@@ -15,7 +15,7 @@ def timedelta_to_hours(td: timedelta) -> int:
     return td.days * 24
 
 
-def calc_start_idx(data_strategies: List[DataStrategy], scheduling_time: time) -> int:
+def calc_tick_offset(data_strategies: List[DataStrategy], scheduling_time: time) -> int:
     start_idx = 0
     for strategy in data_strategies:
         if strategy.window_direction == 'backward':
