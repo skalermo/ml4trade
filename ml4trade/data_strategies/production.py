@@ -6,12 +6,6 @@ import pandas as pd
 from ml4trade.data_strategies import DataStrategy, update_last_processed
 from ml4trade.units import MW
 
-MAX_WIND_POWER = MW(0.01)
-MAX_WIND_SPEED = 11
-
-MAX_SOLAR_POWER = MW(0.001)
-SOLAR_EFFICIENCY = 0.2
-
 imgw_col_ids = {
     'code': 0,
     'year': 2,
@@ -27,10 +21,13 @@ imgw_col_ids = {
 class ImgwDataStrategy(DataStrategy):
 
     def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
-                 window_direction: Literal['forward', 'backward'] = 'forward'):
+                 window_direction: Literal['forward', 'backward'] = 'forward', max_solar_power: MW = MW(0.001),
+                 solar_efficiency: float = 0.2, max_wind_power: MW = MW(0.01), max_wind_speed: float = 11):
         super().__init__(df, window_size, window_direction)
-        self.imgwWindDataStrategy = ImgwWindDataStrategy(df, window_size, window_direction)
-        self.imgwSolarDataStrategy = ImgwSolarDataStrategy(df, window_size, window_direction)
+        self.imgwWindDataStrategy = ImgwWindDataStrategy(df, window_size, window_direction, max_wind_power,
+                                                         max_wind_speed)
+        self.imgwSolarDataStrategy = ImgwSolarDataStrategy(df, window_size, window_direction, max_solar_power,
+                                                           solar_efficiency)
 
     @update_last_processed
     def process(self, idx: int) -> float:
@@ -78,6 +75,7 @@ class ImgwSolarDataStrategy(DataStrategy):
     def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
                 window_direction: Literal['forward', 'backward'] = 'forward', max_solar_power: MW = MW(0.001),
                 solar_efficiency: float = 0.2):
+
         super().__init__(df, window_size, window_direction)
         self.max_solar_power = max_solar_power
         self.solar_efficiency = solar_efficiency
