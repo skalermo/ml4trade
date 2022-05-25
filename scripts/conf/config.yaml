@@ -9,5 +9,10 @@ battery:
   init_charge: 0.05
 wallet:
   init_balance: 10_000
+energy_systems:
+  max_solar_power: 0.001
+  solar_efficiency: 0.2
+  max_wind_power: 0.01
+  max_wind_speed: 11
 
 debug: True
