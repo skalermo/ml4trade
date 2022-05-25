@@ -5,7 +5,7 @@ import datetime
 import pandas as pd
 
 from ml4trade.production import ProductionSystem
-from ml4trade.units import MW
+from ml4trade.units import MWh
 from ml4trade.clock import SimulationClock
 from ml4trade.data_strategies import ImgwWindDataStrategy, ImgwSolarDataStrategy, imgw_col_ids
 
@@ -21,14 +21,14 @@ class TestProduction(unittest.TestCase):
 
     def test_wind_production(self):
         wind_production_system = ProductionSystem(ImgwWindDataStrategy(self.df), self.clock.view())
-        power = wind_production_system.calculate_power()
-        calculated_power = MW(0.002 * 10 / 11)
-        self.assertEqual(power, calculated_power)
+        energy = wind_production_system.calculate_energy()
+        calculated_energy = MWh(0.002 * 10 / 11)
+        self.assertEqual(energy, calculated_energy)
 
     def test_solar_production(self):
         solar_production_system = ProductionSystem(ImgwSolarDataStrategy(self.df), self.clock.view())
-        power = solar_production_system.calculate_power()
-        calculated_power = MW(0.0002)
+        power = solar_production_system.calculate_energy()
+        calculated_power = MWh(0.0002)
         self.assertEqual(power, calculated_power)
 
 

@@ -1,4 +1,5 @@
 import unittest
+from datetime import timedelta
 
 from random_agent import RandomAgent
 
@@ -41,17 +42,17 @@ class TestSimulationEnv(unittest.TestCase):
         env.step(action)
         self.assertEqual(len(env.history['total_reward']), 1)
         self.assertEqual(env.history['total_reward'][0], env._total_reward)
-        self.assertEqual(env.history['wallet_balance'][0], env._prosumer.wallet.balance.value)
         self.assertTrue((env.history['action'][0] == action).all())
-        self.assertEqual(env.history['tick'][0], env._clock.cur_tick)
-        self.assertEqual(env.history['datetime'][0], env._clock.cur_datetime)
+        self.assertEqual(env.history['wallet_balance'][-1], env._prosumer.wallet.balance.value)
+        self.assertEqual(env.history['tick'][-1], env._clock.cur_tick - 1)
+        self.assertEqual(env.history['datetime'][-1], env._clock.cur_datetime - timedelta(hours=1))
 
     def test_reset_sets_initial_values(self):
         env = SimulationEnv(setup_default_data_strategies())
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())
         self.assertNotEqual(env._prosumer.wallet.balance, env._prosumer_init_balance)
-        self.assertNotEqual(env._prev_prosumer_balance, env._prosumer_init_balance)
+        self.assertNotEqual(env._prev_step_prosumer_balance, env._prosumer_init_balance)
         self.assertNotEqual(env._prosumer.battery.current_charge, env._battery_init_charge)
         self.assertNotEqual(env._clock.cur_datetime, env._start_datetime)
         self.assertNotEqual(env._clock.cur_tick, env._start_tick)
@@ -71,6 +72,9 @@ class TestSimulationEnv(unittest.TestCase):
         env.reset()
         self.assertNotEqual(env._clock.cur_datetime, start_datetime)
         self.assertTrue(env._clock.is_it_scheduling_hour())
+
+        self.assertEqual(env._total_reward, 0)
+        self.assertEqual(len(env.history['total_reward']), 0)
 
 
 if __name__ == '__main__':

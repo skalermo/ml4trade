@@ -1,7 +1,7 @@
 import unittest
 from ml4trade.battery import Battery
 from ml4trade.production import ProductionSystem
-from ml4trade.units import MW, MWh, Currency
+from ml4trade.units import MWh, Currency
 from ml4trade.prosumer import Prosumer
 from ml4trade.clock import SimulationClock
 
@@ -17,14 +17,14 @@ class TestProduceConsumeEnergy(unittest.TestCase):
         self.prosumer = Prosumer(battery, self.production, self.consumption, SimulationClock().view(), Currency(50), energy_market)
 
     def test_consume_energy(self):
-        self.consumption.calculate_power = lambda: MW(0.01)
+        self.consumption.calculate_energy = lambda: MWh(0.01)
 
         self.prosumer._consume_energy()
 
         self.assertEqual(self.prosumer.energy_balance.value, MWh(-0.01))
 
     def test_produce_energy(self):
-        self.production.calculate_power = lambda: MW(0.01)
+        self.production.calculate_energy = lambda: MWh(0.01)
 
         self.prosumer._produce_energy()
 

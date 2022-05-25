@@ -3,7 +3,7 @@ from typing_extensions import Literal
 
 import pandas as pd
 
-from ml4trade.data_strategies import DataStrategy
+from ml4trade.data_strategies import DataStrategy, update_last_processed
 from ml4trade.units import MW
 
 imgw_col_ids = {
@@ -29,7 +29,8 @@ class ImgwDataStrategy(DataStrategy):
         self.imgwSolarDataStrategy = ImgwSolarDataStrategy(df, window_size, window_direction, max_solar_power,
                                                            solar_efficiency)
 
-    def process(self, idx: int) -> MW:
+    @update_last_processed
+    def process(self, idx: int) -> float:
         return self.imgwSolarDataStrategy.process(idx) + self.imgwWindDataStrategy.process(idx)
 
     def observation(self, idx: int) -> List[float]:
@@ -57,13 +58,13 @@ class ImgwWindDataStrategy(DataStrategy):
     col = 'wind_speed'
     col_idx = list(imgw_col_ids.keys()).index(col)
 
-    def process(self, idx: int) -> MW:
+    @update_last_processed
+    def process(self, idx: int) -> float:
         # wind speed in meters per second
         wind_speed = self.df.iat[idx, self.col_idx]
         if wind_speed > self.max_wind_speed or wind_speed < 0:
-            return MW(0)
-        power = MW(wind_speed * self.max_wind_power.value / self.max_wind_speed)
-        return power
+            return 0
+        return wind_speed * self.max_wind_power.value / self.max_wind_speed
 
     def observation(self, idx: int) -> List[float]:
         return list(self.df.iloc[idx - self.window_size + 1:idx + 1, self.col_idx])
@@ -82,14 +83,14 @@ class ImgwSolarDataStrategy(DataStrategy):
     col = 'cloudiness'
     col_idx = list(imgw_col_ids.keys()).index(col)
 
-    def process(self, idx: int) -> MW:
+    @update_last_processed
+    def process(self, idx: int) -> float:
         # cloudiness in oktas
         # https://en.wikipedia.org/wiki/Okta 
         cloudiness = self.df.iat[idx, self.col_idx]
         if cloudiness == 9:  # 9 equals lack of observation (sky obscured)
             cloudiness = 8  # 8 equals overcast
-        power = MW(self.max_solar_power.value * (1 - cloudiness / 8) * self.solar_efficiency)
-        return power
+        return self.max_solar_power.value * (1 - cloudiness / 8) * self.solar_efficiency
 
     def observation(self, idx: int) -> List[float]:
         return list(self.df.iloc[idx - self.window_size + 1:idx + 1, self.col_idx])

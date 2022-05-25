@@ -35,6 +35,11 @@ class Prosumer:
         self.scheduled_sell_thresholds: Optional[np.ndarray] = None
         self.next_day_actions: Optional[np.ndarray] = None
 
+        self.last_scheduled_buy_transaction = None
+        self.last_unscheduled_buy_transaction = None
+        self.last_scheduled_sell_transaction = None
+        self.last_unscheduled_sell_transaction = None
+
     def schedule(self, actions: np.ndarray):
         self.next_day_actions = actions
 
@@ -64,18 +69,24 @@ class Prosumer:
         self._restore_energy_balance()
 
     def _consume_energy(self):
-        power_consumed = self.consumption_system.calculate_power()
-        self.energy_balance.sub(power_consumed.to_mwh())
+        self.energy_balance.sub(self.consumption_system.calculate_energy())
 
     def _produce_energy(self):
-        power_produced = self.production_system.calculate_power()
-        self.energy_balance.add(power_produced.to_mwh())
+        self.energy_balance.add(self.production_system.calculate_energy())
 
     def buy_energy(self, amount: MWh, price: Currency, scheduled: bool = True):
-        self.energy_market.buy(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
+        succeeded = self.energy_market.buy(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
+        if scheduled:
+            self.last_scheduled_buy_transaction = (amount.value, succeeded)
+        else:
+            self.last_unscheduled_buy_transaction = (amount.value, True)
 
     def sell_energy(self, amount: MWh, price: Currency, scheduled: bool = True):
-        self.energy_market.sell(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
+        succeeded = self.energy_market.sell(amount, price, self.wallet, self.energy_balance, scheduled=scheduled)
+        if scheduled:
+            self.last_scheduled_sell_transaction = (amount.value, succeeded)
+        else:
+            self.last_unscheduled_sell_transaction = (amount.value, True)
 
     def _restore_energy_balance(self):
         if self.energy_balance.value < MWh(0):

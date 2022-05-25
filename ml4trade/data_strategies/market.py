@@ -2,8 +2,7 @@ from typing import List
 
 import pandas as pd
 
-from ml4trade.data_strategies import DataStrategy
-from ml4trade.units import Currency
+from ml4trade.data_strategies import DataStrategy, update_last_processed
 
 
 class PricesPlDataStrategy(DataStrategy):
@@ -17,9 +16,9 @@ class PricesPlDataStrategy(DataStrategy):
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         return df[[self.col]]
 
-    def process(self, idx: int) -> Currency:
-        val = self.df.iat[idx, self.col_idx]
-        return Currency(val)
+    @update_last_processed
+    def process(self, idx: int) -> float:
+        return self.df.iat[idx, self.col_idx]
 
     def observation(self, idx: int) -> List[float]:
         start_idx = idx - self.scheduling_hour

@@ -13,10 +13,10 @@ from ml4trade.constants import *
 from ml4trade.data_strategies import DataStrategy
 from ml4trade.units import Currency, MWh
 from ml4trade.utils import run_in_random_order, calc_start_idx, dfs_are_long_enough
+from ml4trade.rendering import render_all as _render_all
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 EnvHistory = Dict[str, List[Any]]
-env_history_keys = ('total_reward', 'wallet_balance', 'action', 'tick', 'datetime')
 
 
 class SimulationEnv(gym.Env):
@@ -135,18 +135,33 @@ class SimulationEnv(gym.Env):
         balance_diff = self._prosumer.wallet.balance - self._prev_prosumer_balance
         return balance_diff.value
 
-    def _update_history(self, action: ActType) -> None:
-        self.history['action'].append(action)
-        self.history['total_reward'].append(self._total_reward)
+    def _update_history_for_last_tick(self) -> None:
         self.history['wallet_balance'].append(self._prosumer.wallet.balance.value)
         self.history['tick'].append(self._clock.cur_tick)
         self.history['datetime'].append(self._clock.cur_datetime)
+        self.history['energy_produced'].append(self._production_system.ds.last_processed)
+        self.history['energy_consumed'].append(self._consumption_system.ds.last_processed)
+        self.history['price'].append(self._market.ds.last_processed)
+        self.history['scheduled_buy_amounts'].append(self._prosumer.last_scheduled_buy_transaction)
+        self.history['scheduled_sell_amounts'].append(self._prosumer.last_scheduled_sell_transaction)
+        if self._prosumer.last_unscheduled_buy_transaction is not None:
+            self.history['unscheduled_buy_amounts'].append(self._prosumer.last_unscheduled_buy_transaction)
+            self._prosumer.last_unscheduled_buy_transaction = None
+        else:
+            self.history['unscheduled_buy_amounts'].append((0, False))
+        if self._prosumer.last_unscheduled_sell_transaction is not None:
+            self.history['unscheduled_sell_amounts'].append(self._prosumer.last_unscheduled_sell_transaction)
+            self._prosumer.last_unscheduled_sell_transaction = None
+        else:
+            self.history['unscheduled_sell_amounts'].append((0, False))
+        self.history['battery'].append(self._prosumer.battery.rel_current_charge)
 
     def step(self, action: ActType) -> ObservationType:
-        self._prev_prosumer_balance = self._prosumer.wallet.balance
+        self._prev_step_prosumer_balance = self._prosumer.wallet.balance
         self._simulation.send(action)
         self._total_reward += self._calculate_reward()
-        self._update_history(action)
+        self.history['total_reward'].append(self._total_reward)
+        self.history['action'].append(action)
         return self._observation()
 
     def __simulation(self) -> Generator[None, ActType, None]:
@@ -165,7 +180,23 @@ class SimulationEnv(gym.Env):
             if self._first_actions_set:
                 run_in_random_order([self._prosumer.consume, self._prosumer.produce])
 
+            self._update_history_for_last_tick()
             self._clock.tick()
 
     def render(self, mode="human"):
-        pass
+        NotImplemented('Use render_all()!')
+
+    def render_all(self):
+        _render_all(self.history)
+
+    def save_history(self, path: str = 'env_history.json'):
+        import json
+
+        class CustomEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                return json.JSONEncoder.default(self, obj)
+
+        with open(path, 'w') as f:
+            json.dump(self.history, f, indent=2, cls=CustomEncoder, default=str)
