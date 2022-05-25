@@ -11,7 +11,7 @@ from ml4trade.market import EnergyMarket
 from ml4trade.clock import SimulationClock
 from ml4trade.constants import *
 from ml4trade.data_strategies import DataStrategy
-from ml4trade.units import Currency, MWh, MW
+from ml4trade.units import Currency, MWh
 from ml4trade.utils import run_in_random_order, calc_start_idx, dfs_are_long_enough
 
 ObservationType = Tuple[ObsType, float, bool, dict]
@@ -52,10 +52,6 @@ class SimulationEnv(gym.Env):
             battery_capacity: MWh = MWh(0.1),
             battery_init_charge: MWh = MWh(0.1),
             battery_efficiency: float = 1.0,
-            max_solar_power: MW = MW(0.001),
-            solar_efficiency: float = 0.2,
-            max_wind_power: MW = MW(0.01),
-            max_wind_speed: float = 11,
     ):
         if data_strategies is None:
             data_strategies = {}
@@ -80,8 +76,7 @@ class SimulationEnv(gym.Env):
             self._consumption_system
         ) = self._setup_systems(data_strategies, self._start_tick, prosumer_init_balance,
                                 start_datetime, scheduling_time, action_replacement_time,
-                                battery_init_charge, battery_efficiency, battery_capacity, max_solar_power,
-                                solar_efficiency, max_wind_power, max_wind_speed)
+                                battery_init_charge, battery_efficiency, battery_capacity)
         self.reset()
 
     @staticmethod
@@ -95,14 +90,10 @@ class SimulationEnv(gym.Env):
             battery_init_charge: MWh,
             battery_efficiency: float,
             battery_capacity: MWh,
-            max_solar_power: MW,
-            solar_efficiency: float,
-            max_wind_power: MW,
-            max_wind_speed: float,
     ) -> Tuple[SimulationClock, Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
+
         clock = SimulationClock(start_datetime, scheduling_time, action_replacement_time, start_tick)
         battery = Battery(battery_capacity, battery_efficiency, battery_init_charge)
-
         production_system = ProductionSystem(data_strategies.get('production'), clock.view())
         consumption_system = ConsumptionSystem(data_strategies.get('consumption'), clock.view())
         market = EnergyMarket(data_strategies.get('market'), clock.view())
