@@ -45,12 +45,10 @@ def _plot_battery(history: dict, ax, fig, xlabel, ylabel, title):
     datetime_history_last_2_days = history['datetime'][-48:]
     ax.plot(datetime_history_last_2_days, battery_history_last_2_days, color='black')
     ax.legend(loc='upper right')
-    hours = mdates.HourLocator(interval=2)
+    hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
     h_fmt = mdates.DateFormatter('%H')
     ax.xaxis.set_major_locator(hours)
     ax.xaxis.set_major_formatter(h_fmt)
-    plt.sca(ax)
-    plt.xticks(rotation=90)
 
 
 def _plot_scheduled(history: dict, ax, fig, xlabel, ylabel, title):
@@ -82,15 +80,12 @@ def _plot_scheduled(history: dict, ax, fig, xlabel, ylabel, title):
     ax2.tick_params(bottom=False, labelbottom=False)
     ax2.spines['bottom'].set_visible(False)
 
-    hours = mdates.HourLocator(interval=2)
+    hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
     h_fmt = mdates.DateFormatter('%H')
     ax.xaxis.set_major_locator(hours)
     ax.xaxis.set_major_formatter(h_fmt)
     ax2.xaxis.set_major_locator(hours)
     ax2.xaxis.set_major_formatter(h_fmt)
-
-    plt.sca(ax)
-    plt.xticks(rotation=90)
 
     def rotate_point(p, angle, o=(0, 0)):
         a = angle / 180 * math.pi
@@ -135,13 +130,10 @@ def _plot_unscheduled(history: dict, ax, fig, xlabel, ylabel, title):
     ax.plot(datetime_history_last_2_days, sells, color='blue', label='sell amount')
     ax.legend(loc='upper right')
 
-    hours = mdates.HourLocator(interval=2)
+    hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
     h_fmt = mdates.DateFormatter('%H')
     ax.xaxis.set_major_locator(hours)
     ax.xaxis.set_major_formatter(h_fmt)
-
-    plt.sca(ax)
-    plt.xticks(rotation=90)
 
 
 if __name__ == '__main__':
