@@ -1,4 +1,5 @@
 from typing import Tuple, Generator, Dict, List, Any
+from datetime import timedelta
 
 from gym import spaces
 from gym.core import ObsType, ActType
@@ -12,7 +13,7 @@ from ml4trade.clock import SimulationClock
 from ml4trade.constants import *
 from ml4trade.data_strategies import DataStrategy
 from ml4trade.units import Currency, MWh
-from ml4trade.utils import run_in_random_order, calc_start_idx, dfs_are_long_enough
+from ml4trade.utils import run_in_random_order, calc_tick_offset, dfs_are_long_enough
 from ml4trade.rendering import render_all as _render_all
 
 ObservationType = Tuple[ObsType, float, bool, dict]
@@ -52,6 +53,7 @@ class SimulationEnv(gym.Env):
             battery_capacity: MWh = MWh(0.1),
             battery_init_charge: MWh = MWh(0.1),
             battery_efficiency: float = 1.0,
+            start_tick: int = None,
     ):
         if data_strategies is None:
             data_strategies = {}
@@ -59,11 +61,13 @@ class SimulationEnv(gym.Env):
         obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
-        self._start_tick = calc_start_idx(list(data_strategies.values()), scheduling_time)
+        if start_tick is None:
+            start_tick = calc_tick_offset(list(data_strategies.values()), scheduling_time)
+        self._start_tick = start_tick
         assert dfs_are_long_enough(list(data_strategies.values()), start_datetime, end_datetime, self._start_tick), \
             'Provided dataframe is too short'
 
-        self._start_datetime = start_datetime
+        self._start_datetime = start_datetime + timedelta(hours=self._start_tick)
         self._end_datetime = end_datetime
         self._prosumer_init_balance = prosumer_init_balance
         self._battery_init_charge = battery_init_charge

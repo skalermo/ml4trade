@@ -1,12 +1,7 @@
 import os
-import sys
 from typing import List
 
 from datetime import datetime, time, timedelta
-from ml4trade.data_strategies import ImgwDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, \
-    imgw_col_ids
-from ml4trade.simulation_env import SimulationEnv
-from ml4trade.units import *
 
 import pandas as pd
 from stable_baselines3 import A2C
@@ -14,9 +9,9 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 import quantstats as qs
 
-# normally you wouldn't need this
-# you would just pip-install the project and import it
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from ml4trade.data_strategies import ImgwDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, imgw_col_ids
+from ml4trade.simulation_env import SimulationEnv
+from ml4trade.units import *
 
 
 def get_all_scv_filenames(path: str) -> List[str]:
