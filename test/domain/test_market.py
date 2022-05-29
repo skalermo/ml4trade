@@ -6,7 +6,7 @@ from ml4trade.domain.units import Currency
 from utils import setup_default_market
 
 
-prices_pl_path = os.path.join(os.path.dirname(__file__), 'mock_data/prices_pl.csv')
+prices_pl_path = os.path.join(os.path.dirname(__file__), '../mock_data/prices_pl.csv')
 
 
 class TestMarket(unittest.TestCase):

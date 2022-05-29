@@ -12,7 +12,7 @@ class TestWallet(unittest.TestCase):
 
     def test_withdraw(self):
         wallet = Wallet(Currency(0))
-        wallet.deposit(Currency(-100))
+        wallet.withdraw(Currency(100))
         self.assertEqual(wallet.balance, Currency(-100))
 
 
