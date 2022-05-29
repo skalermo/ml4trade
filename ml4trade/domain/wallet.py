@@ -1,4 +1,4 @@
-from ml4trade.units import Currency
+from ml4trade.domain.units import Currency
 
 
 class Wallet:

@@ -1,6 +1,5 @@
 import unittest
 
-from ml4trade.units import Currency
 from utils import setup_default_data_strategies
 
 

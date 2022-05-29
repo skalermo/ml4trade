@@ -1,7 +1,7 @@
 from datetime import datetime, time, timedelta
 
 
-from ml4trade.constants import START_TIME, SCHEDULING_TIME, ACTION_REPLACEMENT_TIME
+from ml4trade.domain.constants import START_TIME, SCHEDULING_TIME, ACTION_REPLACEMENT_TIME
 
 
 class ClockView:

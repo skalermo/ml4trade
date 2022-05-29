@@ -1,8 +1,8 @@
 import unittest
 import os
 
-from ml4trade.market import UNSCHEDULED_MULTIPLIER
-from ml4trade.units import Currency
+from ml4trade.domain.market import UNSCHEDULED_MULTIPLIER
+from ml4trade.domain.units import Currency
 from utils import setup_default_market
 
 

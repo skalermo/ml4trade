@@ -4,10 +4,10 @@ from typing import Dict
 
 import pandas as pd
 
-from ml4trade.market import EnergyMarket
-from ml4trade.clock import SimulationClock
+from ml4trade.domain.market import EnergyMarket
+from ml4trade.domain.clock import SimulationClock
+from ml4trade.domain.consumption import ConsumptionSystem
 from ml4trade.data_strategies import DataStrategy, PricesPlDataStrategy, ImgwSolarDataStrategy, HouseholdEnergyConsumptionDataStrategy
-from ml4trade.consumption import ConsumptionSystem
 
 
 prices_pl_path = os.path.join(os.path.dirname(__file__), 'mock_data/prices_pl.csv')

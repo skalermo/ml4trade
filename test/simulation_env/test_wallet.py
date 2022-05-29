@@ -1,7 +1,7 @@
 import unittest
 
-from ml4trade.wallet import Wallet
-from ml4trade.units import Currency
+from ml4trade.domain.wallet import Wallet
+from ml4trade.domain.units import Currency
 
 
 class TestWallet(unittest.TestCase):
