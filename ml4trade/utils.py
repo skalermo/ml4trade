@@ -12,7 +12,7 @@ def run_in_random_order(functions: List[callable]) -> None:
 
 
 def timedelta_to_hours(td: timedelta) -> int:
-    return td.days * 24
+    return td.days * 24 + td.seconds // 3600
 
 
 def calc_tick_offset(data_strategies: List[DataStrategy], scheduling_time: time) -> int:
