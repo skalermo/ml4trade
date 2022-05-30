@@ -40,18 +40,16 @@ class EnvIntervalWrapper(gym.Env):
     def save_history(self, *args, **kwargs):
         self.env.save_history(*args, **kwargs)
 
-    def set_to_test(self):
+    def set_to_test_and_reset(self) -> ObsType:
         self.test_mode = True
         self.env._start_datetime = self.test_data_start
         self.env._end_datetime = self.end_datetime
         self.env._start_tick = self.test_data_start_tick
-        self.env.reset()
+        return self.env.reset()
 
     def __ep_interval_ticks_generator(self) -> Generator[int, None, None]:
-        train_data_duration = self.test_data_start_tick - self.min_tick
-        interval_count = train_data_duration // self.interval_in_ticks
         ep_intervals_start_ticks = [start for start in range(
-            self.min_tick, self.test_data_start_tick - self.interval_in_ticks, self.interval_in_ticks
+            self.min_tick, self.test_data_start_tick - self.interval_in_ticks + 1, self.interval_in_ticks
         )]
         while True:
             start_ticks_shuffled = ep_intervals_start_ticks.copy()
@@ -60,7 +58,7 @@ class EnvIntervalWrapper(gym.Env):
                 yield i
 
     def _ep_interval_from_start_tick(self, tick: int) -> Tuple[datetime, datetime]:
-        start_datetime = self.start_datetime + timedelta(hours=tick)
+        start_datetime = self.start_datetime + timedelta(hours=tick - self.min_tick)
         end_datetime = start_datetime + self.interval
         return start_datetime, end_datetime
 
