@@ -1,4 +1,4 @@
-from ml4trade.units import MWh
+from ml4trade.domain.units import MWh
 
 
 class Battery:

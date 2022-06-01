@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, time, timedelta
 
 
-from ml4trade.clock import SimulationClock
+from ml4trade.domain.clock import SimulationClock
 
 
 class TestClock(unittest.TestCase):

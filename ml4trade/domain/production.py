@@ -1,7 +1,7 @@
 from typing import List
 
-from ml4trade.clock import ClockView
-from ml4trade.units import MWh
+from ml4trade.domain.clock import ClockView
+from ml4trade.domain.units import MWh
 from ml4trade.data_strategies.base import DataStrategy
 
 

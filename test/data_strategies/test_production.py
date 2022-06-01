@@ -4,9 +4,9 @@ import datetime
 
 import pandas as pd
 
-from ml4trade.production import ProductionSystem
-from ml4trade.units import MWh
-from ml4trade.clock import SimulationClock
+from ml4trade.domain.production import ProductionSystem
+from ml4trade.domain.units import MWh
+from ml4trade.domain.clock import SimulationClock
 from ml4trade.data_strategies import ImgwWindDataStrategy, ImgwSolarDataStrategy, imgw_col_ids
 
 

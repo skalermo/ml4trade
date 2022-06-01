@@ -11,10 +11,10 @@ import quantstats as qs
 
 from ml4trade.data_strategies import ImgwDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, imgw_col_ids
 from ml4trade.simulation_env import SimulationEnv
-from ml4trade.units import *
+from domain.units import *
 
 
-def get_all_scv_filenames(path: str) -> List[str]:
+def get_all_csv_filenames(path: str) -> List[str]:
     return [f for f in os.listdir(path) if f.endswith('.csv')]
 
 
@@ -22,7 +22,7 @@ def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
     orig_cwd = hydra.utils.get_original_cwd()
 
     weather_data_path = f'{orig_cwd}/../data/.data/weather_unzipped_flattened'
-    filenames = get_all_scv_filenames(weather_data_path)
+    filenames = get_all_csv_filenames(weather_data_path)
     dfs = []
     for f in filenames:
         df = pd.read_csv(f'{weather_data_path}/{f}', header=None, encoding='cp1250',
@@ -92,7 +92,7 @@ def main(cfg: DictConfig) -> None:
     qs.extend_pandas()
     net_worth = pd.Series(env_test.history['wallet_balance'], index=env_test.history['datetime'])
     returns = net_worth.pct_change().iloc[1:]
-    qs.reports.full(returns)
+    # qs.reports.full(returns)
     qs.reports.html(returns, output='a2c_quantstats.html', download_filename='a2c_quantstats.html')
 
 
