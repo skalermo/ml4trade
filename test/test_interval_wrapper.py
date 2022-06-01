@@ -67,7 +67,7 @@ class TestIntervalWrapper(unittest.TestCase):
         self.assertListEqual([start, end, tick], [new_start, new_end, new_tick])
 
         self.env_wrapper.test_mode = False
-        self.env_wrapper.reset()
+        self.env_wrapper.reset(seed=0)
         new_start, new_end, new_tick = (
             self.env._start_datetime,
             self.env._end_datetime,
