@@ -4,7 +4,7 @@ from typing_extensions import Literal
 import pandas as pd
 
 from ml4trade.data_strategies import DataStrategy, update_last_processed
-from ml4trade.units import MW
+from ml4trade.domain.units import MW
 
 imgw_col_ids = {
     'code': 0,

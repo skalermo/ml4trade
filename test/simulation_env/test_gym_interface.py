@@ -4,7 +4,7 @@ from datetime import timedelta
 from random_agent import RandomAgent
 
 from ml4trade.simulation_env import SimulationEnv
-from ml4trade.constants import START_TIME
+from ml4trade.domain.constants import START_TIME
 from utils import setup_default_data_strategies
 
 

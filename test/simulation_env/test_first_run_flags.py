@@ -2,7 +2,7 @@ import unittest
 from datetime import timedelta, datetime
 
 from ml4trade.simulation_env import SimulationEnv
-from ml4trade.constants import SCHEDULING_TIME
+from ml4trade.domain.constants import SCHEDULING_TIME
 from utils import setup_default_data_strategies
 
 

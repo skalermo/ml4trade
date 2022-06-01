@@ -1,7 +1,8 @@
 import unittest
 
 from ml4trade.utils import calc_tick_offset
-from ml4trade.constants import SCHEDULING_TIME
+from ml4trade.domain.constants import SCHEDULING_TIME
+
 from utils import setup_default_data_strategies
 
 

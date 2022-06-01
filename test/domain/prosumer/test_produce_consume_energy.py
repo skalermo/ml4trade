@@ -1,9 +1,9 @@
 import unittest
-from ml4trade.battery import Battery
-from ml4trade.production import ProductionSystem
-from ml4trade.units import MWh, Currency
-from ml4trade.prosumer import Prosumer
-from ml4trade.clock import SimulationClock
+from ml4trade.domain.battery import Battery
+from ml4trade.domain.production import ProductionSystem
+from ml4trade.domain.units import MWh, Currency
+from ml4trade.domain.prosumer import Prosumer
+from ml4trade.domain.clock import SimulationClock
 
 from utils import setup_default_market, setup_default_consumption_system
 
