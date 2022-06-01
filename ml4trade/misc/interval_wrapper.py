@@ -8,7 +8,7 @@ from ml4trade.simulation_env import SimulationEnv
 from ml4trade.utils import timedelta_to_hours
 
 
-class EnvIntervalWrapper(Wrapper):
+class IntervalWrapper(Wrapper):
     env: SimulationEnv
 
     def __init__(self, env: SimulationEnv, interval: timedelta, split_ratio: float = 0.8):
