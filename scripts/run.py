@@ -11,7 +11,7 @@ import quantstats as qs
 
 from ml4trade.data_strategies import ImgwDataStrategy, HouseholdEnergyConsumptionDataStrategy, PricesPlDataStrategy, imgw_col_ids
 from ml4trade.simulation_env import SimulationEnv
-from domain.units import *
+from ml4trade.domain.units import *
 
 
 def get_all_csv_filenames(path: str) -> List[str]:
