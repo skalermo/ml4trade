@@ -16,10 +16,7 @@ def timedelta_to_hours(td: timedelta) -> int:
 
 
 def calc_tick_offset(data_strategies: List[DataStrategy], scheduling_time: time) -> int:
-    start_idx = 0
-    for strategy in data_strategies:
-        if strategy.window_direction == 'backward':
-            start_idx += strategy.observation_size()
+    start_idx = max([s.observation_size() for s in data_strategies if s.window_direction == 'backward'], default=0)
     return start_idx + scheduling_time.hour
 
 

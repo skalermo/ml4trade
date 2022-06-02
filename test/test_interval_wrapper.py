@@ -4,7 +4,7 @@ from collections import Counter
 
 from ml4trade.simulation_env import SimulationEnv
 from ml4trade.domain.constants import START_TIME
-from ml4trade.misc.interval_wrapper import EnvIntervalWrapper
+from ml4trade.misc.interval_wrapper import IntervalWrapper
 from ml4trade.utils import timedelta_to_hours
 from utils import setup_default_data_strategies
 
@@ -13,7 +13,7 @@ class TestIntervalWrapper(unittest.TestCase):
     def setUp(self) -> None:
         self.end_datetime = START_TIME + timedelta(days=14)
         self.env = SimulationEnv(setup_default_data_strategies(), start_datetime=START_TIME, end_datetime=self.end_datetime)
-        self.env_wrapper = EnvIntervalWrapper(env=self.env, interval=timedelta(days=1), split_ratio=0.75)
+        self.env_wrapper = IntervalWrapper(env=self.env, interval=timedelta(days=1), split_ratio=0.75)
         data_duration = timedelta(days=14) - timedelta(hours=34)
         self.data_start_tick = timedelta_to_hours(data_duration * 0.75)
 
@@ -67,7 +67,7 @@ class TestIntervalWrapper(unittest.TestCase):
         self.assertListEqual([start, end, tick], [new_start, new_end, new_tick])
 
         self.env_wrapper.test_mode = False
-        self.env_wrapper.reset()
+        self.env_wrapper.reset(seed=0)
         new_start, new_end, new_tick = (
             self.env._start_datetime,
             self.env._end_datetime,
