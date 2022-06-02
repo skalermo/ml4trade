@@ -52,7 +52,7 @@ class TestSimulationEnv(unittest.TestCase):
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())
         self.assertNotEqual(env._prosumer.wallet.balance, env._prosumer_init_balance)
-        self.assertNotEqual(env._prev_step_prosumer_balance, env._prosumer_init_balance)
+        self.assertNotEqual(env._prev_prosumer_balance, env._prosumer_init_balance)
         self.assertNotEqual(env._prosumer.battery.current_charge, env._battery_init_charge)
         self.assertNotEqual(env._clock.cur_datetime, env._start_datetime)
         self.assertNotEqual(env._clock.cur_tick, env._start_tick)

@@ -161,6 +161,7 @@ class SimulationEnv(gym.Env):
         self.history['battery'].append(self._prosumer.battery.rel_current_charge)
 
     def step(self, action: ActType) -> ObservationType:
+        self._prev_prosumer_balance = self._prosumer.wallet.balance
         self._simulation.send(action)
         self._total_reward += self._calculate_reward()
         self.history['total_reward'].append(self._total_reward)
