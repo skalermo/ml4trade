@@ -31,6 +31,11 @@ class TestProduction(unittest.TestCase):
         calculated_power = MWh(0.0002)
         self.assertEqual(power, calculated_power)
 
+    def test_observation_frame(self):
+        ds = ImgwSolarDataStrategy(self.df, window_size=24)
+        scheduling_hour = 10
+        self.assertListEqual(self.df.iloc[24:48, ds.col_idx].tolist(), ds.observation(scheduling_hour))
+
 
 if __name__ == '__main__':
     unittest.main()
