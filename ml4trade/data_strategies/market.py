@@ -9,8 +9,8 @@ class PricesPlDataStrategy(DataStrategy):
     col = 'Fixing I Price [PLN/MWh]'
     col_idx = 0
 
-    def __init__(self, df: pd.DataFrame, window_size: int = 24):
-        super().__init__(df, window_size, 'backward')
+    def __init__(self, df: pd.DataFrame, window_size: int = 24, scheduling_hour: int = 10):
+        super().__init__(df, window_size, 'backward', scheduling_hour)
 
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         return df[[self.col]]
