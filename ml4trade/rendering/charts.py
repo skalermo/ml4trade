@@ -56,10 +56,11 @@ def _plot_scheduled(history: dict, ax, fig, xlabel, ylabel, title):
 
     datetime_history_last_2_days = history['datetime'][-48:]
     prices_history_last_2_days = history['price'][-48:]
-    buys_last_2_days = history['scheduled_buy_amounts'][-48:]
-    sells_last_2_days = history['scheduled_sell_amounts'][-48:]
-    buys = list(map(lambda x: float(x[0]), buys_last_2_days))
-    sells = list(map(lambda x: float(x[0]), sells_last_2_days))
+    actions = history['action']
+    buys = [x[48:72] for x in actions]
+    sells = [x[72:] for x in actions]
+    buys = [item for sublist in buys for item in sublist][-24 * 2:]
+    sells = [item for sublist in sells for item in sublist][-24 * 2:]
 
     divider = make_axes_locatable(ax)
     ax2 = divider.new_vertical(size="400%", pad=0.1)
