@@ -5,8 +5,8 @@ from ml4trade.data_strategies import DataStrategy, update_last_processed
 
 
 class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
-    def __init__(self, window_size: int = 1):
-        super().__init__(None, window_size)
+    def __init__(self, window_size: int = 24):
+        super().__init__(None, window_size, 'backward')
 
         # avg energy consumption per household
         # for each hour of the day
@@ -26,4 +26,6 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
         return consumed_energy * abs(1 + random.gauss(0, 0.03))
 
     def observation(self, idx: int) -> List[float]:
-        return self.energy_consumption_MWh[idx % 24:idx % 24 + self.window_size]
+        start_idx = idx % 24 - self.scheduling_hour
+        end_idx = start_idx + self.window_size
+        return self.energy_consumption_MWh[start_idx:end_idx]
