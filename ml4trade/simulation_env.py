@@ -1,20 +1,20 @@
-from typing import Tuple, Generator, Dict, List, Any
 from datetime import timedelta
+from typing import Tuple, Generator, Dict, List, Any
 
 from gym import spaces
 from gym.core import ObsType, ActType
 
-from ml4trade.domain.consumption import ConsumptionSystem
-from ml4trade.domain.production import ProductionSystem
-from ml4trade.domain.prosumer import Prosumer
+from ml4trade.data_strategies import DataStrategy
 from ml4trade.domain.battery import Battery
-from ml4trade.domain.market import EnergyMarket
 from ml4trade.domain.clock import SimulationClock
 from ml4trade.domain.constants import *
+from ml4trade.domain.consumption import ConsumptionSystem
+from ml4trade.domain.market import EnergyMarket
+from ml4trade.domain.production import ProductionSystem
+from ml4trade.domain.prosumer import Prosumer
 from ml4trade.domain.units import Currency, MWh
-from ml4trade.utils import run_in_random_order, calc_tick_offset, dfs_are_long_enough
-from ml4trade.data_strategies import DataStrategy
 from ml4trade.rendering import render_all as _render_all
+from ml4trade.utils import run_in_random_order, calc_tick_offset, dfs_are_long_enough
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 EnvHistory = Dict[str, List[Any]]
@@ -36,6 +36,7 @@ class SimulationEnv(gym.Env):
     _consumption_system: ConsumptionSystem
     # resetable properties
     _prev_prosumer_balance: Currency
+    _prosumer_balance: Currency
     _first_actions_scheduled: bool
     _first_actions_set: bool
     _total_reward: float
@@ -116,6 +117,7 @@ class SimulationEnv(gym.Env):
         self._prosumer.next_day_actions = None
         self._clock.cur_datetime = self._start_datetime
         self._clock.cur_tick = self._start_tick
+        self._prosumer_balance = self._prosumer_init_balance
         self._prev_prosumer_balance = self._prosumer_init_balance
         self._first_actions_scheduled = False
         self._first_actions_set = False
@@ -136,8 +138,19 @@ class SimulationEnv(gym.Env):
         return obs, reward, done, {}
 
     def _calculate_reward(self) -> float:
-        balance_diff = self._prosumer.wallet.balance - self._prev_prosumer_balance
-        return balance_diff.value
+        balance_diff = self._prosumer_balance - self._prev_prosumer_balance
+        return balance_diff.value - self._calculate_potential_reward()
+
+    def _calculate_potential_reward(self) -> float:
+        produced = self.history['energy_produced']
+        consumed = self.history['energy_consumed']
+        start_idx = -self._clock.scheduling_time.hour - 24
+        end_idx = -self._clock.scheduling_time.hour
+        total_energy_produced = sum(produced[start_idx:end_idx]) if len(produced) > 48 else 0
+        total_energy_consumed = sum(consumed[start_idx:end_idx]) if len(consumed) > 48 else 0
+        total_extra_energy_produced = total_energy_produced - total_energy_consumed
+        avg_price = sum(self.history['price'][start_idx:end_idx]) / 24 if len(self.history['price']) > 48 else 0
+        return total_extra_energy_produced * avg_price
 
     def _update_history_for_last_tick(self) -> None:
         self.history['wallet_balance'].append(self._prosumer.wallet.balance.value)
@@ -161,7 +174,6 @@ class SimulationEnv(gym.Env):
         self.history['battery'].append(self._prosumer.battery.rel_current_charge)
 
     def step(self, action: ActType) -> ObservationType:
-        self._prev_prosumer_balance = self._prosumer.wallet.balance
         self._simulation.send(action)
         self._total_reward += self._calculate_reward()
         self.history['total_reward'].append(self._total_reward)
@@ -178,6 +190,8 @@ class SimulationEnv(gym.Env):
 
             if self._clock.is_it_action_replacement_hour() and self._first_actions_scheduled:
                 self._prosumer.set_new_actions()
+                self._prev_prosumer_balance = self._prosumer_balance
+                self._prosumer_balance = self._prosumer.wallet.balance
                 if not self._first_actions_set:
                     self._first_actions_set = True
 
