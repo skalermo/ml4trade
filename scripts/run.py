@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Dict, Tuple
 
 from datetime import datetime, time, timedelta
 
@@ -38,6 +38,11 @@ def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
     prices_pl_path = f'{orig_cwd}/../data/.data/prices_pl.csv'
     prices_df: pd.DataFrame = pd.read_csv(prices_pl_path, header=0)
     prices_df.fillna(method='bfill', inplace=True)
+
+    prices_df['index'] = pd.to_datetime(prices_df['index'])
+    avg_month_prices: Dict[Tuple[int, int], float] = prices_df.groupby(
+        [prices_df['index'].dt.year.rename('year'), prices_df['index'].dt.month.rename('month')]
+    )['Fixing I Price [PLN/MWh]'].mean().to_dict()
 
     data_strategies = {
         'production': ImgwDataStrategy(weather_df, window_size=24, window_direction='forward',
