@@ -76,7 +76,7 @@ def _plot_scheduled(history: dict, ax, fig, xlabel, ylabel, title):
     ax2.plot(datetime_history_last_2_days, buys, color='red', label='buy threshold')
     ax2.plot(datetime_history_last_2_days, sells, color='blue', label='sell threshold')
     ax2.legend(loc='upper right')
-    ax2.set_ylim(50, 200)
+    ax2.set_ylim(min(prices_history_last_2_days) - 20, max(prices_history_last_2_days) + 20)
     ax2.tick_params(bottom=False, labelbottom=False)
     ax2.spines['bottom'].set_visible(False)
 
