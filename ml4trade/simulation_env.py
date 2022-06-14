@@ -142,14 +142,21 @@ class SimulationEnv(gym.Env):
         return balance_diff.value - self._calculate_potential_reward()
 
     def _calculate_potential_reward(self) -> float:
+        prices = self.history['price']
+        # max amount of time history goes unfilled is
+        # 24 - scheduling_hour hours and another 24 hours
+        # we need another 24 hours to fill up history
+        # with real values
+        if len(prices) < 72 - self._clock.scheduling_time.hour:
+            return 0
         produced = self.history['energy_produced']
         consumed = self.history['energy_consumed']
         start_idx = -self._clock.scheduling_time.hour - 24
-        end_idx = -self._clock.scheduling_time.hour
-        total_energy_produced = sum(produced[start_idx:end_idx]) if len(produced) > 48 else 0
-        total_energy_consumed = sum(consumed[start_idx:end_idx]) if len(consumed) > 48 else 0
+        end_idx = start_idx + 24
+        total_energy_produced = sum(produced[start_idx:end_idx])
+        total_energy_consumed = sum(consumed[start_idx:end_idx])
         total_extra_energy_produced = total_energy_produced - total_energy_consumed
-        avg_price = sum(self.history['price'][start_idx:end_idx]) / 24 if len(self.history['price']) > 48 else 0
+        avg_price = sum(prices[start_idx:end_idx]) / 24
         return total_extra_energy_produced * avg_price
 
     def _update_history_for_last_tick(self) -> None:
