@@ -51,8 +51,10 @@ class TestSimulationEnv(unittest.TestCase):
         env = SimulationEnv(setup_default_data_strategies())
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())
+        env.step(env.action_space.sample())
         self.assertNotEqual(env._prosumer.wallet.balance, env._prosumer_init_balance)
         self.assertNotEqual(env._prev_prosumer_balance, env._prosumer_init_balance)
+        self.assertNotEqual(env._prosumer_balance, env._prosumer_init_balance)
         self.assertNotEqual(env._prosumer.battery.current_charge, env._battery_init_charge)
         self.assertNotEqual(env._clock.cur_datetime, env._start_datetime)
         self.assertNotEqual(env._clock.cur_tick, env._start_tick)
@@ -63,6 +65,7 @@ class TestSimulationEnv(unittest.TestCase):
 
         self.assertEqual(env._prosumer.wallet.balance, env._prosumer_init_balance)
         self.assertEqual(env._prev_prosumer_balance, env._prosumer_init_balance)
+        self.assertEqual(env._prosumer_balance, env._prosumer_init_balance)
         self.assertEqual(env._prosumer.battery.current_charge, env._battery_init_charge)
         self.assertEqual(env._clock.cur_datetime, env._start_datetime)
         self.assertEqual(env._clock.cur_tick, env._start_tick)
