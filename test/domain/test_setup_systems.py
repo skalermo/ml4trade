@@ -1,6 +1,6 @@
 import unittest
 
-from ml4trade.simulation_env import SimulationEnv
+from ml4trade.domain.utils import setup_systems
 from ml4trade.domain.units import MWh, Currency
 from ml4trade.domain.constants import START_TIME, SCHEDULING_TIME, ACTION_REPLACEMENT_TIME
 from utils import setup_default_data_strategies
@@ -8,7 +8,7 @@ from utils import setup_default_data_strategies
 
 class TestSetupSystems(unittest.TestCase):
     def test_setup_systems(self):
-        _, prosumer, *_ = SimulationEnv._setup_systems(
+        _, prosumer, *_ = setup_systems(
             setup_default_data_strategies(), 0, Currency(1),
             START_TIME, SCHEDULING_TIME, ACTION_REPLACEMENT_TIME,
             MWh(0.001), 0.1, MWh(0.001))

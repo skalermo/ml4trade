@@ -5,7 +5,6 @@ from gym import spaces
 from gym.core import ObsType, ActType
 
 from ml4trade.data_strategies import DataStrategy
-from ml4trade.domain.battery import Battery
 from ml4trade.domain.clock import SimulationClock
 from ml4trade.domain.constants import *
 from ml4trade.domain.consumption import ConsumptionSystem
@@ -13,6 +12,7 @@ from ml4trade.domain.market import EnergyMarket
 from ml4trade.domain.production import ProductionSystem
 from ml4trade.domain.prosumer import Prosumer
 from ml4trade.domain.units import Currency, MWh
+from ml4trade.domain.utils import setup_systems
 from ml4trade.rendering import render_all as _render_all
 from ml4trade.utils import run_in_random_order, calc_tick_offset, dfs_are_long_enough
 
@@ -79,33 +79,10 @@ class SimulationEnv(gym.Env):
             self._market,
             self._production_system,
             self._consumption_system
-        ) = self._setup_systems(data_strategies, self._start_tick, prosumer_init_balance,
-                                start_datetime, scheduling_time, action_replacement_time,
-                                battery_init_charge, battery_efficiency, battery_capacity)
+        ) = setup_systems(data_strategies, self._start_tick, prosumer_init_balance,
+                          start_datetime, scheduling_time, action_replacement_time,
+                          battery_init_charge, battery_efficiency, battery_capacity)
         self.reset()
-
-    @staticmethod
-    def _setup_systems(
-            data_strategies: Dict[str, DataStrategy],
-            start_tick: int,
-            prosumer_init_balance: Currency,
-            start_datetime: datetime,
-            scheduling_time: time,
-            action_replacement_time: time,
-            battery_init_charge: MWh,
-            battery_efficiency: float,
-            battery_capacity: MWh,
-    ) -> Tuple[SimulationClock, Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
-
-        clock = SimulationClock(start_datetime, scheduling_time, action_replacement_time, start_tick)
-        battery = Battery(battery_capacity, battery_efficiency, battery_init_charge)
-        production_system = ProductionSystem(data_strategies.get('production'), clock.view())
-        consumption_system = ConsumptionSystem(data_strategies.get('consumption'), clock.view())
-        market = EnergyMarket(data_strategies.get('market'), clock.view())
-
-        prosumer = Prosumer(battery, production_system, consumption_system,
-                            clock.view(), prosumer_init_balance, market)
-        return clock, prosumer, market, production_system, consumption_system
 
     def reset(self, **kwargs) -> ObsType:
         self._prosumer.wallet.balance = self._prosumer_init_balance
