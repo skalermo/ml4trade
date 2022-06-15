@@ -184,7 +184,7 @@ class SimulationEnv(gym.Env):
         self._simulation.send(action)
         self._total_reward += self._calculate_reward()
         self.history['total_reward'].append(self._total_reward)
-        self.history['action'].append(action)
+        self.history['action'].append(action.tolist())
         return self._observation()
 
     def __simulation(self) -> Generator[None, ActType, None]:
