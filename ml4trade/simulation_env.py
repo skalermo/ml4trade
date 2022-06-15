@@ -196,6 +196,27 @@ class SimulationEnv(gym.Env):
             self._update_history_for_last_tick()
             self._clock.tick()
 
+    def _dry_simulation(self, ticks: int) -> MWh:
+        if not self._first_actions_set:
+            return self._prosumer.battery.current_charge
+        saved_state = (
+            self._prosumer.wallet.balance,
+            self._prosumer.battery.current_charge,
+            self._clock.cur_datetime,
+            self._clock.cur_tick
+        )
+        for _ in range(ticks):
+            self._rand_produce_consume()
+            self._clock.tick()
+        predicted_battery_charge = self._prosumer.battery.current_charge
+        (
+            self._prosumer.wallet.balance,
+            self._prosumer.battery.current_charge,
+            self._clock.cur_datetime,
+            self._clock.cur_tick
+        ) = saved_state
+        return predicted_battery_charge
+
     def render(self, mode="human"):
         NotImplemented('Use render_all()!')
 
