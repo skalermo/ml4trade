@@ -208,14 +208,14 @@ class SimulationEnv(gym.Env):
         for _ in range(ticks):
             self._rand_produce_consume()
             self._clock.tick()
-        predicted_battery_charge = self._prosumer.battery.current_charge
+        predicted_rel_battery_charge = self._prosumer.battery.rel_current_charge
         (
             self._prosumer.wallet.balance,
             self._prosumer.battery.current_charge,
             self._clock.cur_datetime,
             self._clock.cur_tick
         ) = saved_state
-        return predicted_battery_charge
+        return predicted_rel_battery_charge
 
     def render(self, mode="human"):
         NotImplemented('Use render_all()!')

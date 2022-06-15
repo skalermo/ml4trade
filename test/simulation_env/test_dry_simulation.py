@@ -18,10 +18,9 @@ class TestDrySimulation(unittest.TestCase):
         action[48:72] = [0] * 10 + [10000] * 14
 
         env.step(action)
-        predicted_battery_charge = env._dry_simulation(24 - 10)
-        self.assertEqual(env._prosumer.battery.current_charge.value, 0)
-        cap = env._prosumer.battery.capacity
-        self.assertEqual(predicted_battery_charge, cap)
+        predicted_rel_battery_charge = env._dry_simulation(24 - 10)
+        self.assertEqual(env._prosumer.battery.rel_current_charge, 0)
+        self.assertEqual(predicted_rel_battery_charge, 1)
 
     def test_preserves_original_state(self):
         env = SimulationEnv(setup_default_data_strategies())
