@@ -205,7 +205,7 @@ class SimulationEnv(gym.Env):
 
     def _dry_simulation(self, ticks: int) -> MWh:
         if not self._first_actions_set:
-            return self._prosumer.battery.current_charge
+            return self._prosumer.battery.rel_current_charge
         saved_state = (
             self._prosumer.wallet.balance,
             self._prosumer.battery.current_charge,
