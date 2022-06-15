@@ -3,6 +3,7 @@ from typing import Tuple, Generator, Dict, List, Any
 
 from gym import spaces
 from gym.core import ObsType, ActType
+from gym.utils import seeding
 
 from ml4trade.data_strategies import DataStrategy
 from ml4trade.domain.clock import SimulationClock
@@ -14,7 +15,7 @@ from ml4trade.domain.prosumer import Prosumer
 from ml4trade.domain.units import Currency, MWh
 from ml4trade.domain.utils import setup_systems
 from ml4trade.rendering import render_all as _render_all
-from ml4trade.utils import run_in_random_order, calc_tick_offset, dfs_are_long_enough
+from ml4trade.utils import calc_tick_offset, dfs_are_long_enough
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 EnvHistory = Dict[str, List[Any]]
@@ -85,6 +86,10 @@ class SimulationEnv(gym.Env):
         self.reset()
 
     def reset(self, **kwargs) -> ObsType:
+        seed = kwargs.get('seed')
+        if seed is not None:
+            self._np_random, seed = seeding.np_random(seed)
+
         self._prosumer.wallet.balance = self._prosumer_init_balance
         self._prosumer.battery.current_charge = self._battery_init_charge
         self._prosumer.scheduled_buy_amounts = None
@@ -164,6 +169,12 @@ class SimulationEnv(gym.Env):
         self.history['action'].append(action.tolist())
         return self._observation()
 
+    def _rand_produce_consume(self):
+        fs = [self._prosumer.consume, self._prosumer.produce]
+        self.np_random.shuffle(fs)
+        for f in fs:
+            f()
+
     def __simulation(self) -> Generator[None, ActType, None]:
         while True:
             if self._clock.is_it_scheduling_hour():
@@ -180,7 +191,7 @@ class SimulationEnv(gym.Env):
                     self._first_actions_set = True
 
             if self._first_actions_set:
-                run_in_random_order([self._prosumer.consume, self._prosumer.produce])
+                self._rand_produce_consume()
 
             self._update_history_for_last_tick()
             self._clock.tick()
