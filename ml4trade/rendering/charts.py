@@ -19,6 +19,7 @@ def render_all(history: dict, last_n_days: int = 2):
                 'action',
                 'balance_diff',
                 'potential_reward',
+                'unscheduled_actions_profit',
         ):
             history[k] = history[k][24:-10]
 
@@ -38,7 +39,7 @@ def _plot_balance(history: dict, ax, fig, xlabel, ylabel, title):
 
     plt.sca(ax)
     plt.xticks(rotation=45)
-    ax.plot(history['datetime'][::24], np.cumsum(history['balance_diff']) + 10000, color='black')
+    ax.plot(history['datetime'][::24], np.cumsum(history['balance_diff']) + 10000, color='green')
     ax.plot(history['datetime'][::24], np.cumsum(history['potential_reward']) + 10000, color='blue')
     ax.plot(history['datetime'][::24], np.cumsum(history['potential_reward']) / 2 + 10000, color='red')
     ax.legend(loc='upper right')
