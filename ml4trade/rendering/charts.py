@@ -33,6 +33,7 @@ def _plot_balance(history: dict, ax, fig, xlabel, ylabel, title):
     plt.sca(ax)
     plt.xticks(rotation=45)
     ax.plot(history['datetime'], history['wallet_balance'], color='black')
+    ax.plot(history['datetime'][::24], history['balance_diff'], color='red')
     ax.legend(loc='upper right')
 
 
