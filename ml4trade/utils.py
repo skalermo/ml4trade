@@ -1,14 +1,7 @@
-import random
 from datetime import timedelta, datetime, time
 from typing import List
 
 from ml4trade.data_strategies import DataStrategy
-
-
-def run_in_random_order(functions: List[callable]) -> None:
-    random.shuffle(functions)
-    for f in functions:
-        f()
 
 
 def timedelta_to_hours(td: timedelta) -> int:

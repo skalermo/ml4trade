@@ -3,9 +3,9 @@ from typing import Tuple, Generator, Dict, List, Any
 
 from gym import spaces
 from gym.core import ObsType, ActType
+from gym.utils import seeding
 
 from ml4trade.data_strategies import DataStrategy
-from ml4trade.domain.battery import Battery
 from ml4trade.domain.clock import SimulationClock
 from ml4trade.domain.constants import *
 from ml4trade.domain.consumption import ConsumptionSystem
@@ -13,8 +13,9 @@ from ml4trade.domain.market import EnergyMarket
 from ml4trade.domain.production import ProductionSystem
 from ml4trade.domain.prosumer import Prosumer
 from ml4trade.domain.units import Currency, MWh
+from ml4trade.domain.utils import setup_systems
 from ml4trade.rendering import render_all as _render_all
-from ml4trade.utils import run_in_random_order, calc_tick_offset, dfs_are_long_enough
+from ml4trade.utils import calc_tick_offset, dfs_are_long_enough
 
 ObservationType = Tuple[ObsType, float, bool, dict]
 EnvHistory = Dict[str, List[Any]]
@@ -61,7 +62,7 @@ class SimulationEnv(gym.Env):
 
         obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 2,), dtype=np.float32)
         if start_tick is None:
             start_tick = calc_tick_offset(list(data_strategies.values()), scheduling_time)
         self._start_tick = start_tick
@@ -79,35 +80,16 @@ class SimulationEnv(gym.Env):
             self._market,
             self._production_system,
             self._consumption_system
-        ) = self._setup_systems(data_strategies, self._start_tick, prosumer_init_balance,
-                                start_datetime, scheduling_time, action_replacement_time,
-                                battery_init_charge, battery_efficiency, battery_capacity)
+        ) = setup_systems(data_strategies, self._start_tick, prosumer_init_balance,
+                          start_datetime, scheduling_time, action_replacement_time,
+                          battery_init_charge, battery_efficiency, battery_capacity)
         self.reset()
 
-    @staticmethod
-    def _setup_systems(
-            data_strategies: Dict[str, DataStrategy],
-            start_tick: int,
-            prosumer_init_balance: Currency,
-            start_datetime: datetime,
-            scheduling_time: time,
-            action_replacement_time: time,
-            battery_init_charge: MWh,
-            battery_efficiency: float,
-            battery_capacity: MWh,
-    ) -> Tuple[SimulationClock, Prosumer, EnergyMarket, ProductionSystem, ConsumptionSystem]:
-
-        clock = SimulationClock(start_datetime, scheduling_time, action_replacement_time, start_tick)
-        battery = Battery(battery_capacity, battery_efficiency, battery_init_charge)
-        production_system = ProductionSystem(data_strategies.get('production'), clock.view())
-        consumption_system = ConsumptionSystem(data_strategies.get('consumption'), clock.view())
-        market = EnergyMarket(data_strategies.get('market'), clock.view())
-
-        prosumer = Prosumer(battery, production_system, consumption_system,
-                            clock.view(), prosumer_init_balance, market)
-        return clock, prosumer, market, production_system, consumption_system
-
     def reset(self, **kwargs) -> ObsType:
+        seed = kwargs.get('seed')
+        if seed is not None:
+            self._np_random, seed = seeding.np_random(seed)
+
         self._prosumer.wallet.balance = self._prosumer_init_balance
         self._prosumer.battery.current_charge = self._battery_init_charge
         self._prosumer.scheduled_buy_amounts = None
@@ -132,7 +114,14 @@ class SimulationEnv(gym.Env):
         market_obs = self._market.observation()
         production_obs = self._production_system.observation()
         consumption_obs = self._consumption_system.observation()
-        obs = [*market_obs, *production_obs, *consumption_obs, self._prosumer.battery.rel_current_charge]
+        rel_battery_charge_at_midnight = self._dry_simulation(24 - self._clock.scheduling_time.hour)
+        obs = [
+            *market_obs,
+            *production_obs,
+            *consumption_obs,
+            self._prosumer.battery.rel_current_charge,
+            rel_battery_charge_at_midnight,
+        ]
         reward = self._calculate_reward()
         done = self._end_datetime <= self._clock.cur_datetime
         return obs, reward, done, {}
@@ -184,8 +173,14 @@ class SimulationEnv(gym.Env):
         self._simulation.send(action)
         self._total_reward += self._calculate_reward()
         self.history['total_reward'].append(self._total_reward)
-        self.history['action'].append(action)
+        self.history['action'].append(action.tolist())
         return self._observation()
+
+    def _rand_produce_consume(self):
+        fs = [self._prosumer.consume, self._prosumer.produce]
+        self.np_random.shuffle(fs)
+        for f in fs:
+            f()
 
     def __simulation(self) -> Generator[None, ActType, None]:
         while True:
@@ -203,10 +198,31 @@ class SimulationEnv(gym.Env):
                     self._first_actions_set = True
 
             if self._first_actions_set:
-                run_in_random_order([self._prosumer.consume, self._prosumer.produce])
+                self._rand_produce_consume()
 
             self._update_history_for_last_tick()
             self._clock.tick()
+
+    def _dry_simulation(self, ticks: int) -> MWh:
+        if not self._first_actions_set:
+            return self._prosumer.battery.rel_current_charge
+        saved_state = (
+            self._prosumer.wallet.balance,
+            self._prosumer.battery.current_charge,
+            self._clock.cur_datetime,
+            self._clock.cur_tick
+        )
+        for _ in range(ticks):
+            self._rand_produce_consume()
+            self._clock.tick()
+        predicted_rel_battery_charge = self._prosumer.battery.rel_current_charge
+        (
+            self._prosumer.wallet.balance,
+            self._prosumer.battery.current_charge,
+            self._clock.cur_datetime,
+            self._clock.cur_tick
+        ) = saved_state
+        return predicted_rel_battery_charge
 
     def render(self, mode="human"):
         NotImplemented('Use render_all()!')
