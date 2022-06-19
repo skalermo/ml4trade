@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -14,7 +15,12 @@ def render_all(history: dict, last_n_days: int = 2):
 
     for k in env_history_keys:
         # history[k] = history[k][-24*7-10:-10]
-        history[k] = history[k][24:-10]
+        if k not in (
+                'action',
+                'balance_diff',
+                'potential_reward',
+        ):
+            history[k] = history[k][24:-10]
 
     _plot_balance(history, axs[0, 0], fig, 'Datetime', 'Zł', 'All-time Profit')
     _plot_battery(history, last_n_days, axs[0, 1], fig, 'Time', '%', 'Last 2 days Battery state')
@@ -32,8 +38,9 @@ def _plot_balance(history: dict, ax, fig, xlabel, ylabel, title):
 
     plt.sca(ax)
     plt.xticks(rotation=45)
-    ax.plot(history['datetime'], history['wallet_balance'], color='black')
-    ax.plot(history['datetime'][::24], history['balance_diff'], color='red')
+    ax.plot(history['datetime'][::24], np.cumsum(history['balance_diff']) + 10000, color='black')
+    ax.plot(history['datetime'][::24], np.cumsum(history['potential_reward']) + 10000, color='blue')
+    ax.plot(history['datetime'][::24], np.cumsum(history['potential_reward']) / 2 + 10000, color='red')
     ax.legend(loc='upper right')
 
 
