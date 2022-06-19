@@ -7,7 +7,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from ml4trade.domain.constants import env_history_keys
 
 
-def render_all(history: dict):
+def render_all(history: dict, last_n_days: int = 2):
     plt.style.use('ggplot')
     plt.rcParams.update({'font.size': 16})
     fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
@@ -17,9 +17,9 @@ def render_all(history: dict):
         history[k] = history[k][24:-10]
 
     _plot_balance(history, axs[0, 0], fig, 'Datetime', 'Zł', 'All-time Profit')
-    _plot_battery(history, axs[0, 1], fig, 'Time', '%', 'Last 2 days Battery state')
-    _plot_scheduled(history, axs[1, 0], fig, 'Time', 'Zł', 'Last 2 days Scheduled thresholds')
-    _plot_unscheduled(history, axs[1, 1], fig, 'Time', 'MWh', 'Last 2 days Unscheduled energy amounts')
+    _plot_battery(history, last_n_days, axs[0, 1], fig, 'Time', '%', 'Last 2 days Battery state')
+    _plot_scheduled(history, last_n_days, axs[1, 0], fig, 'Time', 'Zł', 'Last 2 days Scheduled thresholds')
+    _plot_unscheduled(history, last_n_days, axs[1, 1], fig, 'Time', 'MWh', 'Last 2 days Unscheduled energy amounts')
 
     fig.tight_layout()
     plt.show()
@@ -36,14 +36,14 @@ def _plot_balance(history: dict, ax, fig, xlabel, ylabel, title):
     ax.legend(loc='upper right')
 
 
-def _plot_battery(history: dict, ax, fig, xlabel, ylabel, title):
+def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.title.set_text(title)
 
-    battery_history_last_2_days = history['battery'][-48:]
-    datetime_history_last_2_days = history['datetime'][-48:]
-    ax.plot(datetime_history_last_2_days, battery_history_last_2_days, color='black')
+    battery_history_last_n_days = history['battery'][-24 * last_n_days:]
+    datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
+    ax.plot(datetime_history_last_n_days, battery_history_last_n_days, color='black')
     ax.legend(loc='upper right')
     hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
     h_fmt = mdates.DateFormatter('%H')
@@ -51,16 +51,16 @@ def _plot_battery(history: dict, ax, fig, xlabel, ylabel, title):
     ax.xaxis.set_major_formatter(h_fmt)
 
 
-def _plot_scheduled(history: dict, ax, fig, xlabel, ylabel, title):
+def _plot_scheduled(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
 
-    datetime_history_last_2_days = history['datetime'][-48:]
-    prices_history_last_2_days = history['price'][-48:]
+    datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
+    prices_history_last_n_days = history['price'][-24 * last_n_days:]
     actions = history['action']
     buys = [x[48:72] for x in actions]
     sells = [x[72:] for x in actions]
-    buys = [item for sublist in buys for item in sublist][-24 * 2:]
-    sells = [item for sublist in sells for item in sublist][-24 * 2:]
+    buys = [item for sublist in buys for item in sublist][-24 * last_n_days:]
+    sells = [item for sublist in sells for item in sublist][-24 * last_n_days:]
 
     divider = make_axes_locatable(ax)
     ax2 = divider.new_vertical(size="400%", pad=0.1)
@@ -68,16 +68,16 @@ def _plot_scheduled(history: dict, ax, fig, xlabel, ylabel, title):
     ax2.set_ylabel(ylabel)
     ax2.title.set_text(title)
 
-    ax.plot(datetime_history_last_2_days, buys, color='red')
-    ax.plot(datetime_history_last_2_days, sells, color='blue')
+    ax.plot(datetime_history_last_n_days, buys, color='red')
+    ax.plot(datetime_history_last_n_days, sells, color='blue')
     ax.set_ylim(0, 5)
     ax.spines['top'].set_visible(False)
 
-    ax2.plot(datetime_history_last_2_days, prices_history_last_2_days, color='black', label='market price')
-    ax2.plot(datetime_history_last_2_days, buys, color='red', label='buy threshold')
-    ax2.plot(datetime_history_last_2_days, sells, color='blue', label='sell threshold')
+    ax2.plot(datetime_history_last_n_days, prices_history_last_n_days, color='black', label='market price')
+    ax2.plot(datetime_history_last_n_days, buys, color='red', label='buy threshold')
+    ax2.plot(datetime_history_last_n_days, sells, color='blue', label='sell threshold')
     ax2.legend(loc='upper right')
-    ax2.set_ylim(min(prices_history_last_2_days) - 20, max(prices_history_last_2_days) + 20)
+    ax2.set_ylim(min(prices_history_last_n_days) - 20, max(prices_history_last_n_days) + 20)
     ax2.tick_params(bottom=False, labelbottom=False)
     ax2.spines['bottom'].set_visible(False)
 
@@ -116,19 +116,19 @@ def _plot_scheduled(history: dict, ax, fig, xlabel, ylabel, title):
     ax2.plot((1 - d, 1 + d), (-d, +d), **kwargs)  # top-right diagonal
 
 
-def _plot_unscheduled(history: dict, ax, fig, xlabel, ylabel, title):
+def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.title.set_text(title)
 
-    datetime_history_last_2_days = history['datetime'][-48:]
-    buys_last_2_days = history['unscheduled_buy_amounts'][-48:]
-    sells_last_2_days = history['unscheduled_sell_amounts'][-48:]
-    buys = list(map(lambda x: float(x[0]), buys_last_2_days))
-    sells = list(map(lambda x: float(x[0]), sells_last_2_days))
+    datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
+    buys_last_n_days = history['unscheduled_buy_amounts'][-24 * last_n_days:]
+    sells_last_n_days = history['unscheduled_sell_amounts'][-24 * last_n_days:]
+    buys = list(map(lambda x: float(x[0]), buys_last_n_days))
+    sells = list(map(lambda x: float(x[0]), sells_last_n_days))
 
-    ax.plot(datetime_history_last_2_days, buys, color='red', label='buy amount')
-    ax.plot(datetime_history_last_2_days, sells, color='blue', label='sell amount')
+    ax.plot(datetime_history_last_n_days, buys, color='red', label='buy amount')
+    ax.plot(datetime_history_last_n_days, sells, color='blue', label='sell amount')
     ax.legend(loc='upper right')
 
     hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
@@ -140,6 +140,7 @@ def _plot_unscheduled(history: dict, ax, fig, xlabel, ylabel, title):
 if __name__ == '__main__':
     import json
     from datetime import datetime
+    import sys
 
     history_file = '../../env_history.json'
     with open(history_file, 'r') as f:
@@ -147,4 +148,6 @@ if __name__ == '__main__':
 
     _history['datetime'] = list(map(datetime.fromisoformat, _history['datetime']))
     _history['battery'] = list(map(lambda x: x * 100, _history['battery']))
-    render_all(_history)
+
+    days = sys.argv[1] or 2
+    render_all(_history, days)
