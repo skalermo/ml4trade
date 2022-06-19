@@ -1,6 +1,7 @@
 from typing import Tuple, Dict
 from datetime import timedelta
 
+import gym
 from gym.core import Wrapper, ObsType, ActType
 import numpy as np
 
@@ -27,9 +28,16 @@ class CustomWrapper(Wrapper):
         self.env.save_history()
 
 
+CUSTOM_ACTION_SPACE = gym.spaces.Box(
+    low=np.array([-10] * 96),
+    high=np.array([10] * 96),
+)
+
+
 class ActionWrapper(CustomWrapper):
     def __init__(self, env: SimulationEnv, avg_month_prices: Dict[Tuple[int, int], float], ref_power_MW: float, clock_view: ClockView):
         super().__init__(env)
+        self.env.action_space = CUSTOM_ACTION_SPACE
         self.avg_month_prices = avg_month_prices
         self.avg_prices = list(avg_month_prices.values())
         self.ref_power_MW = ref_power_MW
