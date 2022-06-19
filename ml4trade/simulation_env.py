@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Tuple, Generator, Dict, List, Any
+from typing import Tuple, Generator, Dict, List, Any, Optional
 
 from gym import spaces
 from gym.core import ObsType, ActType
@@ -110,7 +110,7 @@ class SimulationEnv(gym.Env):
 
         return self._observation()[0]
 
-    def _observation(self) -> ObservationType:
+    def _observation(self, potential_reward: Optional[float] = None) -> ObservationType:
         market_obs = self._market.observation()
         production_obs = self._production_system.observation()
         consumption_obs = self._consumption_system.observation()
@@ -122,13 +122,14 @@ class SimulationEnv(gym.Env):
             self._prosumer.battery.rel_current_charge,
             rel_battery_charge_at_midnight,
         ]
-        reward = self._calculate_reward()
+        if potential_reward is None:
+            potential_reward = self._calculate_potential_reward()
+        reward = self._calculate_balance_diff() - potential_reward
         done = self._end_datetime <= self._clock.cur_datetime
         return obs, reward, done, {}
 
-    def _calculate_reward(self) -> float:
-        balance_diff = self._prosumer_balance - self._prev_prosumer_balance
-        return balance_diff.value - self._calculate_potential_reward()
+    def _calculate_balance_diff(self) -> float:
+        return (self._prosumer_balance - self._prev_prosumer_balance).value
 
     def _calculate_potential_reward(self) -> float:
         prices = self.history['price']
@@ -171,10 +172,11 @@ class SimulationEnv(gym.Env):
 
     def step(self, action: ActType) -> ObservationType:
         self._simulation.send(action)
-        self._total_reward += self._calculate_reward()
-        self.history['total_reward'].append(self._total_reward)
+        self.history['balance_diff'].append(self._calculate_balance_diff())
+        potential_reward = self._calculate_potential_reward()
+        self.history['potential_reward'].append(potential_reward)
         self.history['action'].append(action.tolist())
-        return self._observation()
+        return self._observation(potential_reward)
 
     def _rand_produce_consume(self):
         fs = [self._prosumer.consume, self._prosumer.produce]
