@@ -39,7 +39,7 @@ SIMULATION_ENV_ACTION_SPACE = gym.spaces.Box(
 )
 
 env_history_keys = (
-    'balance_diff', 'potential_reward', 'action', 'wallet_balance', 'tick', 'datetime',
+    'balance_diff', 'potential_reward', 'unscheduled_actions_profit', 'action', 'wallet_balance', 'tick', 'datetime',
     'energy_produced', 'energy_consumed', 'price', 'scheduled_buy_amounts',
     'scheduled_sell_amounts', 'unscheduled_buy_amounts', 'unscheduled_sell_amounts',
     'battery',

@@ -9,7 +9,7 @@ from ml4trade.data_strategies import DataStrategy
 from ml4trade.domain.clock import SimulationClock
 from ml4trade.domain.constants import *
 from ml4trade.domain.consumption import ConsumptionSystem
-from ml4trade.domain.market import EnergyMarket
+from ml4trade.domain.market import EnergyMarket, UNSCHEDULED_MULTIPLIER
 from ml4trade.domain.production import ProductionSystem
 from ml4trade.domain.prosumer import Prosumer
 from ml4trade.domain.units import Currency, MWh
@@ -110,7 +110,11 @@ class SimulationEnv(gym.Env):
 
         return self._observation()[0]
 
-    def _observation(self, potential_reward: Optional[float] = None) -> ObservationType:
+    def _observation(
+            self,
+            potential_reward: Optional[float] = None,
+            unscheduled_actions_profit: Optional[float] = None,
+    ) -> ObservationType:
         market_obs = self._market.observation()
         production_obs = self._production_system.observation()
         consumption_obs = self._consumption_system.observation()
@@ -124,12 +128,33 @@ class SimulationEnv(gym.Env):
         ]
         if potential_reward is None:
             potential_reward = self._calculate_potential_reward()
-        reward = self._calculate_balance_diff() - potential_reward
+        if unscheduled_actions_profit is None:
+            unscheduled_actions_profit = self._calculate_unscheduled_actions_profit()
+        reward = self._calculate_balance_diff() - potential_reward - unscheduled_actions_profit
         done = self._end_datetime <= self._clock.cur_datetime
         return obs, reward, done, {}
 
     def _calculate_balance_diff(self) -> float:
         return (self._prosumer_balance - self._prev_prosumer_balance).value
+
+    def _calculate_unscheduled_actions_profit(self) -> float:
+        prices = self.history['price']
+        if len(prices) < 72 - self._clock.scheduling_time.hour:
+            return 0
+        start_idx = -self._clock.scheduling_time.hour - 24
+        end_idx = start_idx + 24
+        avg_price = sum(prices[start_idx:end_idx]) / 24
+
+        def sum_unscheduled_amounts(a: List[Tuple[float, bool]]) -> float:
+            return sum(map(lambda x: x[0], filter(lambda x: x[1], a)), 0)
+
+        bought = self.history['unscheduled_buy_amounts']
+        sold = self.history['unscheduled_sell_amounts']
+        total_bought = sum_unscheduled_amounts(bought[start_idx:end_idx])
+        total_sold = sum_unscheduled_amounts(sold[start_idx:end_idx])
+        unscheduled_profit = total_sold * avg_price / UNSCHEDULED_MULTIPLIER
+        unscheduled_profit -= total_bought * avg_price * UNSCHEDULED_MULTIPLIER
+        return unscheduled_profit
 
     def _calculate_potential_reward(self) -> float:
         prices = self.history['price']
@@ -175,8 +200,10 @@ class SimulationEnv(gym.Env):
         self.history['balance_diff'].append(self._calculate_balance_diff())
         potential_reward = self._calculate_potential_reward()
         self.history['potential_reward'].append(potential_reward)
+        unscheduled_actions_profit = self._calculate_unscheduled_actions_profit()
+        self.history['unscheduled_actions_profit'].append(unscheduled_actions_profit)
         self.history['action'].append(action.tolist())
-        return self._observation(potential_reward)
+        return self._observation(potential_reward, unscheduled_actions_profit)
 
     def _rand_produce_consume(self):
         fs = [self._prosumer.consume, self._prosumer.produce]
