@@ -29,19 +29,12 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertIsNotNone(env._prosumer.scheduled_sell_thresholds)
         self.assertEqual(env._prosumer.next_day_actions, None)
 
-    def test_step_updates_total_reward(self):
-        env = SimulationEnv(setup_default_data_strategies())
-        total_reward_before = env._total_reward
-        env.step(env.action_space.sample())
-        self.assertEqual(env._total_reward, total_reward_before + env._calculate_reward())
-
     def test_step_updates_history(self):
         env = SimulationEnv(setup_default_data_strategies())
-        self.assertEqual(len(env.history['total_reward']), 0)
+        self.assertEqual(len(env.history['balance_diff']), 0)
         action = env.action_space.sample()
         env.step(action)
-        self.assertEqual(len(env.history['total_reward']), 1)
-        self.assertEqual(env.history['total_reward'][0], env._total_reward)
+        self.assertEqual(len(env.history['balance_diff']), 1)
         self.assertTrue((env.history['action'][0] == action).all())
         self.assertEqual(env.history['wallet_balance'][-1], env._prosumer.wallet.balance.value)
         self.assertEqual(env.history['tick'][-1], env._clock.cur_tick - 1)
@@ -70,7 +63,7 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertEqual(env._clock.cur_datetime, env._start_datetime)
         self.assertEqual(env._clock.cur_tick, env._start_tick)
         self.assertEqual(env._total_reward, 0)
-        self.assertEqual(len(env.history['total_reward']), 0)
+        self.assertEqual(len(env.history['balance_diff']), 0)
 
     def test_reset_starts_new_simulation(self):
         start_datetime = START_TIME.replace(hour=0)
@@ -80,7 +73,7 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertTrue(env._clock.is_it_scheduling_hour())
 
         self.assertEqual(env._total_reward, 0)
-        self.assertEqual(len(env.history['total_reward']), 0)
+        self.assertEqual(len(env.history['balance_diff']), 0)
 
 
 if __name__ == '__main__':
