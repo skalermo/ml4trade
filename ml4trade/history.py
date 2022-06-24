@@ -91,7 +91,7 @@ class History:
             'potential_profit': summary[0],
             'unscheduled_sell_actions_profit': summary[1],
             'unscheduled_buy_actions_loss': summary[2],
-        }
+        }[item]
 
     def _last_day_summary(self) -> Tuple[float, float, float]:
         # max amount of time history goes unfilled is
@@ -131,16 +131,8 @@ class History:
         render_all(self._history)
 
     def save(self, path: str = 'env_history.json'):
-        # class CustomEncoder(json.JSONEncoder):
-        #     def default(self, obj):
-        #         if isinstance(obj, np.ndarray):
-        #             return obj.tolist()
-        #         return json.JSONEncoder.default(self, obj)
-        #
         with open(path, 'w') as f:
-            json.dump(self._history, f, indent=2,
-                      # cls=CustomEncoder,
-                      default=str)
+            json.dump(self._history, f, indent=2, default=str)
 
     @classmethod
     def load(cls, path: str, clock_view: Optional[ClockView] = None) -> 'History':
