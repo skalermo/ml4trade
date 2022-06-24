@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ml4trade.domain.constants import env_history_keys
+from ml4trade.history import tick_history_keys
 
 
 def render_all(history: dict, last_n_days: int = 2):
@@ -12,8 +12,7 @@ def render_all(history: dict, last_n_days: int = 2):
     plt.rcParams.update({'font.size': 16})
     fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
 
-    for k in env_history_keys:
-        # history[k] = history[k][-24*7-10:-10]
+    for k in tick_history_keys:
         history[k] = history[k][24:-10]
 
     _plot_balance(history, axs[0, 0], fig, 'Datetime', 'Zł', 'All-time Profit')

@@ -9,7 +9,6 @@ from ml4trade.domain.consumption import ConsumptionSystem
 from ml4trade.domain.market import EnergyMarket, UNSCHEDULED_MULTIPLIER
 from ml4trade.domain.production import ProductionSystem
 from ml4trade.domain.prosumer import Prosumer
-from ml4trade.rendering.charts import render_all
 
 tick_history_keys = [
     'tick', 'datetime',
@@ -125,6 +124,7 @@ class History:
             self._history[key] = self._history[key][:-n or None]
 
     def render(self):
+        from ml4trade.rendering.charts import render_all
         render_all(self._history)
 
     def save(self, path: str = 'env_history.json'):
