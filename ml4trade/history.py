@@ -32,6 +32,9 @@ class History:
         self._clock_view = clock_view
         self._history = {key: [] for key in tick_history_keys + step_history_keys}
 
+    def __getitem__(self, item):
+        return self._history[item]
+
     def tick_update(
             self,
             prosumer: Prosumer,
