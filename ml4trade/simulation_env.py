@@ -1,13 +1,20 @@
-from datetime import timedelta
-from typing import Tuple, Generator, Dict, List, Any, Optional
+from datetime import timedelta, time, datetime
+from typing import Tuple, Generator, Dict
 
-from gym import spaces
+import numpy as np
+import gym
 from gym.core import ObsType, ActType
 from gym.utils import seeding
 
 from ml4trade.data_strategies import DataStrategy
 from ml4trade.domain.clock import SimulationClock
-from ml4trade.domain.constants import *
+from ml4trade.domain.constants import (
+    START_TIME,
+    END_TIME,
+    SCHEDULING_TIME,
+    ACTION_REPLACEMENT_TIME,
+    SIMULATION_ENV_ACTION_SPACE,
+)
 from ml4trade.domain.consumption import ConsumptionSystem
 from ml4trade.domain.market import EnergyMarket
 from ml4trade.domain.production import ProductionSystem
@@ -22,8 +29,8 @@ ObservationType = Tuple[ObsType, float, bool, dict]
 
 class SimulationEnv(gym.Env):
     # immutable properties
-    action_space: spaces.Box
-    observation_space: spaces.Box
+    action_space: gym.spaces.Box
+    observation_space: gym.spaces.Box
     _start_tick: int
     _start_datetime: datetime
     _end_datetime: datetime
@@ -61,7 +68,7 @@ class SimulationEnv(gym.Env):
 
         obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 2,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 2,), dtype=np.float32)
         if start_tick is None:
             start_tick = calc_tick_offset(list(data_strategies.values()), scheduling_time)
         self._start_tick = start_tick
