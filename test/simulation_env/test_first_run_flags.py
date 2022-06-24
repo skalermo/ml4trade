@@ -12,7 +12,6 @@ class TestSimulationEnv(unittest.TestCase):
             data_strategies=setup_default_data_strategies(),
             start_datetime=datetime.combine(datetime.today(), SCHEDULING_TIME) + timedelta(hours=1)
         )
-        env._run_in_random_order = lambda *args: None
 
         self.assertFalse(env._first_actions_set)
         env.step(env.action_space.sample())
