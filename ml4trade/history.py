@@ -84,7 +84,7 @@ class History:
     def _item_from_last_day_summary(self, item: str):
         if not self._history['step_tick']:
             return 0
-        if self._history['step_tick'][-1] == self._clock_view.cur_tick():
+        if self._history['step_tick'][-1] <= self._clock_view.cur_tick():
             return self._history[item][-1]
         summary = self._last_day_summary()
         return {
@@ -101,7 +101,7 @@ class History:
         if len(self._history['tick']) < 72 - self._clock_view.scheduling_hour():
             return 0, 0, 0
 
-        start_idx = -self._clock_view.scheduling_hour() - 24
+        start_idx = -self._clock_view.cur_datetime().hour - 24
         end_idx = start_idx + 24 or None
 
         avg_price = sum(self._history['price'][start_idx:end_idx]) / 24
