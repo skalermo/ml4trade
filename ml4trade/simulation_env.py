@@ -9,16 +9,15 @@ from ml4trade.data_strategies import DataStrategy
 from ml4trade.domain.clock import SimulationClock
 from ml4trade.domain.constants import *
 from ml4trade.domain.consumption import ConsumptionSystem
-from ml4trade.domain.market import EnergyMarket, UNSCHEDULED_MULTIPLIER
+from ml4trade.domain.market import EnergyMarket
 from ml4trade.domain.production import ProductionSystem
 from ml4trade.domain.prosumer import Prosumer
 from ml4trade.domain.units import Currency, MWh
 from ml4trade.domain.utils import setup_systems
-from ml4trade.rendering import render_all as _render_all
 from ml4trade.utils import calc_tick_offset, dfs_are_long_enough
+from ml4trade.history import History
 
 ObservationType = Tuple[ObsType, float, bool, dict]
-EnvHistory = Dict[str, List[Any]]
 
 
 class SimulationEnv(gym.Env):
@@ -41,7 +40,7 @@ class SimulationEnv(gym.Env):
     _first_actions_scheduled: bool
     _first_actions_set: bool
     _total_reward: float
-    history: EnvHistory
+    history: History
     _simulation: Generator[None, ActType, None]
 
     def __init__(
@@ -104,17 +103,13 @@ class SimulationEnv(gym.Env):
         self._first_actions_scheduled = False
         self._first_actions_set = False
         self._total_reward = 0
-        self.history = {key: [] for key in env_history_keys}
+        self.history = History(self._clock.view())
         self._simulation = self.__simulation()
         self._simulation.send(None)
 
         return self._observation()[0]
 
-    def _observation(
-            self,
-            potential_reward: Optional[float] = None,
-            unscheduled_actions_profit: Optional[float] = None,
-    ) -> ObservationType:
+    def _observation(self) -> ObservationType:
         market_obs = self._market.observation()
         production_obs = self._production_system.observation()
         consumption_obs = self._consumption_system.observation()
@@ -126,84 +121,17 @@ class SimulationEnv(gym.Env):
             self._prosumer.battery.rel_current_charge,
             rel_battery_charge_at_midnight,
         ]
-        if potential_reward is None:
-            potential_reward = self._calculate_potential_reward()
-        if unscheduled_actions_profit is None:
-            unscheduled_actions_profit = self._calculate_unscheduled_actions_profit()
-        reward = self._calculate_balance_diff() - potential_reward - unscheduled_actions_profit
+        reward = self._calculate_balance_diff() - self.history.last_day_potential_profit()
         done = self._end_datetime <= self._clock.cur_datetime
         return obs, reward, done, {}
 
     def _calculate_balance_diff(self) -> float:
         return (self._prosumer_balance - self._prev_prosumer_balance).value
 
-    def _calculate_unscheduled_actions_profit(self) -> float:
-        prices = self.history['price']
-        if len(prices) < 72 - self._clock.scheduling_time.hour:
-            return 0
-        start_idx = -self._clock.scheduling_time.hour - 24
-        end_idx = start_idx + 24
-        avg_price = sum(prices[start_idx:end_idx]) / 24
-
-        def sum_unscheduled_amounts(a: List[Tuple[float, bool]]) -> float:
-            return sum(map(lambda x: x[0], filter(lambda x: x[1], a)), 0)
-
-        bought = self.history['unscheduled_buy_amounts']
-        sold = self.history['unscheduled_sell_amounts']
-        total_bought = sum_unscheduled_amounts(bought[start_idx:end_idx])
-        total_sold = sum_unscheduled_amounts(sold[start_idx:end_idx])
-        unscheduled_profit = total_sold * avg_price / UNSCHEDULED_MULTIPLIER
-        unscheduled_profit -= total_bought * avg_price * UNSCHEDULED_MULTIPLIER
-        return unscheduled_profit
-
-    def _calculate_potential_reward(self) -> float:
-        prices = self.history['price']
-        # max amount of time history goes unfilled is
-        # 24 - scheduling_hour hours and another 24 hours
-        # we need another 24 hours to fill up history
-        # with real values
-        if len(prices) < 72 - self._clock.scheduling_time.hour:
-            return 0
-        produced = self.history['energy_produced']
-        consumed = self.history['energy_consumed']
-        start_idx = -self._clock.scheduling_time.hour - 24
-        end_idx = start_idx + 24
-        total_energy_produced = sum(produced[start_idx:end_idx])
-        total_energy_consumed = sum(consumed[start_idx:end_idx])
-        total_extra_energy_produced = total_energy_produced - total_energy_consumed
-        avg_price = sum(prices[start_idx:end_idx]) / 24
-        return total_extra_energy_produced * avg_price
-
-    def _update_history_for_last_tick(self) -> None:
-        self.history['wallet_balance'].append(self._prosumer.wallet.balance.value)
-        self.history['tick'].append(self._clock.cur_tick)
-        self.history['datetime'].append(self._clock.cur_datetime)
-        self.history['energy_produced'].append(self._production_system.ds.last_processed)
-        self.history['energy_consumed'].append(self._consumption_system.ds.last_processed)
-        self.history['price'].append(self._market.ds.last_processed)
-        self.history['scheduled_buy_amounts'].append(self._prosumer.last_scheduled_buy_transaction)
-        self.history['scheduled_sell_amounts'].append(self._prosumer.last_scheduled_sell_transaction)
-        if self._prosumer.last_unscheduled_buy_transaction is not None:
-            self.history['unscheduled_buy_amounts'].append(self._prosumer.last_unscheduled_buy_transaction)
-            self._prosumer.last_unscheduled_buy_transaction = None
-        else:
-            self.history['unscheduled_buy_amounts'].append((0, False))
-        if self._prosumer.last_unscheduled_sell_transaction is not None:
-            self.history['unscheduled_sell_amounts'].append(self._prosumer.last_unscheduled_sell_transaction)
-            self._prosumer.last_unscheduled_sell_transaction = None
-        else:
-            self.history['unscheduled_sell_amounts'].append((0, False))
-        self.history['battery'].append(self._prosumer.battery.rel_current_charge)
-
     def step(self, action: ActType) -> ObservationType:
         self._simulation.send(action)
-        self.history['balance_diff'].append(self._calculate_balance_diff())
-        potential_reward = self._calculate_potential_reward()
-        self.history['potential_reward'].append(potential_reward)
-        unscheduled_actions_profit = self._calculate_unscheduled_actions_profit()
-        self.history['unscheduled_actions_profit'].append(unscheduled_actions_profit)
-        self.history['action'].append(action.tolist())
-        return self._observation(potential_reward, unscheduled_actions_profit)
+        self.history.step_update(action, self._calculate_balance_diff())
+        return self._observation()
 
     def _rand_produce_consume(self):
         fs = [self._prosumer.consume, self._prosumer.produce]
@@ -229,7 +157,12 @@ class SimulationEnv(gym.Env):
             if self._first_actions_set:
                 self._rand_produce_consume()
 
-            self._update_history_for_last_tick()
+            self.history.tick_update(
+                self._prosumer,
+                self._market,
+                self._production_system,
+                self._consumption_system,
+            )
             self._clock.tick()
 
     def _dry_simulation(self, ticks: int) -> MWh:
@@ -257,16 +190,7 @@ class SimulationEnv(gym.Env):
         NotImplemented('Use render_all()!')
 
     def render_all(self):
-        _render_all(self.history)
+        self.history.render()
 
-    def save_history(self, path: str = 'env_history.json'):
-        import json
-
-        class CustomEncoder(json.JSONEncoder):
-            def default(self, obj):
-                if isinstance(obj, np.ndarray):
-                    return obj.tolist()
-                return json.JSONEncoder.default(self, obj)
-
-        with open(path, 'w') as f:
-            json.dump(self.history, f, indent=2, cls=CustomEncoder, default=str)
+    def save_history(self):
+        self.history.save()
