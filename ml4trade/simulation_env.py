@@ -128,9 +128,12 @@ class SimulationEnv(gym.Env):
             self._prosumer.battery.rel_current_charge,
             rel_battery_charge_at_midnight,
         ]
-        reward = self._calculate_balance_diff() - self.history.last_day_potential_profit()
+        reward = self._calculate_reward()
         done = self._end_datetime <= self._clock.cur_datetime
         return obs, reward, done, {}
+
+    def _calculate_reward(self) -> float:
+        return self._calculate_balance_diff() - self.history.last_day_potential_profit()
 
     def _calculate_balance_diff(self) -> float:
         return (self._prosumer_balance - self._prev_prosumer_balance).value
@@ -138,7 +141,9 @@ class SimulationEnv(gym.Env):
     def step(self, action: ActType) -> ObservationType:
         self._simulation.send(action)
         self.history.step_update(action, self._calculate_balance_diff())
-        return self._observation()
+        obs, reward, done, info = self._observation()
+        self.history.save_reward(reward)
+        return obs, reward, done, info
 
     def _rand_produce_consume(self):
         fs = [self._prosumer.consume, self._prosumer.produce]

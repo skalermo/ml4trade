@@ -69,6 +69,9 @@ class History:
         self._history['unscheduled_sell_actions_profit'].append(unscheduled_sell_actions_profit)
         self._history['unscheduled_buy_actions_loss'].append(unscheduled_buy_actions_loss)
 
+    def save_reward(self, reward: float):
+        self._history['reward'].append(reward)
+
     def last_day_potential_profit(self) -> float:
         return self._item_from_last_day_summary('potential_profit')
 
