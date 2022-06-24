@@ -46,7 +46,6 @@ class SimulationEnv(gym.Env):
     _prosumer_balance: Currency
     _first_actions_scheduled: bool
     _first_actions_set: bool
-    _total_reward: float
     history: History
     _simulation: Generator[None, ActType, None]
 
@@ -109,7 +108,6 @@ class SimulationEnv(gym.Env):
         self._prev_prosumer_balance = self._prosumer_init_balance
         self._first_actions_scheduled = False
         self._first_actions_set = False
-        self._total_reward = 0
         self.history = History(self._clock.view())
         self._simulation = self.__simulation()
         self._simulation.send(None)

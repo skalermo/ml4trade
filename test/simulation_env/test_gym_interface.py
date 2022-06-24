@@ -62,7 +62,6 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertEqual(env._prosumer.battery.current_charge, env._battery_init_charge)
         self.assertEqual(env._clock.cur_datetime, env._start_datetime)
         self.assertEqual(env._clock.cur_tick, env._start_tick)
-        self.assertEqual(env._total_reward, 0)
         self.assertEqual(len(env.history['balance_diff']), 0)
 
     def test_reset_starts_new_simulation(self):
@@ -72,7 +71,6 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertNotEqual(env._clock.cur_datetime, start_datetime)
         self.assertTrue(env._clock.is_it_scheduling_hour())
 
-        self.assertEqual(env._total_reward, 0)
         self.assertEqual(len(env.history['balance_diff']), 0)
 
 
