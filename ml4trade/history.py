@@ -44,6 +44,8 @@ class History:
         self._history['tick'].append(self._clock_view.cur_tick())
         self._history['datetime'].append(self._clock_view.cur_datetime())
         self._history['wallet_balance'].append(prosumer.wallet.balance.value)
+        # does not require checking against None
+        # because it is being overwritten on every tick
         self._history['scheduled_buy_amounts'].append(prosumer.last_scheduled_buy_transaction)
         self._history['scheduled_sell_amounts'].append(prosumer.last_scheduled_sell_transaction)
         self._history['battery'].append(prosumer.battery.rel_current_charge)
@@ -52,6 +54,8 @@ class History:
         self._history['price'].append(market.ds.last_processed)
         self._history['energy_produced'].append(production_system.ds.last_processed)
         self._history['energy_consumed'].append(consumption_system.ds.last_processed)
+        prosumer.last_unscheduled_buy_transaction = None
+        prosumer.last_unscheduled_sell_transaction = None
 
     def step_update(self, action: np.ndarray, balance_diff: float):
         self._history['step_tick'].append(self._clock_view.cur_tick())
