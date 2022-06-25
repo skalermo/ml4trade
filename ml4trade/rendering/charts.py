@@ -54,10 +54,11 @@ def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, titl
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
     ax.plot(datetime_history_last_n_days, battery_history_last_n_days, color='black')
     ax.legend(loc='upper right')
-    hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
-    h_fmt = mdates.DateFormatter('%H')
-    ax.xaxis.set_major_locator(hours)
-    ax.xaxis.set_major_formatter(h_fmt)
+    if last_n_days <= 5:
+        hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
+        h_fmt = mdates.DateFormatter('%H')
+        ax.xaxis.set_major_locator(hours)
+        ax.xaxis.set_major_formatter(h_fmt)
 
 
 def _plot_scheduled(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
@@ -90,12 +91,13 @@ def _plot_scheduled(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, t
     ax2.tick_params(bottom=False, labelbottom=False)
     ax2.spines['bottom'].set_visible(False)
 
-    hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
-    h_fmt = mdates.DateFormatter('%H')
-    ax.xaxis.set_major_locator(hours)
-    ax.xaxis.set_major_formatter(h_fmt)
-    ax2.xaxis.set_major_locator(hours)
-    ax2.xaxis.set_major_formatter(h_fmt)
+    if last_n_days <= 5:
+        hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
+        h_fmt = mdates.DateFormatter('%H')
+        ax.xaxis.set_major_locator(hours)
+        ax.xaxis.set_major_formatter(h_fmt)
+        ax2.xaxis.set_major_locator(hours)
+        ax2.xaxis.set_major_formatter(h_fmt)
 
     def rotate_point(p, angle, o=(0, 0)):
         a = angle / 180 * math.pi
@@ -140,10 +142,11 @@ def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, 
     ax.plot(datetime_history_last_n_days, sells, color='blue', label='sell amount')
     ax.legend(loc='upper right')
 
-    hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
-    h_fmt = mdates.DateFormatter('%H')
-    ax.xaxis.set_major_locator(hours)
-    ax.xaxis.set_major_formatter(h_fmt)
+    if last_n_days <= 5:
+        hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
+        h_fmt = mdates.DateFormatter('%H')
+        ax.xaxis.set_major_locator(hours)
+        ax.xaxis.set_major_formatter(h_fmt)
 
 
 if __name__ == '__main__':
