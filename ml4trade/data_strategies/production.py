@@ -20,14 +20,14 @@ imgw_col_ids = {
 
 class ImgwDataStrategy(DataStrategy):
 
-    def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
-                 window_direction: Literal['forward', 'backward'] = 'forward', max_solar_power: MW = MW(0.001),
-                 solar_efficiency: float = 0.2, max_wind_power: MW = MW(0.01), max_wind_speed: float = 11):
+    def __init__(self, df: pd.DataFrame, window_size: int,
+                 max_solar_power: MW, solar_efficiency: float, max_wind_power: MW, max_wind_speed: float,
+                 window_direction: Literal['forward', 'backward'] = 'forward'):
         super().__init__(df, window_size, window_direction)
-        self.imgwWindDataStrategy = ImgwWindDataStrategy(df, window_size, window_direction, max_wind_power,
-                                                         max_wind_speed)
-        self.imgwSolarDataStrategy = ImgwSolarDataStrategy(df, window_size, window_direction, max_solar_power,
-                                                           solar_efficiency)
+        self.imgwWindDataStrategy = ImgwWindDataStrategy(df, window_size, max_wind_power, max_wind_speed,
+                                                         window_direction)
+        self.imgwSolarDataStrategy = ImgwSolarDataStrategy(df, window_size, max_solar_power, solar_efficiency,
+                                                           window_direction)
 
     @update_last_processed
     def process(self, idx: int) -> float:
@@ -48,9 +48,9 @@ def _preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
 
 class ImgwWindDataStrategy(DataStrategy):
 
-    def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
-                 window_direction: Literal['forward', 'backward'] = 'forward', max_wind_power: MW = MW(0.01),
-                 max_wind_speed: float = 11):
+    def __init__(self, df: pd.DataFrame, window_size: int,
+                 max_wind_power: MW, max_wind_speed: float,
+                 window_direction: Literal['forward', 'backward'] = 'forward'):
         super().__init__(df, window_size, window_direction)
         self.max_wind_power = max_wind_power
         self.max_wind_speed = max_wind_speed
@@ -74,9 +74,9 @@ class ImgwWindDataStrategy(DataStrategy):
 
 class ImgwSolarDataStrategy(DataStrategy):
 
-    def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
-                 window_direction: Literal['forward', 'backward'] = 'forward', max_solar_power: MW = MW(0.001),
-                 solar_efficiency: float = 0.2):
+    def __init__(self, df: pd.DataFrame, window_size: int,
+                 max_solar_power: MW, solar_efficiency: float,
+                 window_direction: Literal['forward', 'backward'] = 'forward'):
         super().__init__(df, window_size, window_direction)
         self.max_solar_power = max_solar_power
         self.solar_efficiency = solar_efficiency

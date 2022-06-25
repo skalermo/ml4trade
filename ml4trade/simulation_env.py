@@ -46,15 +46,15 @@ class SimulationEnv(gym.Env):
 
     def __init__(
             self,
-            data_strategies: Dict[str, DataStrategy] = None,
-            start_datetime: datetime = START_TIME,
-            end_datetime: datetime = END_TIME,
-            scheduling_time: time = SCHEDULING_TIME,
-            action_replacement_time: time = ACTION_REPLACEMENT_TIME,
-            prosumer_init_balance: Currency = Currency(10_000),
-            battery_capacity: MWh = MWh(0.1),
-            battery_init_charge: MWh = MWh(0.1),
-            battery_efficiency: float = 1.0,
+            data_strategies: Dict[str, DataStrategy],
+            start_datetime: datetime,
+            end_datetime: datetime,
+            scheduling_time: time,
+            action_replacement_time: time,
+            prosumer_init_balance: Currency,
+            battery_capacity: MWh,
+            battery_init_charge: MWh,
+            battery_efficiency: float,
             start_tick: int = None,
     ):
         if data_strategies is None:

@@ -1,9 +1,6 @@
 from datetime import datetime, time, timedelta
 
 
-from ml4trade.domain.constants import START_TIME, SCHEDULING_TIME, ACTION_REPLACEMENT_TIME
-
-
 class ClockView:
     def __init__(self, clock: 'SimulationClock'):
         self._clock = clock
@@ -16,8 +13,8 @@ class ClockView:
 
 
 class SimulationClock:
-    def __init__(self, start_datetime: datetime = START_TIME,
-                 scheduling_time: time = SCHEDULING_TIME, action_replacement_time: time = ACTION_REPLACEMENT_TIME,
+    def __init__(self, start_datetime: datetime,
+                 scheduling_time: time, action_replacement_time: time,
                  start_tick: int = 0, tick_duration: timedelta = timedelta(hours=1)):
         self.cur_datetime = start_datetime
         self.scheduling_time = scheduling_time

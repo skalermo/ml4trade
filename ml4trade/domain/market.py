@@ -11,10 +11,9 @@ UNSCHEDULED_MULTIPLIER = 2.0
 
 
 class EnergyMarket:
-    def __init__(self, ds: DataStrategy, clock_view: ClockView, window_size: int = 24):
+    def __init__(self, ds: DataStrategy, clock_view: ClockView):
         self.ds = ds
         self.clock_view = clock_view
-        self.window_size = window_size
 
     def buy(self, amount: MWh, price_threshold: Currency,
             client_wallet: Wallet, energy_balance: EnergyBalance,
