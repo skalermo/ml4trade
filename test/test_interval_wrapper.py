@@ -1,18 +1,17 @@
 import unittest
-from datetime import timedelta
 from collections import Counter
+from datetime import timedelta
 
-from ml4trade.simulation_env import SimulationEnv
 from ml4trade.domain.constants import START_TIME
 from ml4trade.misc.interval_wrapper import IntervalWrapper
 from ml4trade.utils import timedelta_to_hours
-from utils import setup_default_data_strategies
+from utils import setup_default_simulation_env
 
 
 class TestIntervalWrapper(unittest.TestCase):
     def setUp(self) -> None:
         self.end_datetime = START_TIME + timedelta(days=14)
-        self.env = SimulationEnv(setup_default_data_strategies(), start_datetime=START_TIME, end_datetime=self.end_datetime)
+        self.env = setup_default_simulation_env(end_datetime=self.end_datetime)
         self.env_wrapper = IntervalWrapper(env=self.env, interval=timedelta(days=1), split_ratio=0.75)
         data_duration = timedelta(days=14) - timedelta(hours=34)
         self.data_start_tick = timedelta_to_hours(data_duration * 0.75)

@@ -1,9 +1,7 @@
-import datetime
 import unittest
 
 from ml4trade.domain.units import MWh
-from ml4trade.domain.clock import SimulationClock
-from utils import setup_default_consumption_system
+from utils import setup_default_consumption_system, setup_default_clock
 
 
 class TestConsumption(unittest.TestCase):
@@ -17,7 +15,7 @@ class TestConsumption(unittest.TestCase):
         self.assertAlmostEqual(mean, 0.00025, 1)
 
     def test_consumption_per_day(self):
-        clock = SimulationClock(datetime.datetime(2020, 1, 1, hour=0))
+        clock = setup_default_clock()
         consumption_system = setup_default_consumption_system(clock)
         energy_sum = MWh(0)
         for j in range(10):

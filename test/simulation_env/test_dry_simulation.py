@@ -1,12 +1,11 @@
 import unittest
 
-from ml4trade.simulation_env import SimulationEnv
-from utils import setup_default_data_strategies
+from utils import setup_default_simulation_env
 
 
 class TestDrySimulation(unittest.TestCase):
     def test_predicts_battery_charge(self):
-        env = SimulationEnv(setup_default_data_strategies())
+        env = setup_default_simulation_env()
         env.reset(seed=0)
 
         action = env.action_space.sample()
@@ -23,7 +22,7 @@ class TestDrySimulation(unittest.TestCase):
         self.assertEqual(predicted_rel_battery_charge, 1)
 
     def test_preserves_original_state(self):
-        env = SimulationEnv(setup_default_data_strategies())
+        env = setup_default_simulation_env()
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())
         state_before = (
