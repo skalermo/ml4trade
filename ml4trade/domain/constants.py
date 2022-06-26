@@ -37,10 +37,3 @@ SIMULATION_ENV_ACTION_SPACE = gym.spaces.Box(
         + [SELL_PRICE_THRESHOLD_MAX] * 24
     ),
 )
-
-env_history_keys = (
-    'total_reward', 'action', 'wallet_balance', 'tick', 'datetime',
-    'energy_produced', 'energy_consumed', 'price', 'scheduled_buy_amounts',
-    'scheduled_sell_amounts', 'unscheduled_buy_amounts', 'unscheduled_sell_amounts',
-    'battery',
-)
