@@ -10,7 +10,6 @@ class TestSimulationEnv(unittest.TestCase):
         env = setup_default_simulation_env(
             start_datetime=datetime.combine(datetime.today(), SCHEDULING_TIME) + timedelta(hours=1),
         )
-        env._run_in_random_order = lambda *args: None
 
         self.assertFalse(env._first_actions_set)
         env.step(env.action_space.sample())

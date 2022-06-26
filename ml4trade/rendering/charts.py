@@ -1,20 +1,15 @@
 import math
 
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-from ml4trade.domain.constants import env_history_keys
 
 
 def render_all(history: dict, last_n_days: int = 2):
     plt.style.use('ggplot')
     plt.rcParams.update({'font.size': 16})
     fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
-
-    for k in env_history_keys:
-        # history[k] = history[k][-24*7-10:-10]
-        history[k] = history[k][24:-10]
 
     _plot_balance(history, axs[0, 0], fig, 'Datetime', 'Zł', 'All-time Profit')
     _plot_battery(history, last_n_days, axs[0, 1], fig, 'Time', '%', 'Last 2 days Battery state')
@@ -32,7 +27,9 @@ def _plot_balance(history: dict, ax, fig, xlabel, ylabel, title):
 
     plt.sca(ax)
     plt.xticks(rotation=45)
-    ax.plot(history['datetime'], history['wallet_balance'], color='black')
+    ax.plot(history['step_datetime'], np.cumsum(history['balance_diff']), color='green')
+    ax.plot(history['step_datetime'], np.cumsum(history['potential_profit']), color='blue')
+    ax.plot(history['step_datetime'], np.cumsum(history['potential_profit']) / 2, color='red')
     ax.legend(loc='upper right')
 
 
@@ -45,10 +42,11 @@ def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, titl
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
     ax.plot(datetime_history_last_n_days, battery_history_last_n_days, color='black')
     ax.legend(loc='upper right')
-    hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
-    h_fmt = mdates.DateFormatter('%H')
-    ax.xaxis.set_major_locator(hours)
-    ax.xaxis.set_major_formatter(h_fmt)
+    if last_n_days <= 5:
+        hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
+        h_fmt = mdates.DateFormatter('%H')
+        ax.xaxis.set_major_locator(hours)
+        ax.xaxis.set_major_formatter(h_fmt)
 
 
 def _plot_scheduled(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
@@ -81,12 +79,13 @@ def _plot_scheduled(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, t
     ax2.tick_params(bottom=False, labelbottom=False)
     ax2.spines['bottom'].set_visible(False)
 
-    hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
-    h_fmt = mdates.DateFormatter('%H')
-    ax.xaxis.set_major_locator(hours)
-    ax.xaxis.set_major_formatter(h_fmt)
-    ax2.xaxis.set_major_locator(hours)
-    ax2.xaxis.set_major_formatter(h_fmt)
+    if last_n_days <= 5:
+        hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
+        h_fmt = mdates.DateFormatter('%H')
+        ax.xaxis.set_major_locator(hours)
+        ax.xaxis.set_major_formatter(h_fmt)
+        ax2.xaxis.set_major_locator(hours)
+        ax2.xaxis.set_major_formatter(h_fmt)
 
     def rotate_point(p, angle, o=(0, 0)):
         a = angle / 180 * math.pi
@@ -131,10 +130,11 @@ def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, 
     ax.plot(datetime_history_last_n_days, sells, color='blue', label='sell amount')
     ax.legend(loc='upper right')
 
-    hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
-    h_fmt = mdates.DateFormatter('%H')
-    ax.xaxis.set_major_locator(hours)
-    ax.xaxis.set_major_formatter(h_fmt)
+    if last_n_days <= 5:
+        hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
+        h_fmt = mdates.DateFormatter('%H')
+        ax.xaxis.set_major_locator(hours)
+        ax.xaxis.set_major_formatter(h_fmt)
 
 
 if __name__ == '__main__':

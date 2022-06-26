@@ -11,6 +11,9 @@ class ClockView:
     def cur_tick(self) -> int:
         return self._clock.cur_tick
 
+    def scheduling_hour(self) -> int:
+        return self._clock.scheduling_hour()
+
 
 class SimulationClock:
     def __init__(self, start_datetime: datetime,
@@ -25,6 +28,9 @@ class SimulationClock:
     def tick(self) -> None:
         self.cur_tick += 1
         self.cur_datetime += self.tick_duration
+
+    def scheduling_hour(self) -> int:
+        return self.scheduling_time.hour
 
     def is_it_scheduling_hour(self) -> bool:
         return self.scheduling_time.hour == self.cur_datetime.hour
