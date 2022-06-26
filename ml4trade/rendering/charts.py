@@ -5,23 +5,11 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ml4trade.domain.constants import env_history_keys
-
 
 def render_all(history: dict, last_n_days: int = 2):
     plt.style.use('ggplot')
     plt.rcParams.update({'font.size': 16})
     fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
-
-    for k in env_history_keys:
-        # history[k] = history[k][-24*7-10:-10]
-        if k not in (
-                'action',
-                'balance_diff',
-                'potential_reward',
-                'unscheduled_actions_profit',
-        ):
-            history[k] = history[k][24:-10]
 
     _plot_balance(history, axs[0, 0], fig, 'Datetime', 'Zł', 'All-time Profit')
     _plot_battery(history, last_n_days, axs[0, 1], fig, 'Time', '%', 'Last 2 days Battery state')
@@ -39,9 +27,9 @@ def _plot_balance(history: dict, ax, fig, xlabel, ylabel, title):
 
     plt.sca(ax)
     plt.xticks(rotation=45)
-    ax.plot(history['datetime'][::24], np.cumsum(history['balance_diff']) + 10000, color='green')
-    ax.plot(history['datetime'][::24], np.cumsum(history['potential_reward']) + 10000, color='blue')
-    ax.plot(history['datetime'][::24], np.cumsum(history['potential_reward']) / 2 + 10000, color='red')
+    ax.plot(history['step_datetime'], np.cumsum(history['balance_diff']), color='green')
+    ax.plot(history['step_datetime'], np.cumsum(history['potential_profit']), color='blue')
+    ax.plot(history['step_datetime'], np.cumsum(history['potential_profit']) / 2, color='red')
     ax.legend(loc='upper right')
 
 
