@@ -18,8 +18,8 @@ class Prosumer:
             production_system: ProductionSystem,
             consumption_system: ConsumptionSystem,
             clock_view: ClockView,
-            initial_balance: Currency = Currency(0),
-            energy_market: Optional[EnergyMarket] = None,
+            initial_balance: Currency,
+            energy_market: EnergyMarket,
     ):
         self.battery = battery
         self.production_system = production_system

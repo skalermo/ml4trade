@@ -3,12 +3,12 @@ import unittest
 from ml4trade.history import History, tick_history_keys, step_history_keys
 from ml4trade.simulation_env import SimulationEnv
 from ml4trade.domain.market import UNSCHEDULED_MULTIPLIER
-from utils import setup_default_data_strategies
+from utils import setup_default_simulation_env
 
 
 class TestHistory(unittest.TestCase):
     def setUp(self) -> None:
-        self.env = SimulationEnv(data_strategies=setup_default_data_strategies())
+        self.env = setup_default_simulation_env()
         self.history = self.env.history
 
     def test_constructor(self):

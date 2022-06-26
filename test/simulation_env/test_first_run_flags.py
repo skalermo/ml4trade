@@ -1,16 +1,14 @@
 import unittest
 from datetime import timedelta, datetime
 
-from ml4trade.simulation_env import SimulationEnv
 from ml4trade.domain.constants import SCHEDULING_TIME
-from utils import setup_default_data_strategies
+from utils import setup_default_simulation_env
 
 
 class TestSimulationEnv(unittest.TestCase):
     def test_no_setting_actions_before_first_step(self):
-        env = SimulationEnv(
-            data_strategies=setup_default_data_strategies(),
-            start_datetime=datetime.combine(datetime.today(), SCHEDULING_TIME) + timedelta(hours=1)
+        env = setup_default_simulation_env(
+            start_datetime=datetime.combine(datetime.today(), SCHEDULING_TIME) + timedelta(hours=1),
         )
 
         self.assertFalse(env._first_actions_set)

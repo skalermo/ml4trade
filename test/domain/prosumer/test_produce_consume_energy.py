@@ -1,11 +1,10 @@
 import unittest
+
 from ml4trade.domain.battery import Battery
 from ml4trade.domain.production import ProductionSystem
-from ml4trade.domain.units import MWh, Currency
 from ml4trade.domain.prosumer import Prosumer
-from ml4trade.domain.clock import SimulationClock
-
-from utils import setup_default_market, setup_default_consumption_system
+from ml4trade.domain.units import MWh, Currency
+from utils import setup_default_market, setup_default_consumption_system, setup_default_clock
 
 
 class TestProduceConsumeEnergy(unittest.TestCase):
@@ -14,7 +13,8 @@ class TestProduceConsumeEnergy(unittest.TestCase):
         energy_market = setup_default_market()
         self.production = ProductionSystem(None, None)
         self.consumption = setup_default_consumption_system()
-        self.prosumer = Prosumer(battery, self.production, self.consumption, SimulationClock().view(), Currency(50), energy_market)
+        self.prosumer = Prosumer(battery, self.production, self.consumption, setup_default_clock().view(), Currency(50),
+                                 energy_market)
 
     def test_consume_energy(self):
         self.consumption.calculate_energy = lambda: MWh(0.01)

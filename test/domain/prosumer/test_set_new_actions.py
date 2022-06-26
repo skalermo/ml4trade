@@ -2,23 +2,23 @@ import unittest
 
 import numpy as np
 
-from ml4trade.domain.units import MWh, Currency
-from ml4trade.domain.prosumer import Prosumer
-from ml4trade.domain.battery import Battery
-from ml4trade.domain.production import ProductionSystem
 from ml4trade.domain.constants import SIMULATION_ENV_ACTION_SPACE
-from ml4trade.domain.clock import SimulationClock
-from utils import setup_default_consumption_system
+from ml4trade.domain.production import ProductionSystem
+from ml4trade.domain.prosumer import Prosumer
+from ml4trade.domain.units import MWh, Currency
+from utils import setup_default_consumption_system, setup_default_clock, setup_default_battery, setup_default_market
 
 
 class TestSetNewActions(unittest.TestCase):
     def setUp(self) -> None:
-        clock = SimulationClock()
+        clock = setup_default_clock()
         self.prosumer = Prosumer(
-            battery=Battery(),
+            battery=setup_default_battery(),
             clock_view=clock.view(),
             production_system=ProductionSystem(None, None),
-            consumption_system=setup_default_consumption_system(clock)
+            consumption_system=setup_default_consumption_system(clock),
+            initial_balance=Currency(50),
+            energy_market=setup_default_market()
         )
         self.action = SIMULATION_ENV_ACTION_SPACE.sample()
         self.prosumer.schedule(self.action)

@@ -1,16 +1,15 @@
 import unittest
 from datetime import timedelta
 
-from random_agent import RandomAgent
-
-from ml4trade.simulation_env import SimulationEnv
 from ml4trade.domain.constants import START_TIME
-from utils import setup_default_data_strategies
+from ml4trade.domain.units import MWh
+from random_agent import RandomAgent
+from utils import setup_default_simulation_env
 
 
 class TestSimulationEnv(unittest.TestCase):
     def test_gym_interface_works(self):
-        env = SimulationEnv(setup_default_data_strategies())
+        env = setup_default_simulation_env()
 
         model = RandomAgent(env)
         model.learn(total_timesteps=3)
@@ -21,7 +20,7 @@ class TestSimulationEnv(unittest.TestCase):
             obs, rewards, dones, info = env.step(action)
 
     def test_step_passes_action_to_prosumer(self):
-        env = SimulationEnv(setup_default_data_strategies())
+        env = setup_default_simulation_env()
         env.step(env.action_space.sample())
         self.assertIsNotNone(env._prosumer.scheduled_buy_amounts)
         self.assertIsNotNone(env._prosumer.scheduled_sell_amounts)
@@ -30,7 +29,7 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertEqual(env._prosumer.next_day_actions, None)
 
     def test_step_updates_history(self):
-        env = SimulationEnv(setup_default_data_strategies())
+        env = setup_default_simulation_env()
         self.assertEqual(len(env.history['balance_diff']), 0)
         action = env.action_space.sample()
         env.step(action)
@@ -41,7 +40,7 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertEqual(env.history['datetime'][-1], env._clock.cur_datetime - timedelta(hours=1))
 
     def test_reset_sets_initial_values(self):
-        env = SimulationEnv(setup_default_data_strategies())
+        env = setup_default_simulation_env(battery_init_charge=MWh(0.1))
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())
@@ -66,7 +65,7 @@ class TestSimulationEnv(unittest.TestCase):
 
     def test_reset_starts_new_simulation(self):
         start_datetime = START_TIME.replace(hour=0)
-        env = SimulationEnv(setup_default_data_strategies(), start_datetime=start_datetime)
+        env = setup_default_simulation_env(start_datetime=start_datetime)
         env.reset()
         self.assertNotEqual(env._clock.cur_datetime, start_datetime)
         self.assertTrue(env._clock.is_it_scheduling_hour())
