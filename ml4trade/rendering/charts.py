@@ -125,17 +125,27 @@ def _plot_scheduled_amounts(history: dict, last_n_days: int,  ax, fig, xlabel, y
     energy_diff = energy_produced - energy_consumed
 
     actions = history['action']
-    buys = [x[:24] for x in actions]
-    sells = [x[24:48] for x in actions]
-    buys = [item for sublist in buys for item in sublist][-24 * last_n_days:]
-    sells = [item for sublist in sells for item in sublist][-24 * last_n_days:]
+    buys_amounts = [x[:24] for x in actions]
+    sells_amounts = [x[24:48] for x in actions]
+    buys_thresholds = [x[48:72] for x in actions]
+    sells_thresholds = [x[72:] for x in actions]
+    buys_amounts = [item for sublist in buys_amounts for item in sublist][-24 * last_n_days:]
+    sells_amounts = [item for sublist in sells_amounts for item in sublist][-24 * last_n_days:]
+    prices_history_last_n_days = history['price'][-24 * last_n_days:]
+    buys_thresholds = [item for sublist in buys_thresholds for item in sublist][-24 * last_n_days:]
+    sells_thresholds = [item for sublist in sells_thresholds for item in sublist][-24 * last_n_days:]
+    buys_success = [ba if bt >= p else 0 for ba, bt, p in zip(buys_amounts, buys_thresholds, prices_history_last_n_days)]
+    sells_success = [sa if st <= p else 0 for sa, st, p in zip(sells_amounts, sells_thresholds, prices_history_last_n_days)]
 
     ax.set_ylabel(ylabel)
     ax.title.set_text(title)
 
-    ax.plot(datetime_history_last_n_days, buys, color='red', label='buy amount')
-    ax.plot(datetime_history_last_n_days, sells, color='blue', label='sell amount')
-    ax.plot(datetime_history_last_n_days, energy_diff, color='black', label='energy produced - energy consumed')
+    ax.plot(datetime_history_last_n_days, prices_history_last_n_days / max(prices_history_last_n_days) * max(energy_diff), color='gray', label='market price')
+    ax.plot(datetime_history_last_n_days, buys_amounts, color='lightsalmon', label='buy amount')
+    ax.plot(datetime_history_last_n_days, sells_amounts, color='lightblue', label='sell amount')
+    ax.plot(datetime_history_last_n_days, buys_success, 'o', color='red', label='buy amount success')
+    ax.plot(datetime_history_last_n_days, sells_success, 'o', color='blue', label='sell amount success')
+    ax.plot(datetime_history_last_n_days, energy_diff, color='purple', label='produced - consumed')
     ax.legend(loc='upper right')
     ax.set_ylim(0, max(energy_diff) * 1.5)
 
