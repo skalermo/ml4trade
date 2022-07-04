@@ -26,7 +26,7 @@ class DataStrategyWrapper(DataStrategy):
         return self.ds.observation_size()
 
 
-class MarketWrapper(DataStrategyWrapper):
+class MarketDummyWrapper(DataStrategyWrapper):
     def __init__(self, ds: PricesPlDataStrategy):
         super().__init__(ds)
 
@@ -35,6 +35,18 @@ class MarketWrapper(DataStrategyWrapper):
 
     def observation_size(self) -> int:
         return 0
+
+
+class MarketWrapper(DataStrategyWrapper):
+    def __init__(self, ds: PricesPlDataStrategy):
+        super().__init__(ds)
+        self.col_mean = ds.df.iloc[:, ds.col_idx].mean()
+        self.col_std = ds.df.iloc[:, ds.col_idx].std()
+
+    def observation(self, idx: int) -> List[float]:
+        obs = self.ds.observation(idx)
+        # obs = list(map(lambda x: (x - self.col_mean) / self.col_std, obs))
+        return obs
 
 
 class ConsumptionWrapper(DataStrategyWrapper):
