@@ -45,8 +45,7 @@ class MarketWrapper(DataStrategyWrapper):
 
     def observation(self, idx: int) -> List[float]:
         obs = self.ds.observation(idx)
-        # obs = list(map(lambda x: (x - self.col_mean) / self.col_std, obs))
-        return obs
+        return list(map(lambda x: (x - self.col_mean) / self.col_std, obs))
 
 
 class ConsumptionWrapper(DataStrategyWrapper):
