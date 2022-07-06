@@ -140,7 +140,7 @@ def _plot_scheduled_amounts(history: dict, last_n_days: int,  ax, fig, xlabel, y
     ax.set_ylabel(ylabel)
     ax.title.set_text(title)
 
-    ax.plot(datetime_history_last_n_days, prices_history_last_n_days / max(prices_history_last_n_days) * max(energy_diff), color='gray', label='market price')
+    ax.plot(datetime_history_last_n_days, np.array(prices_history_last_n_days) / max(prices_history_last_n_days) * max(energy_diff), color='gray', label='market price')
     ax.plot(datetime_history_last_n_days, buys_amounts, color='lightsalmon', label='buy amount')
     ax.plot(datetime_history_last_n_days, sells_amounts, color='lightblue', label='sell amount')
     ax.plot(datetime_history_last_n_days, buys_success, 'o', color='red', label='buy amount success')
