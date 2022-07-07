@@ -9,12 +9,13 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 def render_all(history: dict, last_n_days: int = 2):
     plt.style.use('ggplot')
     plt.rcParams.update({'font.size': 16})
-    fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
+    fig, axs = plt.subplots(nrows=3, ncols=2, figsize=(16, 16))
 
     _plot_balance(history, axs[0, 0], fig, 'Datetime', 'Zł', 'All-time Profit')
-    _plot_battery(history, last_n_days, axs[0, 1], fig, 'Time', '%', 'Last 2 days Battery state')
-    _plot_scheduled(history, last_n_days, axs[1, 0], fig, 'Time', 'Zł', 'Last 2 days Scheduled thresholds')
-    _plot_unscheduled(history, last_n_days, axs[1, 1], fig, 'Time', 'MWh', 'Last 2 days Unscheduled energy amounts')
+    _plot_battery(history, last_n_days, axs[0, 1], fig, 'Time', '%', f'Last {last_n_days} days Battery state')
+    _plot_scheduled_thresholds(history, last_n_days, axs[1, 0], fig, 'Time', 'Zł', f'Last {last_n_days} days Scheduled thresholds')
+    _plot_scheduled_amounts(history, last_n_days, axs[1, 1], fig, 'Time', 'MWh', f'Last {last_n_days} days Scheduled amounts')
+    _plot_unscheduled(history, last_n_days, axs[2, 1], fig, 'Time', 'MWh', f'Last {last_n_days} days Unscheduled energy amounts')
 
     fig.tight_layout()
     plt.show()
@@ -49,7 +50,7 @@ def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, titl
         ax.xaxis.set_major_formatter(h_fmt)
 
 
-def _plot_scheduled(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
+def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
 
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
@@ -71,9 +72,9 @@ def _plot_scheduled(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, t
     ax.set_ylim(0, 5)
     ax.spines['top'].set_visible(False)
 
-    ax2.plot(datetime_history_last_n_days, prices_history_last_n_days, color='black', label='market price')
     ax2.plot(datetime_history_last_n_days, buys, color='red', label='buy threshold')
     ax2.plot(datetime_history_last_n_days, sells, color='blue', label='sell threshold')
+    ax2.plot(datetime_history_last_n_days, prices_history_last_n_days, color='black', label='market price')
     ax2.legend(loc='upper right')
     ax2.set_ylim(min(prices_history_last_n_days) - 20, max(prices_history_last_n_days) + 20)
     ax2.tick_params(bottom=False, labelbottom=False)
@@ -113,6 +114,46 @@ def _plot_scheduled(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, t
     kwargs.update(transform=ax2.transAxes)  # switch to the bottom axes
     ax2.plot((-d, +d), (-d, +d), **kwargs)  # top-left diagonal
     ax2.plot((1 - d, 1 + d), (-d, +d), **kwargs)  # top-right diagonal
+
+
+def _plot_scheduled_amounts(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
+    ax.set_xlabel(xlabel)
+
+    datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
+    energy_produced = np.array(history['energy_produced'][-24 * last_n_days:])
+    energy_consumed = np.array(history['energy_consumed'][-24 * last_n_days:])
+    energy_diff = energy_produced - energy_consumed
+
+    actions = history['action']
+    buys_amounts = [x[:24] for x in actions]
+    sells_amounts = [x[24:48] for x in actions]
+    buys_thresholds = [x[48:72] for x in actions]
+    sells_thresholds = [x[72:] for x in actions]
+    buys_amounts = [item for sublist in buys_amounts for item in sublist][-24 * last_n_days:]
+    sells_amounts = [item for sublist in sells_amounts for item in sublist][-24 * last_n_days:]
+    prices_history_last_n_days = history['price'][-24 * last_n_days:]
+    buys_thresholds = [item for sublist in buys_thresholds for item in sublist][-24 * last_n_days:]
+    sells_thresholds = [item for sublist in sells_thresholds for item in sublist][-24 * last_n_days:]
+    buys_success = [ba if bt >= p else 0 for ba, bt, p in zip(buys_amounts, buys_thresholds, prices_history_last_n_days)]
+    sells_success = [sa if st <= p else 0 for sa, st, p in zip(sells_amounts, sells_thresholds, prices_history_last_n_days)]
+
+    ax.set_ylabel(ylabel)
+    ax.title.set_text(title)
+
+    ax.plot(datetime_history_last_n_days, np.array(prices_history_last_n_days) / max(prices_history_last_n_days) * max(energy_diff), color='gray', label='market price')
+    ax.plot(datetime_history_last_n_days, buys_amounts, color='lightsalmon', label='buy amount')
+    ax.plot(datetime_history_last_n_days, sells_amounts, color='lightblue', label='sell amount')
+    ax.plot(datetime_history_last_n_days, buys_success, 'o', color='red', label='buy amount success')
+    ax.plot(datetime_history_last_n_days, sells_success, 'o', color='blue', label='sell amount success')
+    ax.plot(datetime_history_last_n_days, energy_diff, color='purple', label='produced - consumed')
+    ax.legend(loc='upper right')
+    ax.set_ylim(0, max(energy_diff) * 1.5)
+
+    if last_n_days <= 5:
+        hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
+        h_fmt = mdates.DateFormatter('%H')
+        ax.xaxis.set_major_locator(hours)
+        ax.xaxis.set_major_formatter(h_fmt)
 
 
 def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, title):
