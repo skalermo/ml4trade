@@ -43,9 +43,16 @@ class MarketWrapper(DataStrategyWrapper):
         self.col_mean = ds.df.iloc[:, ds.col_idx].mean()
         self.col_std = ds.df.iloc[:, ds.col_idx].std()
 
+    @staticmethod
+    def _minmax_scale(obs: list):
+        min_val = min(obs)
+        max_val = max(obs)
+        return list(map(lambda x: (x - min_val) / (max_val - min_val), obs))
+
     def observation(self, idx: int) -> List[float]:
         obs = self.ds.observation(idx)
-        return list(map(lambda x: (x - self.col_mean) / self.col_std, obs))
+        # return list(map(lambda x: (x - self.col_mean) / self.col_std, obs))
+        return self._minmax_scale(obs)
 
 
 class ConsumptionWrapper(DataStrategyWrapper):
