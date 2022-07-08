@@ -11,13 +11,14 @@ from ml4trade.utils import timedelta_to_hours
 class IntervalWrapper(Wrapper):
     env: SimulationEnv
 
-    def __init__(self, env: SimulationEnv, interval: timedelta, split_ratio: float = 0.8):
+    def __init__(self, env: SimulationEnv, interval: timedelta, split_ratio: float = 0.8, randomly_set_battery=False):
         super().__init__(env)
 
         self.start_datetime = env._start_datetime
         self.end_datetime = env._end_datetime
         self.min_tick = env._start_tick
         self.interval = interval
+        self.randomly_set_battery = randomly_set_battery
         self.interval_in_ticks = timedelta_to_hours(interval)
         self.test_mode = False
         self._ep_interval_ticks_generator = self.__ep_interval_ticks_generator()
@@ -68,7 +69,16 @@ class IntervalWrapper(Wrapper):
             self.env._start_datetime = start_datetime
             self.env._end_datetime = end_datetime
             self.env._start_tick = start_tick
-        return self.env.reset(**kwargs)
+
+        battery_charge_to_set = None
+        if self.randomly_set_battery and not self.test_mode:
+            rand_rel_charge = self.np_random.uniform(0.05, 0.95)
+            battery_charge_to_set = self.env._prosumer.battery.capacity * rand_rel_charge
+
+        return self.env.reset(
+            battery_charge_to_set=battery_charge_to_set,
+            **kwargs
+        )
 
     def render_all(self):
         self.env.render_all()
