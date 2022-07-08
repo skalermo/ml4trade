@@ -93,7 +93,7 @@ class SimulationEnv(gym.Env):
             self._np_random, seed = seeding.np_random(seed)
 
         self._prosumer.wallet.balance = self._prosumer_init_balance
-        self._prosumer.battery.current_charge = self._battery_init_charge
+        self._prosumer.battery.current_charge = kwargs.get('battery_charge_to_set') or self._battery_init_charge
         self._prosumer.scheduled_buy_amounts = None
         self._prosumer.scheduled_sell_amounts = None
         self._prosumer.scheduled_buy_thresholds = None
