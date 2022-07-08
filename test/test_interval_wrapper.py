@@ -2,6 +2,7 @@ import unittest
 from collections import Counter
 from datetime import timedelta
 
+from ml4trade.domain.units import MWh
 from ml4trade.domain.constants import START_TIME
 from ml4trade.misc.interval_wrapper import IntervalWrapper
 from ml4trade.utils import timedelta_to_hours
@@ -11,7 +12,11 @@ from utils import setup_default_simulation_env
 class TestIntervalWrapper(unittest.TestCase):
     def setUp(self) -> None:
         self.end_datetime = START_TIME + timedelta(days=14)
-        self.env = setup_default_simulation_env(end_datetime=self.end_datetime)
+        self.battery_init_charge = MWh(0.42)
+        self.env = setup_default_simulation_env(
+            end_datetime=self.end_datetime,
+            battery_init_charge=self.battery_init_charge
+        )
         self.env_wrapper = IntervalWrapper(env=self.env, interval=timedelta(days=1), split_ratio=0.75)
         data_duration = timedelta(days=14) - timedelta(hours=34)
         self.data_start_tick = timedelta_to_hours(data_duration * 0.75)
@@ -78,6 +83,15 @@ class TestIntervalWrapper(unittest.TestCase):
         self.assertNotEqual(start, new_start)
         self.assertNotEqual(end, new_end)
         self.assertNotEqual(tick, new_tick)
+
+    def test_setting_battery_randomly_for_each_episode(self):
+        self.assertEqual(self.env._prosumer.battery.current_charge, self.battery_init_charge)
+        self.env_wrapper.reset()
+        self.assertEqual(self.env._prosumer.battery.current_charge, self.battery_init_charge)
+
+        self.env_wrapper.randomly_set_battery = True
+        self.env_wrapper.reset(seed=42)
+        self.assertNotEqual(self.env._prosumer.battery.current_charge, self.battery_init_charge)
 
 
 if __name__ == '__main__':
