@@ -40,9 +40,12 @@ class TestIntervalWrapper(unittest.TestCase):
         # check if ticks are within allowed range
         self.assertTrue(all([self.env_wrapper.min_tick <= t <= self.env_wrapper.test_data_start_tick
                              for t in ticks]))
-        # check if ticks are of fixed values
+
+    def test_random_start_ticks(self):
         ticks_expected_count = (self.env_wrapper.test_data_start_tick - self.env_wrapper.min_tick) // self.env_wrapper.interval_in_ticks
-        self.assertTrue(len(Counter(ticks)), ticks_expected_count)
+        ticks1 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
+        ticks2 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
+        self.assertNotEqual(ticks1, ticks2)
 
     def test_ep_interval_from_start_tick(self):
         tick = 42
