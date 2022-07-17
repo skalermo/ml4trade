@@ -42,13 +42,14 @@ class IntervalWrapper(Wrapper):
         return self.env.reset()
 
     def __ep_interval_ticks_generator(self) -> Generator[int, None, None]:
-        ep_intervals_start_ticks = [start for start in range(
-            self.min_tick, self.test_data_start_tick - self.interval_in_ticks + 1, self.interval_in_ticks
-        )]
         while True:
-            start_ticks_shuffled = ep_intervals_start_ticks.copy()
-            self.np_random.shuffle(start_ticks_shuffled)
-            for i in start_ticks_shuffled:
+            rand_offset = self.np_random.integers(0, self.interval_in_ticks - 1, size=None)
+            ep_intervals_start_ticks = [start for start in range(
+                self.min_tick + rand_offset, self.test_data_start_tick - self.interval_in_ticks + 1,
+                self.interval_in_ticks
+            )]
+            self.np_random.shuffle(ep_intervals_start_ticks)
+            for i in ep_intervals_start_ticks:
                 yield i
 
     def _ep_interval_from_start_tick(self, tick: int) -> Tuple[datetime, datetime]:
