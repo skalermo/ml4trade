@@ -131,8 +131,8 @@ class History:
         for key in tick_history_keys:
             self._history[key] = self._history[key][:-n or None]
 
-    def render(self):
-        render_all(self._history)
+    def render(self, last_n_days: int = 2):
+        render_all(self._history, last_n_days)
 
     def save(self, path: str = 'env_history.json'):
         with open(path, 'w') as f:
