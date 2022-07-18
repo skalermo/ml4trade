@@ -21,12 +21,6 @@ class CustomWrapper(Wrapper):
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         return super().step(action)
 
-    def render_all(self):
-        self.env.render_all()
-
-    def save_history(self):
-        self.env.save_history()
-
 
 CUSTOM_ACTION_SPACE = gym.spaces.Box(
     low=np.array([-10] * 96),

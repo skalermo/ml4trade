@@ -32,9 +32,6 @@ class IntervalWrapper(Wrapper):
     def history(self):
         return self.env.history
 
-    def save_history(self, *args, **kwargs):
-        self.env.save_history(*args, **kwargs)
-
     def set_to_test_and_reset(self) -> ObsType:
         self.test_mode = True
         self.env._start_datetime = self.test_data_start
@@ -79,6 +76,3 @@ class IntervalWrapper(Wrapper):
             battery_charge_to_set=battery_charge_to_set,
             **kwargs
         )
-
-    def render_all(self):
-        self.env.render_all()
