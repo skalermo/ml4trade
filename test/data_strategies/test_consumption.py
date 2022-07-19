@@ -12,7 +12,7 @@ class TestConsumption(unittest.TestCase):
             energy = consumption_system.calculate_energy()
             energy_sum += energy
         mean = energy_sum.value / 10
-        self.assertAlmostEqual(mean, 0.00025, 1)
+        self.assertAlmostEqual(mean, 0.025, 1)
 
     def test_consumption_per_day(self):
         clock = setup_default_clock()
@@ -26,7 +26,7 @@ class TestConsumption(unittest.TestCase):
                 clock.tick()
             energy_sum += daily_sum
         mean = energy_sum.value / 10
-        self.assertAlmostEqual(mean, 0.00538, 1)
+        self.assertAlmostEqual(mean, 0.538, 1)
 
     def test_data_length(self):
         consumption_system = setup_default_consumption_system(window_size=26)
