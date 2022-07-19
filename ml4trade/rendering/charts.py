@@ -6,7 +6,7 @@ import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-def render_all(history: dict, last_n_days: int = 2):
+def render_all(history: dict, last_n_days: int = 2, save_path=None):
     plt.style.use('ggplot')
     plt.rcParams.update({'font.size': 16})
     fig, axs = plt.subplots(nrows=3, ncols=2, figsize=(16, 16))
@@ -18,6 +18,8 @@ def render_all(history: dict, last_n_days: int = 2):
     _plot_unscheduled(history, last_n_days, axs[2, 1], fig, 'Time', 'MWh', f'Last {last_n_days} days Unscheduled energy amounts')
 
     fig.tight_layout()
+    if save_path is not None:
+        fig.savefig(save_path)
     plt.show()
 
 
