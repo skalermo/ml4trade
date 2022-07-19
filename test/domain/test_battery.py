@@ -20,6 +20,12 @@ class TestBattery(unittest.TestCase):
         self.assertAlmostEqual(charged.value, 0.06, 10)
         self.assertAlmostEqual(battery.current_charge.value, 0.1, 10)
 
+    def test_charge_no_float_point_errors(self):
+        battery = Battery(MWh(0.528), 0.85, MWh(0.05))
+        charge_amount = MWh(0.014180880497799088)
+        charged = battery.charge(charge_amount)
+        self.assertEqual(charged, charge_amount)
+
     def test_discharge(self):
         battery = Battery(MWh(0.1), 1.0, MWh(0.05))
         battery.discharge(MWh(0.01))

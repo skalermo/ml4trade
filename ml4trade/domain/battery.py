@@ -14,8 +14,11 @@ class Battery:
         return self.current_charge / self.capacity
 
     def charge(self, amount: MWh):
-        charged_amount = min(amount * self.efficiency, self.capacity - self.current_charge)
-        self.current_charge += charged_amount
+        if amount * self.efficiency <= self.capacity - self.current_charge:
+            self.current_charge += amount * self.efficiency
+            return amount
+        charged_amount = self.capacity - self.current_charge
+        self.current_charge = self.capacity
         return charged_amount / self.efficiency
 
     def discharge(self, amount: MWh):
