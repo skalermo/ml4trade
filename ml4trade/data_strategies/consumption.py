@@ -11,12 +11,13 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
         # avg energy consumption per 100 households
         # for each hour of the day
         self.energy_consumption_MWh = [
-            0.0189, 0.0184, 0.0181, 0.0181, 0.0182, 0.0185,
-            0.0194, 0.0222, 0.0238, 0.0246, 0.0246, 0.0246,
-            0.0248, 0.0249, 0.0246, 0.0244, 0.0244, 0.0244,
-            0.0243, 0.0246, 0.0246, 0.0242, 0.0225, 0.0208
+            0.000189, 0.000184, 0.000181, 0.000181, 0.000182, 0.000185,
+            0.000194, 0.000222, 0.000238, 0.000246, 0.000246, 0.000246,
+            0.000248, 0.000249, 0.000246, 0.000244, 0.000244, 0.000244,
+            0.000243, 0.000246, 0.000246, 0.000242, 0.000225, 0.000208
         ]
 
+        self.energy_consumption_MWh = list(map(lambda x: x * 100, self.energy_consumption_MWh))
         extra_data = window_size // len(self.energy_consumption_MWh)
         self.energy_consumption_MWh += self.energy_consumption_MWh * extra_data
 
