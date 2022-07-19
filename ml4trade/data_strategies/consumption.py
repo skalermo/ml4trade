@@ -8,7 +8,7 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
     def __init__(self, window_size: int = 24):
         super().__init__(None, window_size, 'backward')
 
-        # avg energy consumption per household
+        # avg energy consumption per 100 households
         # for each hour of the day
         self.energy_consumption_MWh = [
             0.000189, 0.000184, 0.000181, 0.000181, 0.000182, 0.000185,
@@ -17,6 +17,7 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
             0.000243, 0.000246, 0.000246, 0.000242, 0.000225, 0.000208
         ]
 
+        self.energy_consumption_MWh = list(map(lambda x: x * 100, self.energy_consumption_MWh))
         extra_data = window_size // len(self.energy_consumption_MWh)
         self.energy_consumption_MWh += self.energy_consumption_MWh * extra_data
 
