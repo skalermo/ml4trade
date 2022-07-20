@@ -50,7 +50,8 @@ def setup_sim_env(cfg: DictConfig) -> (SimulationEnv, SimulationEnv):
                                        solar_efficiency=cfg.energy_systems.solar_efficiency,
                                        max_wind_power=MW(cfg.energy_systems.max_wind_power),
                                        max_wind_speed=cfg.energy_systems.max_wind_speed),
-        'consumption': HouseholdEnergyConsumptionDataStrategy(window_size=24),
+        'consumption': HouseholdEnergyConsumptionDataStrategy(household_number=cfg.energy_systems.households,
+                                                              window_size=24),
         'market': PricesPlDataStrategy(prices_df)
     }
 

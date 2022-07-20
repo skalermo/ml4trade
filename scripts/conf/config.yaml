@@ -14,5 +14,6 @@ energy_systems:
   solar_efficiency: 0.2
   max_wind_power: 0.01
   max_wind_speed: 11
+  households: 1
 
 debug: True
