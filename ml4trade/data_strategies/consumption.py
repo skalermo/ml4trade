@@ -5,8 +5,9 @@ from ml4trade.data_strategies import DataStrategy, update_last_processed
 
 
 class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
-    def __init__(self, window_size: int = 24):
+    def __init__(self, household_number: int = 1, window_size: int = 24):
         super().__init__(None, window_size, 'backward')
+        self.household_number = household_number
 
         # avg energy consumption for 1 household
         # for each hour of the day
@@ -16,8 +17,8 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
             0.000248, 0.000249, 0.000246, 0.000244, 0.000244, 0.000244,
             0.000243, 0.000246, 0.000246, 0.000242, 0.000225, 0.000208
         ]
-        # increase consumption to 3 households
-        self.energy_consumption_MWh = list(map(lambda x: x * 3, self.energy_consumption_MWh))
+        # increase consumption to n households
+        self.energy_consumption_MWh = list(map(lambda x: x * self.household_number, self.energy_consumption_MWh))
 
         extra_data = window_size // len(self.energy_consumption_MWh)
         self.energy_consumption_MWh += self.energy_consumption_MWh * extra_data
