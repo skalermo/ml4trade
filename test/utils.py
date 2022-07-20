@@ -33,10 +33,11 @@ def setup_default_market(df: pd.DataFrame = None, clock: SimulationClock = None)
     return market
 
 
-def setup_default_consumption_system(clock: SimulationClock = None, window_size: int = 1) -> ConsumptionSystem:
+def setup_default_consumption_system(clock: SimulationClock = None, household_number: int = 1, window_size: int = 1)\
+        -> ConsumptionSystem:
     if clock is None:
         clock = setup_default_clock()
-    return ConsumptionSystem(HouseholdEnergyConsumptionDataStrategy(window_size), clock.view())
+    return ConsumptionSystem(HouseholdEnergyConsumptionDataStrategy(household_number, window_size), clock.view())
 
 
 def setup_default_data_strategies() -> Dict[str, DataStrategy]:
