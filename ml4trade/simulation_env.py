@@ -67,8 +67,7 @@ class SimulationEnv(gym.Env):
 
         obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
-        # self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
-        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
         if start_tick is None:
             start_tick = calc_tick_offset(list(data_strategies.values()), scheduling_time)
         self._start_tick = start_tick
@@ -116,14 +115,14 @@ class SimulationEnv(gym.Env):
         return self._observation()[0]
 
     def _observation(self) -> ObservationType:
-        # market_obs = self._market.observation()
-        # production_obs = self._production_system.observation()
-        # consumption_obs = self._consumption_system.observation()
+        market_obs = self._market.observation()
+        production_obs = self._production_system.observation()
+        consumption_obs = self._consumption_system.observation()
         rel_battery_charge_at_midnight = self._dry_simulation(24 - self._clock.scheduling_time.hour)
         obs = [
-            # *market_obs,
-            # *production_obs,
-            # *consumption_obs,
+            *market_obs,
+            *production_obs,
+            *consumption_obs,
             rel_battery_charge_at_midnight,
         ]
         reward = self._calculate_reward()
