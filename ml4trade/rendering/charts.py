@@ -40,6 +40,9 @@ def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, titl
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.title.set_text(title)
+    if last_n_days <= 5:
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
     battery_history_last_n_days = history['battery'][-24 * last_n_days:]
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
@@ -54,6 +57,9 @@ def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, titl
 
 def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
+    if last_n_days <= 5:
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
     prices_history_last_n_days = history['price'][-24 * last_n_days:]
@@ -120,6 +126,9 @@ def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel
 
 def _plot_scheduled_amounts(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
+    if last_n_days <= 5:
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
     energy_produced = np.array(history['energy_produced'][-24 * last_n_days:])
@@ -149,7 +158,7 @@ def _plot_scheduled_amounts(history: dict, last_n_days: int,  ax, fig, xlabel, y
     ax.plot(datetime_history_last_n_days, sells_success, 'o', color='blue', label='sell amount success')
     ax.plot(datetime_history_last_n_days, energy_diff, color='purple', label='produced - consumed')
     ax.legend(loc='upper right')
-    ax.set_ylim(0, max(energy_diff) * 1.5)
+    ax.set_ylim(0, int(max(max(buys_success), max(sells_success))) * 1.5)
 
     if last_n_days <= 5:
         hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
@@ -162,6 +171,9 @@ def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.title.set_text(title)
+    if last_n_days <= 5:
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
     buys_last_n_days = history['unscheduled_buy_amounts'][-24 * last_n_days:]
