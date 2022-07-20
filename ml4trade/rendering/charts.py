@@ -57,9 +57,6 @@ def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, titl
 
 def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
-    if last_n_days <= 5:
-        plt.sca(ax)
-        plt.xticks(rotation=45)
 
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
     prices_history_last_n_days = history['price'][-24 * last_n_days:]
@@ -95,6 +92,8 @@ def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel
         ax.xaxis.set_major_formatter(h_fmt)
         ax2.xaxis.set_major_locator(hours)
         ax2.xaxis.set_major_formatter(h_fmt)
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
     def rotate_point(p, angle, o=(0, 0)):
         a = angle / 180 * math.pi
@@ -126,9 +125,6 @@ def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel
 
 def _plot_scheduled_amounts(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
-    if last_n_days <= 5:
-        plt.sca(ax)
-        plt.xticks(rotation=45)
 
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
     energy_produced = np.array(history['energy_produced'][-24 * last_n_days:])
@@ -165,15 +161,14 @@ def _plot_scheduled_amounts(history: dict, last_n_days: int,  ax, fig, xlabel, y
         h_fmt = mdates.DateFormatter('%H')
         ax.xaxis.set_major_locator(hours)
         ax.xaxis.set_major_formatter(h_fmt)
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
 
 def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.title.set_text(title)
-    if last_n_days <= 5:
-        plt.sca(ax)
-        plt.xticks(rotation=45)
 
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
     buys_last_n_days = history['unscheduled_buy_amounts'][-24 * last_n_days:]
@@ -190,6 +185,8 @@ def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, 
         h_fmt = mdates.DateFormatter('%H')
         ax.xaxis.set_major_locator(hours)
         ax.xaxis.set_major_formatter(h_fmt)
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
 
 if __name__ == '__main__':
