@@ -40,9 +40,6 @@ def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, titl
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.title.set_text(title)
-    if last_n_days <= 5:
-        plt.sca(ax)
-        plt.xticks(rotation=45)
 
     battery_history_last_n_days = history['battery'][-24 * last_n_days:]
     datetime_history_last_n_days = history['datetime'][-24 * last_n_days:]
@@ -53,6 +50,9 @@ def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, titl
         h_fmt = mdates.DateFormatter('%H')
         ax.xaxis.set_major_locator(hours)
         ax.xaxis.set_major_formatter(h_fmt)
+    else:
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
 
 def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
@@ -92,7 +92,10 @@ def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel
         ax.xaxis.set_major_formatter(h_fmt)
         ax2.xaxis.set_major_locator(hours)
         ax2.xaxis.set_major_formatter(h_fmt)
+    else:
         plt.sca(ax)
+        plt.xticks(rotation=45)
+        plt.sca(ax2)
         plt.xticks(rotation=45)
 
     def rotate_point(p, angle, o=(0, 0)):
@@ -161,6 +164,7 @@ def _plot_scheduled_amounts(history: dict, last_n_days: int,  ax, fig, xlabel, y
         h_fmt = mdates.DateFormatter('%H')
         ax.xaxis.set_major_locator(hours)
         ax.xaxis.set_major_formatter(h_fmt)
+    else:
         plt.sca(ax)
         plt.xticks(rotation=45)
 
@@ -185,6 +189,7 @@ def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, 
         h_fmt = mdates.DateFormatter('%H')
         ax.xaxis.set_major_locator(hours)
         ax.xaxis.set_major_formatter(h_fmt)
+    else:
         plt.sca(ax)
         plt.xticks(rotation=45)
 
