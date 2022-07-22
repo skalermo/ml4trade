@@ -50,6 +50,9 @@ def _plot_battery(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, titl
         h_fmt = mdates.DateFormatter('%H')
         ax.xaxis.set_major_locator(hours)
         ax.xaxis.set_major_formatter(h_fmt)
+    else:
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
 
 def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel, ylabel, title):
@@ -89,6 +92,11 @@ def _plot_scheduled_thresholds(history: dict, last_n_days: int,  ax, fig, xlabel
         ax.xaxis.set_major_formatter(h_fmt)
         ax2.xaxis.set_major_locator(hours)
         ax2.xaxis.set_major_formatter(h_fmt)
+    else:
+        plt.sca(ax)
+        plt.xticks(rotation=45)
+        plt.sca(ax2)
+        plt.xticks(rotation=45)
 
     def rotate_point(p, angle, o=(0, 0)):
         a = angle / 180 * math.pi
@@ -149,13 +157,16 @@ def _plot_scheduled_amounts(history: dict, last_n_days: int,  ax, fig, xlabel, y
     ax.plot(datetime_history_last_n_days, sells_success, 'o', color='blue', label='sell amount success')
     ax.plot(datetime_history_last_n_days, energy_diff, color='purple', label='produced - consumed')
     ax.legend(loc='upper right')
-    ax.set_ylim(0, max(energy_diff) * 1.5)
+    ax.set_ylim(0, int(max(max(buys_success), max(sells_success))) * 1.5)
 
     if last_n_days <= 5:
         hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
         h_fmt = mdates.DateFormatter('%H')
         ax.xaxis.set_major_locator(hours)
         ax.xaxis.set_major_formatter(h_fmt)
+    else:
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
 
 def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, title):
@@ -178,6 +189,9 @@ def _plot_unscheduled(history: dict, last_n_days: int, ax, fig, xlabel, ylabel, 
         h_fmt = mdates.DateFormatter('%H')
         ax.xaxis.set_major_locator(hours)
         ax.xaxis.set_major_formatter(h_fmt)
+    else:
+        plt.sca(ax)
+        plt.xticks(rotation=45)
 
 
 if __name__ == '__main__':
