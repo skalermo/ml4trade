@@ -62,13 +62,16 @@ class SimulationEnv(gym.Env):
         obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 2,), dtype=np.float32)
+
         if start_tick is None:
             start_tick = calc_tick_offset(list(data_strategies.values()), scheduling_time)
-        self._start_tick = start_tick
-        assert dfs_are_long_enough(list(data_strategies.values()), start_datetime, end_datetime, self._start_tick), \
+            start_datetime += timedelta(hours=start_tick)
+        assert dfs_are_long_enough(list(data_strategies.values()), start_datetime, end_datetime, start_tick), \
             'Provided dataframe is too short'
 
-        self._start_datetime = start_datetime + timedelta(hours=self._start_tick)
+        # if start_tick is provided manually start_datetime should be aligned with it
+        self._start_tick = start_tick
+        self._start_datetime = start_datetime
         self._end_datetime = end_datetime
         self._prosumer_init_balance = prosumer_init_balance
         self._battery_init_charge = battery_init_charge
