@@ -7,14 +7,8 @@ from gym.core import ObsType, ActType
 from gym.utils import seeding
 
 from ml4trade.data_strategies import DataStrategy
-from ml4trade.domain.clock import SimulationClock
-from ml4trade.domain.constants import (
-    START_TIME,
-    END_TIME,
-    SCHEDULING_TIME,
-    ACTION_REPLACEMENT_TIME,
-    SIMULATION_ENV_ACTION_SPACE,
-)
+from ml4trade.domain.clock import SimulationClock, ClockView
+from ml4trade.domain.constants import SIMULATION_ENV_ACTION_SPACE
 from ml4trade.domain.consumption import ConsumptionSystem
 from ml4trade.domain.market import EnergyMarket
 from ml4trade.domain.production import ProductionSystem
@@ -70,11 +64,13 @@ class SimulationEnv(gym.Env):
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 1,), dtype=np.float32)
         if start_tick is None:
             start_tick = calc_tick_offset(list(data_strategies.values()), scheduling_time)
-        self._start_tick = start_tick
-        assert dfs_are_long_enough(list(data_strategies.values()), start_datetime, end_datetime, self._start_tick), \
+            start_datetime += timedelta(hours=start_tick)
+        assert dfs_are_long_enough(list(data_strategies.values()), start_datetime, end_datetime, start_tick), \
             'Provided dataframe is too short'
 
-        self._start_datetime = start_datetime + timedelta(hours=self._start_tick)
+        # if start_tick is provided manually start_datetime should be aligned with it
+        self._start_tick = start_tick
+        self._start_datetime = start_datetime
         self._end_datetime = end_datetime
         self._prosumer_init_balance = prosumer_init_balance
         self._battery_init_charge = battery_init_charge
@@ -203,3 +199,6 @@ class SimulationEnv(gym.Env):
 
     def save_history(self):
         self.history.save()
+
+    def new_clock_view(self) -> ClockView:
+        return self._clock.view()

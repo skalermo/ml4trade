@@ -17,4 +17,4 @@ def dfs_are_long_enough(data_strategies: List[DataStrategy], start_datetime: dat
                         start_tick: int) -> bool:
     dfs_lengths = [len(ds.df) for ds in data_strategies if ds.df is not None]
     episode_hour_length = timedelta_to_hours(end_datetime - start_datetime)
-    return episode_hour_length + 2 * start_tick <= min(dfs_lengths)
+    return episode_hour_length + start_tick <= min(dfs_lengths)

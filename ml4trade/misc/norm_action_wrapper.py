@@ -1,25 +1,12 @@
-from typing import Tuple, Dict
-from datetime import timedelta
+from typing import Tuple, Dict, Union
+from datetime import timedelta, datetime
 
 import gym
-from gym.core import Wrapper, ObsType, ActType
+from gym.core import Wrapper, ActionWrapper as _ActionWrapper
+import pandas as pd
 import numpy as np
 
-from ml4trade.domain.clock import ClockView
 from ml4trade.simulation_env import SimulationEnv
-
-
-class CustomWrapper(Wrapper):
-    env: SimulationEnv
-
-    def __init__(self, env: SimulationEnv):
-        super().__init__(env)
-
-    def reset(self, **kwargs) -> ObsType:
-        return super().reset(**kwargs)
-
-    def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
-        return super().step(action)
 
 
 CUSTOM_ACTION_SPACE = gym.spaces.Box(
@@ -28,27 +15,42 @@ CUSTOM_ACTION_SPACE = gym.spaces.Box(
 )
 
 
-class ActionWrapper(CustomWrapper):
-    def __init__(self, env: SimulationEnv, avg_month_prices: Dict[Tuple[int, int], float], ref_power_MW: float, clock_view: ClockView):
+class ActionWrapper(_ActionWrapper):
+    env: SimulationEnv
+
+    def __init__(self, env: Union[SimulationEnv, Wrapper], ref_power_MW: float,
+                 avg_month_price_retriever: 'AvgMonthPriceRetriever'):
         super().__init__(env)
         self.env.action_space = CUSTOM_ACTION_SPACE
-        self.avg_month_prices = avg_month_prices
-        self.avg_prices = list(avg_month_prices.values())
         self.ref_power_MW = ref_power_MW
-        self.clock_view = clock_view
+        self.clock_view = self.env.new_clock_view()
+        self._avg_month_price_retriever = avg_month_price_retriever
 
-    def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
-        a = np.exp(action)
-        a[:48] *= self.ref_power_MW / 2
-        price = self._get_prev_month_avg_price()
-        a[48:] *= price
-        return super().step(a)
+    def action(self, action):
+        new_action = np.exp(action)
+        new_action[:48] *= self.ref_power_MW / 2
+        price = self._avg_month_price_retriever.get_prev_month_avg_price(
+            self.clock_view.cur_datetime()
+        )
+        new_action[48:] *= price
+        return new_action
 
-    def _get_prev_month_avg_price(self) -> float:
-        prev_month_avg_price = self.avg_month_prices.get(self._get_prev_month(), self.avg_prices[0])
+    def reverse_action(self, action):
+        raise NotImplementedError
+
+
+class AvgMonthPriceRetriever:
+    def __init__(self, prices_df: pd.DataFrame):
+        self._avg_month_prices: Dict[Tuple[int, int], float] = prices_df.groupby(
+            [prices_df['index'].dt.year.rename('year'), prices_df['index'].dt.month.rename('month')]
+        )['Fixing I Price [PLN/MWh]'].mean().to_dict()
+        self._default_avg_price = list(self._avg_month_prices.values())[0]
+
+    def get_prev_month_avg_price(self, _datetime: datetime) -> float:
+        prev_month = self._get_prev_month(_datetime)
+        prev_month_avg_price = self._avg_month_prices.get(prev_month, self._default_avg_price)
         return prev_month_avg_price
 
-    def _get_prev_month(self) -> Tuple[int, int]:
-        cur_datetime = self.clock_view.cur_datetime()
-        prev_month_datetime = cur_datetime.replace(day=1) - timedelta(days=1)
+    def _get_prev_month(self, _datetime: datetime) -> Tuple[int, int]:
+        prev_month_datetime = _datetime.replace(day=1) - timedelta(days=1)
         return prev_month_datetime.year, prev_month_datetime.month
