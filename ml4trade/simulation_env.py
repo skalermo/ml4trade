@@ -7,14 +7,8 @@ from gym.core import ObsType, ActType
 from gym.utils import seeding
 
 from ml4trade.data_strategies import DataStrategy
-from ml4trade.domain.clock import SimulationClock
-from ml4trade.domain.constants import (
-    START_TIME,
-    END_TIME,
-    SCHEDULING_TIME,
-    ACTION_REPLACEMENT_TIME,
-    SIMULATION_ENV_ACTION_SPACE,
-)
+from ml4trade.domain.clock import SimulationClock, ClockView
+from ml4trade.domain.constants import SIMULATION_ENV_ACTION_SPACE
 from ml4trade.domain.consumption import ConsumptionSystem
 from ml4trade.domain.market import EnergyMarket
 from ml4trade.domain.production import ProductionSystem
@@ -204,3 +198,6 @@ class SimulationEnv(gym.Env):
 
     def save_history(self):
         self.history.save()
+
+    def new_clock_view(self) -> ClockView:
+        return self._clock.view()
