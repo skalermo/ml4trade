@@ -1,5 +1,4 @@
 import unittest
-from collections import Counter
 from datetime import timedelta
 
 from ml4trade.domain.constants import START_TIME
@@ -20,29 +19,29 @@ class TestIntervalWrapper(unittest.TestCase):
         self.assertEqual(self.env_wrapper.env, self.env)
         self.assertEqual(self.env_wrapper.start_datetime, START_TIME + timedelta(hours=34))
         self.assertEqual(self.env_wrapper.end_datetime, self.end_datetime)
-        self.assertEqual(self.env_wrapper.min_tick, 34)
+        self.assertEqual(self.env_wrapper.start_tick, 34)
         self.assertEqual(self.env_wrapper.interval, timedelta(days=1))
         self.assertEqual(self.env_wrapper.interval_in_ticks, 24)
-        self.assertEqual(self.env_wrapper.test_mode, False)
+        self.assertEqual(self.env_wrapper.train_mode, True)
         self.assertEqual(self.env_wrapper.test_data_start_tick, self.data_start_tick)
 
-    def test_set_to_test(self):
-        self.env_wrapper.set_to_test_and_reset()
-        self.assertTrue(self.env_wrapper.test_mode)
-        self.assertEqual(self.env._start_tick, self.data_start_tick)
-        self.assertEqual(
-            self.env._start_datetime.replace(minute=0),
-            self.env_wrapper.start_datetime + timedelta(hours=self.data_start_tick)
-        )
+    # def test_set_to_test(self):
+    #     self.env_wrapper.set_to_test_and_reset()
+    #     self.assertFalse(self.env_wrapper.train_mode)
+    #     self.assertEqual(self.env._start_tick, self.data_start_tick)
+    #     self.assertEqual(
+    #         self.env._start_datetime.replace(minute=0),
+    #         self.env_wrapper.start_datetime + timedelta(hours=self.data_start_tick)
+    #     )
 
     def test_interval_ticks_generator(self):
         ticks = [next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(100)]
         # check if ticks are within allowed range
-        self.assertTrue(all([self.env_wrapper.min_tick <= t <= self.env_wrapper.test_data_start_tick
+        self.assertTrue(all([self.env_wrapper.start_tick <= t <= self.env_wrapper.test_data_start_tick
                              for t in ticks]))
 
     def test_random_start_ticks(self):
-        ticks_expected_count = (self.env_wrapper.test_data_start_tick - self.env_wrapper.min_tick) // self.env_wrapper.interval_in_ticks
+        ticks_expected_count = (self.env_wrapper.test_data_start_tick - self.env_wrapper.start_tick) // self.env_wrapper.interval_in_ticks
         ticks1 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
         ticks2 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
         self.assertNotEqual(ticks1, ticks2)
@@ -54,7 +53,7 @@ class TestIntervalWrapper(unittest.TestCase):
         self.assertEqual(end, start + self.env_wrapper.interval)
 
     def test_reset(self):
-        self.env_wrapper.test_mode = True
+        self.env_wrapper.train_mode = False
         start, end, tick = (
             self.env._start_datetime,
             self.env._end_datetime,
@@ -68,7 +67,7 @@ class TestIntervalWrapper(unittest.TestCase):
         )
         self.assertListEqual([start, end, tick], [new_start, new_end, new_tick])
 
-        self.env_wrapper.test_mode = False
+        self.env_wrapper.train_mode = True
         self.env_wrapper.reset(seed=0)
         new_start, new_end, new_tick = (
             self.env._start_datetime,
