@@ -22,15 +22,15 @@ class ActionWrapper(_ActionWrapper):
                  avg_month_price_retriever: 'AvgMonthPriceRetriever'):
         super().__init__(env)
         self.env.action_space = CUSTOM_ACTION_SPACE
-        self._ref_power_MW = ref_power_MW
+        self.ref_power_MW = ref_power_MW
+        self.clock_view = self.env.new_clock_view()
         self._avg_month_price_retriever = avg_month_price_retriever
-        self._clock_view = self.env.new_clock_view()
 
     def action(self, action):
         new_action = np.exp(action)
         new_action[:48] *= self.ref_power_MW / 2
-        price = self.avg_month_price_retriever.get_prev_month_avg_price(
-            self._clock_view.cur_datetime()
+        price = self._avg_month_price_retriever.get_prev_month_avg_price(
+            self.clock_view.cur_datetime()
         )
         new_action[48:] *= price
         return new_action
