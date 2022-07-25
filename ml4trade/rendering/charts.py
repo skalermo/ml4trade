@@ -1,5 +1,6 @@
 import math
 from datetime import timedelta
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -8,24 +9,24 @@ import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-def _history_to_df(history: dict) -> pd.DataFrame:
+def _history_to_df(history: List[dict]) -> pd.DataFrame:
     history_df = pd.DataFrame(history)
     history_df.set_index('datetime', inplace=True)
     history_df.sort_index()
     return history_df
 
 
-def render_all(history: dict, last_n_days: int = 2, save_path=None):
+def render_all(history: List[dict], last_n_days: int = 2, n_days_offset: int = 0, save_path=None):
     history_df = _history_to_df(history)
     plt.style.use('ggplot')
     plt.rcParams.update({'font.size': 12})
     fig, axs = plt.subplots(nrows=3, ncols=2, figsize=(16, 16))
 
     _plot_balance(history_df, axs[0, 0], fig, 'Datetime', 'Zł', 'All-time Profit')
-    _plot_battery(history_df, last_n_days, axs[0, 1], fig, 'Time', '', f'Last {last_n_days} days Battery state')
-    _plot_scheduled_thresholds(history_df, last_n_days, axs[1, 0], fig, 'Time', 'Zł', f'Last {last_n_days} days Scheduled thresholds')
-    _plot_scheduled_amounts(history_df, last_n_days, axs[1, 1], fig, 'Time', 'MWh', f'Last {last_n_days} days Scheduled amounts')
-    _plot_unscheduled(history_df, last_n_days, axs[2, 1], fig, 'Time', 'MWh', f'Last {last_n_days} days Unscheduled energy amounts')
+    _plot_battery(history_df, last_n_days, n_days_offset, axs[0, 1], fig, 'Time', '', f'Last {last_n_days} days Battery state')
+    _plot_scheduled_thresholds(history_df, last_n_days, n_days_offset, axs[1, 0], fig, 'Time', 'Zł', f'Last {last_n_days} days Scheduled thresholds')
+    _plot_scheduled_amounts(history_df, last_n_days, n_days_offset, axs[1, 1], fig, 'Time', 'MWh', f'Last {last_n_days} days Scheduled amounts')
+    _plot_unscheduled(history_df, last_n_days, n_days_offset, axs[2, 1], fig, 'Time', 'MWh', f'Last {last_n_days} days Unscheduled energy amounts')
 
     fig.tight_layout()
     if save_path is not None:
@@ -50,7 +51,7 @@ def _plot_balance(history: pd.DataFrame, ax, fig, xlabel, ylabel, title):
     ax.title.set_text(f'{title}\n{start_datetime}-{end_datetime}')
 
 
-def _plot_battery(history: pd.DataFrame, last_n_days: int, ax, fig, xlabel, ylabel, title):
+def _plot_battery(history: pd.DataFrame, last_n_days: int, n_days_offset: int, ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     if last_n_days <= 5:
@@ -64,7 +65,7 @@ def _plot_battery(history: pd.DataFrame, last_n_days: int, ax, fig, xlabel, ylab
     ax.legend(loc='upper right')
 
     df = history[history['rel_battery'].notna()]
-    end_datetime = df.tail(1).index.item()
+    end_datetime = df.tail(1).index.item() - timedelta(days=n_days_offset)
     start_datetime = end_datetime - timedelta(days=last_n_days)
     ax.title.set_text(f'{title}\n{start_datetime}-{end_datetime}')
 
@@ -72,7 +73,7 @@ def _plot_battery(history: pd.DataFrame, last_n_days: int, ax, fig, xlabel, ylab
     ax.plot(battery_history_last_n_days.index, battery_history_last_n_days, color='black')
 
 
-def _plot_scheduled_thresholds(history: pd.DataFrame, last_n_days: int,  ax, fig, xlabel, ylabel, title):
+def _plot_scheduled_thresholds(history: pd.DataFrame, last_n_days: int, n_days_offset: int,  ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
     divider = make_axes_locatable(ax)
     ax2 = divider.new_vertical(size="400%", pad=0.1)
@@ -111,7 +112,7 @@ def _plot_scheduled_thresholds(history: pd.DataFrame, last_n_days: int,  ax, fig
     ax2.plot((1 - d, 1 + d), (-d, +d), **kwargs)  # top-right diagonal
 
     df = history[history['price'].notna()]
-    end_datetime = df.tail(1).index.item()
+    end_datetime = df.tail(1).index.item() - timedelta(days=n_days_offset)
     start_datetime = end_datetime - timedelta(days=last_n_days)
     ax2.title.set_text(f'{title}\n{start_datetime}-{end_datetime}')
 
@@ -142,13 +143,13 @@ def _plot_scheduled_thresholds(history: pd.DataFrame, last_n_days: int,  ax, fig
         plt.xticks(rotation=45)
 
 
-def _plot_scheduled_amounts(history: pd.DataFrame, last_n_days: int,  ax, fig, xlabel, ylabel, title):
+def _plot_scheduled_amounts(history: pd.DataFrame, last_n_days: int, n_days_offset,  ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.legend(loc='upper right')
 
     df = history[history['price'].notna()]
-    end_datetime = df.tail(1).index.item()
+    end_datetime = df.tail(1).index.item() - timedelta(days=n_days_offset)
     start_datetime = end_datetime - timedelta(days=last_n_days)
     ax.title.set_text(f'{title}\n{start_datetime}-{end_datetime}')
 
@@ -181,13 +182,13 @@ def _plot_scheduled_amounts(history: pd.DataFrame, last_n_days: int,  ax, fig, x
     ax.set_ylim(0, int(max([*buys_success, *sells_success])) * 1.25)
 
 
-def _plot_unscheduled(history: pd.DataFrame, last_n_days: int, ax, fig, xlabel, ylabel, title):
+def _plot_unscheduled(history: pd.DataFrame, last_n_days: int, n_days_offset: int, ax, fig, xlabel, ylabel, title):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.title.set_text(title)
 
     df = history[history['unscheduled_buy_amount'].notna()]
-    end_datetime = df.tail(1).index.item()
+    end_datetime = df.tail(1).index.item() - timedelta(days=n_days_offset)
     start_datetime = end_datetime - timedelta(days=last_n_days)
     ax.title.set_text(f'{title}\n{start_datetime}-{end_datetime}')
 

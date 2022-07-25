@@ -198,8 +198,8 @@ class SimulationEnv(gym.Env):
     def render(self, mode="human"):
         NotImplemented('Use render_all()!')
 
-    def render_all(self, last_n_days: int = 2, save_path=None):
-        self.history.render(last_n_days, save_path)
+    def render_all(self, last_n_days: int = 2, n_days_offset: int = 0, save_path=None):
+        self.history.render(last_n_days, n_days_offset, save_path)
 
     def save_history(self):
         self.history.save()

@@ -114,8 +114,8 @@ class History:
 
         return potential_profit
 
-    def render(self, last_n_days: int = 2, save_path=None):
-        render_all(self._history, last_n_days, save_path)
+    def render(self, last_n_days: int = 2, n_days_offset: int = 0, save_path=None):
+        render_all(self._history, last_n_days, n_days_offset, save_path)
 
     def save(self, path: str = 'env_history.json'):
         with open(path, 'w') as f:
