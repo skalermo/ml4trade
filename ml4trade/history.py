@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Dict
 
 import numpy as np
@@ -78,9 +78,11 @@ class History:
 
     def step_update(self, action: np.ndarray):
         cur_idx = self._cur_tick_to_idx()
+        next_day_start = self._clock_view.cur_datetime().replace(hour=0) + timedelta(days=1)
         if cur_idx >= len(self._history):
             self._add_empty_rows(24 - self._clock_view.scheduling_hour())
         actions = [{
+            'datetime': next_day_start + timedelta(hours=h),
             'scheduled_buy_amount': action[h],
             'scheduled_sell_amount': action[24 + h],
             'scheduled_buy_threshold': action[48 + h],
