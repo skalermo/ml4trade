@@ -112,8 +112,8 @@ class History:
 
         return potential_profit
 
-    # def render(self, last_n_days: int = 2, save_path=None):
-    #     render_all(self._history, last_n_days, save_path)
+    def render(self, last_n_days: int = 2, save_path=None):
+        render_all(self._history, last_n_days, save_path)
 
     def save(self, path: str = 'env_history.json'):
         with open(path, 'w') as f:
@@ -124,7 +124,8 @@ class History:
         with open(path, 'r') as f:
             history = json.load(f)
 
-        history['datetime'] = list(map(datetime.fromisoformat, history['datetime']))
+        for r in history:
+            r['datetime'] = datetime.fromisoformat(r['datetime'])
 
         obj = cls(clock_view)
         obj._history = history

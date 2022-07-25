@@ -138,9 +138,8 @@ class SimulationEnv(gym.Env):
 
     def step(self, action: ActType) -> ObservationType:
         self._simulation.send(action)
-        self.history.step_update(action, self._calculate_balance_diff())
+        self.history.step_update(action)
         obs, reward, done, info = self._observation()
-        self.history.save_reward(reward)
         return obs, reward, done, info
 
     def _rand_produce_consume(self):
