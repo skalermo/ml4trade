@@ -1,6 +1,6 @@
 import unittest
 
-from ml4trade.history import History, tick_history_keys, step_history_keys
+from ml4trade.history import History
 from ml4trade.simulation_env import SimulationEnv
 from ml4trade.domain.market import UNSCHEDULED_MULTIPLIER
 from utils import setup_default_simulation_env
@@ -13,11 +13,11 @@ class TestHistory(unittest.TestCase):
 
     def test_constructor(self):
         self.assertIs(self.history._clock_view._clock, self.env._clock)
-        self.assertTrue(all(k in self.history._history for k in tick_history_keys + step_history_keys))
+        self.assertTrue(self.history._history, [])
 
     def test_tick_update(self):
         history = History(self.env._clock.view())
-        self.assertEqual(len(history['tick']), 0)
+        self.assertEqual(len(history), 0)
 
         history.tick_update(
             self.env._prosumer,
@@ -26,18 +26,16 @@ class TestHistory(unittest.TestCase):
             self.env._consumption_system,
         )
 
-        self.assertEqual(len(history['tick']), 1)
-        self.assertEqual(history['tick'][0], self.env._clock.cur_tick)
-        self.assertEqual(history['datetime'][0], self.env._clock.cur_datetime)
-        self.assertEqual(history['wallet_balance'][0], self.env._prosumer.wallet.balance.value)
-        self.assertEqual(history['scheduled_buy_amounts'][0], self.env._prosumer.last_scheduled_buy_transaction)
-        self.assertEqual(history['scheduled_sell_amounts'][0], self.env._prosumer.last_scheduled_sell_transaction)
-        self.assertEqual(history['battery'][0], self.env._prosumer.battery.rel_current_charge)
-        self.assertEqual(history['unscheduled_buy_amounts'][0], self.env._prosumer.last_unscheduled_buy_transaction or (0, False))
-        self.assertEqual(history['unscheduled_sell_amounts'][0], self.env._prosumer.last_unscheduled_sell_transaction or (0, False))
-        self.assertEqual(history['price'][0], self.env._market.ds.last_processed)
-        self.assertEqual(history['energy_produced'][0], self.env._production_system.ds.last_processed)
-        self.assertEqual(history['energy_consumed'][0], self.env._consumption_system.ds.last_processed)
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]['tick'], self.env._clock.cur_tick)
+        self.assertEqual(history[0]['datetime'], self.env._clock.cur_datetime)
+        self.assertEqual(history[0]['wallet_balance'], self.env._prosumer.wallet.balance.value)
+        self.assertEqual(history[0]['rel_battery'], self.env._prosumer.battery.rel_current_charge)
+        self.assertEqual(history[0]['unscheduled_buy_amount'], self.env._prosumer.last_unscheduled_buy_transaction or (0, False))
+        self.assertEqual(history[0]['unscheduled_sell_amount'], self.env._prosumer.last_unscheduled_sell_transaction or (0, False))
+        self.assertEqual(history[0]['price'], self.env._market.ds.last_processed)
+        self.assertEqual(history[0]['energy_produced'], self.env._production_system.ds.last_processed)
+        self.assertEqual(history[0]['energy_consumed'], self.env._consumption_system.ds.last_processed)
 
     def test_step_update(self):
         self.assertEqual(len(self.history['step_tick']), 0)
