@@ -72,11 +72,11 @@ class History:
         if cur_idx >= len(self._history):
             self._add_empty_rows(24 - self._clock_view.scheduling_hour())
         actions = [{
-            'scheduled_buy_amount': ba,
-            'scheduled_sell_amount': sa,
-            'scheduled_buy_threshold': bt,
-            'scheduled_sell_threshold': st,
-        } for h in range(24) for ba, sa, bt, st in action[[h, 24 + h, 48 + h, 72 + h]]]
+            'scheduled_buy_amount': action[h],
+            'scheduled_sell_amount': action[24 + h],
+            'scheduled_buy_threshold': action[48 + h],
+            'scheduled_sell_threshold': action[72 + h],
+        } for h in range(24)]
 
         self._history.extend(actions)
 

@@ -37,20 +37,41 @@ class TestHistory(unittest.TestCase):
         self.assertEqual(history[0]['energy_produced'], self.env._production_system.ds.last_processed)
         self.assertEqual(history[0]['energy_consumed'], self.env._consumption_system.ds.last_processed)
 
+    def test_tick_update_existing_row(self):
+        history = History(self.env._clock.view())
+        history.tick_update(
+            self.env._prosumer,
+            self.env._market,
+            self.env._production_system,
+            self.env._consumption_system,
+        )
+        self.assertEqual(len(history), 1)
+        history[0]['price'] = 42
+        self.assertEqual(history[0]['price'], 42)
+
+        history.tick_update(
+            self.env._prosumer,
+            self.env._market,
+            self.env._production_system,
+            self.env._consumption_system,
+        )
+
+        self.assertEqual(len(history), 1)
+        self.assertNotEqual(history[0]['price'], 42)
+
     def test_step_update(self):
-        self.assertEqual(len(self.history['step_tick']), 0)
+        history = History(self.env._clock.view())
+        self.assertEqual(len(history), 0)
 
         action = self.env.action_space.sample()
-        self.history.step_update(action, balance_diff=1)
+        history.step_update(action)
 
-        self.assertEqual(len(self.history['step_tick']), 1)
-        self.assertEqual(self.history['step_tick'][0], self.env._clock.cur_tick)
-        self.assertEqual(self.history['step_datetime'][0], self.env._clock.cur_datetime)
-        self.assertEqual(self.history['action'][0], action.tolist())
-        self.assertEqual(self.history['balance_diff'][0], 1)
-        self.assertEqual(self.history['potential_profit'][0], 0)
-        self.assertEqual(self.history['unscheduled_sell_actions_profit'][0], 0)
-        self.assertEqual(self.history['unscheduled_buy_actions_loss'][0], 0)
+        self.assertEqual(len(history), 24 + 24 - 10)
+        next_day_history = history._history[-24:]
+        self.assertListEqual([r['scheduled_buy_amount'] for r in next_day_history], action[0:24].tolist())
+        self.assertListEqual([r['scheduled_sell_amount'] for r in next_day_history], action[24:48].tolist())
+        self.assertListEqual([r['scheduled_buy_threshold'] for r in next_day_history], action[48:72].tolist())
+        self.assertListEqual([r['scheduled_sell_threshold'] for r in next_day_history], action[72:96].tolist())
 
     def test_save_reward(self):
         self.assertEqual(len(self.history['reward']), 0)
