@@ -30,14 +30,13 @@ class TestSimulationEnv(unittest.TestCase):
 
     def test_step_updates_history(self):
         env = setup_default_simulation_env()
-        self.assertEqual(len(env.history['balance_diff']), 0)
-        action = env.action_space.sample()
-        env.step(action)
-        self.assertEqual(len(env.history['balance_diff']), 1)
-        self.assertTrue((env.history['action'][0] == action).all())
-        self.assertEqual(env.history['wallet_balance'][-1], env._prosumer.wallet.balance.value)
-        self.assertEqual(env.history['tick'][-1], env._clock.cur_tick - 1)
-        self.assertEqual(env.history['datetime'][-1], env._clock.cur_datetime - timedelta(hours=1))
+        len_before = len(env.history)
+        env.step(env.action_space.sample())
+        self.assertGreater(len(env.history), len_before)
+        last_tick_idx = env._clock.cur_tick - env._start_tick - 1
+        self.assertEqual(env.history[last_tick_idx]['wallet_balance'], env._prosumer.wallet.balance.value)
+        self.assertEqual(env.history[last_tick_idx]['tick'], env._clock.cur_tick - 1)
+        self.assertEqual(env.history[last_tick_idx]['datetime'], env._clock.cur_datetime - timedelta(hours=1))
 
     def test_reset_sets_initial_values(self):
         env = setup_default_simulation_env(battery_init_charge=MWh(0.1))
@@ -61,7 +60,6 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertEqual(env._prosumer.battery.current_charge, env._battery_init_charge)
         self.assertEqual(env._clock.cur_datetime, env._start_datetime)
         self.assertEqual(env._clock.cur_tick, env._start_tick)
-        self.assertEqual(len(env.history['balance_diff']), 0)
 
     def test_reset_starts_new_simulation(self):
         start_datetime = START_TIME.replace(hour=0)
@@ -69,8 +67,7 @@ class TestSimulationEnv(unittest.TestCase):
         env.reset()
         self.assertNotEqual(env._clock.cur_datetime, start_datetime)
         self.assertTrue(env._clock.is_it_scheduling_hour())
-
-        self.assertEqual(len(env.history['balance_diff']), 0)
+        self.assertEqual(len(env.history), 0)
 
 
 if __name__ == '__main__':
