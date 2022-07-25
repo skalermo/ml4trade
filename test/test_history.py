@@ -1,8 +1,6 @@
 import unittest
 
 from ml4trade.history import History
-from ml4trade.simulation_env import SimulationEnv
-from ml4trade.domain.market import UNSCHEDULED_MULTIPLIER
 from utils import setup_default_simulation_env
 
 
@@ -73,68 +71,29 @@ class TestHistory(unittest.TestCase):
         self.assertListEqual([r['scheduled_buy_threshold'] for r in next_day_history], action[48:72].tolist())
         self.assertListEqual([r['scheduled_sell_threshold'] for r in next_day_history], action[72:96].tolist())
 
-    def test_save_reward(self):
-        self.assertEqual(len(self.history['reward']), 0)
-        self.history.save_reward(1)
-        self.assertEqual(len(self.history['reward']), 1)
-        self.assertEqual(self.history['reward'][0], 1)
-
-    def test_remove_last_tick_entries(self):
-        history = History(self.env._clock.view())
-        for _ in range(10):
-            history.tick_update(
-                self.env._prosumer,
-                self.env._market,
-                self.env._production_system,
-                self.env._consumption_system,
-            )
-            history.step_update(self.env.action_space.sample(), balance_diff=1)
-        self.assertEqual(len(history['tick']), 10)
-        history.remove_last_tick_entries(3)
-        self.assertEqual(len(history['tick']), 7)
-        self.assertEqual(len(history['step_tick']), 10)
-
     def test_last_day_summary(self):
         history = History(self.env._clock.view())
 
         def update():
-            history._history['tick'].append(0)
-            history._history['price'].append(100)
-            history._history['energy_produced'].append(10)
-            history._history['energy_consumed'].append(2)
-            history._history['unscheduled_buy_amounts'].append((4, True))
-            history._history['unscheduled_sell_amounts'].append((6, True))
+            row = {
+                'price': 100,
+                'energy_produced': 10,
+                'energy_consumed': 2,
+            }
+            history._history.append(row)
 
-        for _ in range(72 - 11):
+        for _ in range(72 - 11 - 1):
             update()
+            self.env._clock.tick()
 
-        self.assertEqual(history._last_day_summary(), (0, 0, 0))
         update()
-        self.assertNotEqual(history._last_day_summary(), (0, 0, 0))
+        history.step_update(self.env.action_space.sample())
+        self.assertEqual(history._last_day_summary(), 0)
+        update()
 
-        for _ in range(10):
-            history._history['price'].append(200)
-
-        (
-            potential_profit,
-            unscheduled_sell_actions_profit,
-            unscheduled_buy_actions_loss,
-        ) = history._last_day_summary()
-        self.assertEqual(potential_profit, 800 * 24)
-        self.assertEqual(unscheduled_sell_actions_profit, 600 * 24 / UNSCHEDULED_MULTIPLIER)
-        self.assertEqual(unscheduled_buy_actions_loss, 400 * 24 * UNSCHEDULED_MULTIPLIER)
-
-        self.env._clock.tick()
-        history._history['price'].append(200)
-
-        (
-            potential_profit,
-            unscheduled_sell_actions_profit,
-            unscheduled_buy_actions_loss,
-        ) = history._last_day_summary()
-        self.assertEqual(potential_profit, 800 * 24)
-        self.assertEqual(unscheduled_sell_actions_profit, 600 * 24 / UNSCHEDULED_MULTIPLIER)
-        self.assertEqual(unscheduled_buy_actions_loss, 400 * 24 * UNSCHEDULED_MULTIPLIER)
+        self.assertNotEqual(history._last_day_summary(), 0)
+        potential_profit = history.last_day_potential_profit()
+        self.assertEqual(potential_profit, 100 * (10 - 2) * 24)  # 19200
 
 
 if __name__ == '__main__':
