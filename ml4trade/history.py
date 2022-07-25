@@ -67,6 +67,15 @@ class History:
         empty_row = [{}]
         self._history.extend(empty_row * n)
 
+    def _has_1day_of_history(self) -> bool:
+        # max span of time history goes unfilled is
+        # 24 - scheduling_hour hours and another 24 hours
+        # we need another 24 hours to fill up history
+        # with real values
+        # rows of next 24 hours are prefilled with scheduled actions
+        # 10 -> 10 -> 24 -> 24 | -> 24
+        return len(self._history) >= 96 - self._clock_view.scheduling_hour()
+
     def step_update(self, action: np.ndarray):
         cur_idx = self._cur_tick_to_idx()
         if cur_idx >= len(self._history):
@@ -82,21 +91,12 @@ class History:
 
         if self._has_1day_of_history():
             potential_profit = self._last_day_summary()
-            self._history[cur_idx - self._clock_view.scheduling_hour() - 1].update({
+            self._history[cur_idx - self._clock_view.cur_datetime().hour - 1].update({
                 'potential_profit': potential_profit,
             })
 
     def last_day_potential_profit(self) -> float:
         return self._last_day_summary()
-
-    def _has_1day_of_history(self) -> bool:
-        # max span of time history goes unfilled is
-        # 24 - scheduling_hour hours and another 24 hours
-        # we need another 24 hours to fill up history
-        # with real values
-        # rows of next 24 hours are prefilled with scheduled actions
-        # 10 -> 10 -> 24 -> 24 | -> 24
-        return len(self._history) >= 96 - self._clock_view.scheduling_hour()
 
     def _last_day_summary(self) -> float:
         if not self._has_1day_of_history():
