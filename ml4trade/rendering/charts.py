@@ -173,13 +173,12 @@ def _plot_scheduled_amounts(history: pd.DataFrame, last_n_days: int, n_days_offs
         plt.sca(ax)
         plt.xticks(rotation=45)
 
-    ax.plot(prices.index, prices / max(prices) * max(energy_diff), color='gray', label='market price')
+    ax.plot(prices.index, prices / max(prices) * max(max(buys_success), max(sells_success)), color='gray', label='market price')
     ax.plot(energy_diff.index, energy_diff, color='purple', label='produced - consumed')
     ax.plot(buy_amounts.index, buy_amounts, color='lightsalmon', label='buy amount')
     ax.plot(sell_amounts.index, sell_amounts, color='lightblue', label='sell amount')
     ax.plot(buys_success.index, buys_success, '.', color='red', label='buy amount success')
     ax.plot(sells_success.index, sells_success, '.', color='blue', label='sell amount success')
-    ax.set_ylim(0, int(max([*buys_success, *sells_success])) * 1.25)
 
 
 def _plot_unscheduled(history: pd.DataFrame, last_n_days: int, n_days_offset: int, ax, fig, xlabel, ylabel, title):
