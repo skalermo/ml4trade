@@ -41,7 +41,7 @@ class IntervalWrapper(Wrapper):
             self.env._start_tick = start_tick
 
         battery_charge_to_set = None
-        if self.randomly_set_battery and not self.test_mode:
+        if self.randomly_set_battery and self.train_mode:
             rand_rel_charge = self.np_random.uniform(0.05, 0.95)
             battery_charge_to_set = self.env._prosumer.battery.capacity * rand_rel_charge
 
