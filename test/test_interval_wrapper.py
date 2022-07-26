@@ -13,7 +13,7 @@ class TestIntervalWrapper(unittest.TestCase):
         self.env = setup_default_simulation_env(end_datetime=self.end_datetime)
         self.env_wrapper = IntervalWrapper(env=self.env, interval=timedelta(days=1), split_ratio=0.75)
         data_duration = timedelta(days=14) - timedelta(hours=34)
-        self.data_start_tick = timedelta_to_hours(data_duration * 0.75)
+        self.data_start_tick = self.env._start_tick + timedelta_to_hours(data_duration * 0.75)
 
     def test_constructor(self):
         self.assertEqual(self.env_wrapper.env, self.env)

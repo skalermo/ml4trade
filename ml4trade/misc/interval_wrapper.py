@@ -25,7 +25,7 @@ class IntervalWrapper(Wrapper):
         data_duration = self.end_datetime - self.start_datetime
         train_data_duration = data_duration * split_ratio
         self.test_data_start = self.start_datetime + train_data_duration
-        self.test_data_start_tick = timedelta_to_hours(train_data_duration)
+        self.test_data_start_tick = self.start_tick + timedelta_to_hours(train_data_duration)
 
     def reset(self, **kwargs) -> ObsType:
         seed = kwargs.get('seed')
