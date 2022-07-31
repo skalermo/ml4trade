@@ -40,11 +40,8 @@ class TestSimulationEnv(unittest.TestCase):
             end_datetime=datetime(year=2016, month=1, day=15),
             start_tick=3,
         )
-        prices_pl_path = os.path.join(os.path.dirname(__file__), '../mock_data/prices_pl.csv')
-        prices_df = pd.read_csv(prices_pl_path, header=0)
-        expected_start_datetime = datetime.fromisoformat(prices_df.iloc[env._start_tick, 0])
         self.assertEqual(env._start_tick, 3)
-        self.assertEqual(env._start_datetime, expected_start_datetime)
+        self.assertEqual(env._start_datetime, datetime(year=2016, month=1, day=1))
 
 
 if __name__ == '__main__':
