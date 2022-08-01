@@ -3,6 +3,7 @@ from typing_extensions import Literal
 from functools import wraps
 
 import pandas as pd
+from gym.utils import seeding
 
 from ml4trade.domain.constants import SCHEDULING_TIME
 
@@ -29,6 +30,16 @@ class DataStrategy:
         self.window_direction = window_direction
         self.scheduling_hour = scheduling_hour
         self.last_processed = None
+        self._rng = None
+
+    @property
+    def rng(self):
+        if self._rng is None:
+            self._rng, seed = seeding.np_random()
+        return self._rng
+
+    def set_seed(self, seed: int):
+        self._rng, seed = seeding.np_random(seed)
 
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         return df

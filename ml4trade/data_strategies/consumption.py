@@ -1,5 +1,4 @@
 from typing import List
-import random
 
 from ml4trade.data_strategies import DataStrategy, update_last_processed
 
@@ -26,7 +25,7 @@ class HouseholdEnergyConsumptionDataStrategy(DataStrategy):
     @update_last_processed
     def process(self, idx: int) -> float:
         consumed_energy = self.energy_consumption_MWh[idx % 24]
-        return consumed_energy * abs(1 + random.gauss(0, 0.03))
+        return consumed_energy * abs(1 + self.rng.normal(0, 0.03))
 
     def observation(self, idx: int) -> List[float]:
         start_idx = idx % 24 - self.scheduling_hour
