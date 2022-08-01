@@ -91,6 +91,9 @@ class SimulationEnv(gym.Env):
         seed = kwargs.get('seed')
         if seed is not None:
             self._np_random, seed = seeding.np_random(seed)
+            self._production_system.ds.set_seed(seed)
+            self._consumption_system.ds.set_seed(seed)
+            self._market.ds.set_seed(seed)
 
         self._prosumer.wallet.balance = self._prosumer_init_balance
         self._prosumer.battery.current_charge = kwargs.get('battery_charge_to_set') or self._battery_init_charge
