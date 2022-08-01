@@ -67,7 +67,7 @@ def setup_default_clock(start_datetime=START_TIME) -> SimulationClock:
 
 
 def setup_default_simulation_env(
-        data_strategies=setup_default_data_strategies(),
+        data_strategies=None,
         start_datetime=START_TIME,
         end_datetime=END_TIME,
         scheduling_time=SCHEDULING_TIME,
@@ -78,6 +78,8 @@ def setup_default_simulation_env(
         battery_efficiency=1.0,
         start_tick=None,
 ) -> SimulationEnv:
+    if data_strategies is None:
+        data_strategies = setup_default_data_strategies()
     return SimulationEnv(
         data_strategies=data_strategies,
         start_datetime=start_datetime,

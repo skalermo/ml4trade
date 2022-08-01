@@ -69,6 +69,19 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertTrue(env._clock.is_it_scheduling_hour())
         self.assertEqual(len(env.history), 0)
 
+    def test_reset_seeds_environment(self):
+        seed = 42
+        env = setup_default_simulation_env()
+        env2 = setup_default_simulation_env()
+        env.reset(seed=seed)
+        env2.reset(seed=seed)
+        for i in range(10):
+            action = env.action_space.sample()
+            env.step(action)
+            env2.step(action)
+        for i, (row, row2) in enumerate(zip(env.history._history, env2.history._history)):
+            self.assertDictEqual(row, row2)
+
 
 if __name__ == '__main__':
     unittest.main()
