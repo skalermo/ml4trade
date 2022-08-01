@@ -59,10 +59,9 @@ class SimulationEnv(gym.Env):
         if data_strategies is None:
             data_strategies = {}
 
-        obs_size = sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.action_space = SIMULATION_ENV_ACTION_SPACE
-        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size + 2,), dtype=np.float32)
-
+        obs_size = 2 + sum(map(lambda x: x.observation_size(), data_strategies.values()))
+        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float32)
         if start_tick is None:
             start_tick = calc_tick_offset(list(data_strategies.values()), scheduling_time)
             start_datetime += timedelta(hours=start_tick)
