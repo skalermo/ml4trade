@@ -56,7 +56,7 @@ class IntervalWrapper(Wrapper):
         )
 
     def __ep_interval_ticks_generator(self) -> Generator[int, None, None]:
-        max_offset = self.test_data_start_tick - self.start_tick - (self.interval_in_ticks - 1)
+        max_offset = self.test_data_start_tick - self.start_tick - self.interval_in_ticks
         while True:
             rand_offset = self.np_random.integers(0, min(self.interval_in_ticks - 1, max_offset),
                                                   size=None, endpoint=True)
