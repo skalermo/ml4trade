@@ -22,10 +22,16 @@ class IntervalWrapper(Wrapper):
         self.interval_in_ticks = timedelta_to_hours(interval)
         self.train_mode = True
         data_duration = self.end_datetime - self.start_datetime
-        train_data_duration = data_duration * split_ratio
-        self.test_data_start = self.start_datetime + train_data_duration
-        self.test_data_start_tick = self.start_tick + timedelta_to_hours(train_data_duration)
+        self.train_data_duration = data_duration * split_ratio
+        self.test_data_start = self.start_datetime + self.train_data_duration
+        self.test_data_start_tick = self.start_tick + timedelta_to_hours(self.train_data_duration)
         self._ep_interval_ticks_generator = self.__ep_interval_ticks_generator()
+
+        assert self._is_interval_allowed(interval), \
+            f'Max allowed interval is {self.train_data_duration.days} days'
+
+    def _is_interval_allowed(self, interval: timedelta) -> bool:
+        return self.train_data_duration >= interval
 
     def reset(self, **kwargs) -> ObsType:
         seed = kwargs.get('seed')
@@ -50,8 +56,10 @@ class IntervalWrapper(Wrapper):
         )
 
     def __ep_interval_ticks_generator(self) -> Generator[int, None, None]:
+        max_offset = self.test_data_start_tick - self.start_tick - (self.interval_in_ticks - 1)
         while True:
-            rand_offset = self.np_random.integers(0, self.interval_in_ticks - 1, size=None)
+            rand_offset = self.np_random.integers(0, min(self.interval_in_ticks - 1, max_offset),
+                                                  size=None, endpoint=True)
             ep_intervals_start_ticks = [start for start in range(
                 self.start_tick + rand_offset, self.test_data_start_tick - self.interval_in_ticks + 1,
                 self.interval_in_ticks
@@ -67,6 +75,9 @@ class IntervalWrapper(Wrapper):
         return start_datetime, end_datetime
 
     def set_interval(self, new_interval: timedelta):
+        assert self._is_interval_allowed(new_interval), \
+            f'Max allowed interval is {self.train_data_duration.days} days'
+
         self.interval = new_interval
         self.interval_in_ticks = timedelta_to_hours(new_interval)
         self._ep_interval_ticks_generator = self.__ep_interval_ticks_generator()
