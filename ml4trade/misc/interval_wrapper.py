@@ -21,12 +21,11 @@ class IntervalWrapper(Wrapper):
         self.randomly_set_battery = randomly_set_battery
         self.interval_in_ticks = timedelta_to_hours(interval)
         self.train_mode = True
-        self._ep_interval_ticks_generator = self.__ep_interval_ticks_generator()
-
         data_duration = self.end_datetime - self.start_datetime
         train_data_duration = data_duration * split_ratio
         self.test_data_start = self.start_datetime + train_data_duration
         self.test_data_start_tick = self.start_tick + timedelta_to_hours(train_data_duration)
+        self._ep_interval_ticks_generator = self.__ep_interval_ticks_generator()
 
     def reset(self, **kwargs) -> ObsType:
         seed = kwargs.get('seed')
@@ -57,6 +56,7 @@ class IntervalWrapper(Wrapper):
                 self.start_tick + rand_offset, self.test_data_start_tick - self.interval_in_ticks + 1,
                 self.interval_in_ticks
             )]
+            assert len(ep_intervals_start_ticks) > 0
             self.np_random.shuffle(ep_intervals_start_ticks)
             for i in ep_intervals_start_ticks:
                 yield i
@@ -66,9 +66,7 @@ class IntervalWrapper(Wrapper):
         end_datetime = start_datetime + self.interval
         return start_datetime, end_datetime
 
-    # def set_to_test_and_reset(self) -> ObsType:
-    #     self.train_mode = False
-    #     self.env._start_datetime = self.test_data_start
-    #     self.env._end_datetime = self.end_datetime
-    #     self.env._start_tick = self.test_data_start_tick
-    #     return self.env.reset()
+    def set_interval(self, new_interval: timedelta):
+        self.interval = new_interval
+        self.interval_in_ticks = timedelta_to_hours(new_interval)
+        self._ep_interval_ticks_generator = self.__ep_interval_ticks_generator()
