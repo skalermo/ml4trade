@@ -92,6 +92,21 @@ class TestIntervalWrapper(unittest.TestCase):
         self.env_wrapper.reset(seed=42)
         self.assertNotEqual(self.env._prosumer.battery.current_charge, self.battery_init_charge)
 
+    def test_not_allowed_interval(self):
+        with self.assertRaises(AssertionError) as e:
+            self.env_wrapper.set_interval(timedelta(days=42))
+        self.assertTrue('Max allowed interval is 9 days' in str(e.exception))
+
+    def test_set_interval(self):
+        self.assertEqual(self.env_wrapper.interval, timedelta(days=1))
+
+        self.env_wrapper.set_interval(timedelta(days=9))
+
+        self.assertEqual(self.env_wrapper.interval, timedelta(days=9))
+        self.assertEqual(self.env_wrapper.interval_in_ticks, 9 * 24)
+        self.env_wrapper.reset()
+        self.assertEqual(self.env_wrapper.env._end_datetime - self.env_wrapper.env._start_datetime, timedelta(days=9))
+
 
 if __name__ == '__main__':
     unittest.main()
