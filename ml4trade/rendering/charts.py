@@ -128,6 +128,8 @@ def _plot_scheduled_thresholds(history: pd.DataFrame, last_n_days: int, n_days_o
     ax2.plot(sells.index, sells, color='blue', label='sell threshold')
     ax2.plot(prices_history_last_n_days.index, prices_history_last_n_days, color='black', label='market price')
     ax2.set_ylim(bottom=min(prices_history_last_n_days) - 20)
+    if max(max(buys), max(sells)) > max(prices_history_last_n_days) * 3:
+        plt.yscale("log")
 
     if last_n_days <= 5:
         hours = mdates.HourLocator(byhour=list(range(0, 24, 4)), interval=1)
