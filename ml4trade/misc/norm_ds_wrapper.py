@@ -10,7 +10,7 @@ from ml4trade.data_strategies import (
 )
 
 
-class DataStrategyWrapper(DataStrategy):
+class DataStrategyWrapper:
     def __init__(self, ds: DataStrategy):
         super().__init__()
         self.ds = ds
@@ -25,9 +25,12 @@ class DataStrategyWrapper(DataStrategy):
     def observation_size(self) -> int:
         return self.ds.observation_size()
 
+    def __getattr__(self, item):
+        return getattr(self.env, item)
 
-class MarketDummyWrapper(DataStrategyWrapper):
-    def __init__(self, ds: PricesPlDataStrategy):
+
+class DummyWrapper(DataStrategyWrapper):
+    def __init__(self, ds: DataStrategy):
         super().__init__(ds)
 
     def observation(self, idx: int) -> List[float]:

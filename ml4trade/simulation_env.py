@@ -94,6 +94,10 @@ class SimulationEnv(gym.Env):
             self._consumption_system.ds.set_seed(seed)
             self._market.ds.set_seed(seed)
 
+        self._production_system.ds.last_processed = None
+        self._consumption_system.ds.last_processed = None
+        self._market.ds.last_processed = None
+
         self._prosumer.wallet.balance = self._prosumer_init_balance
         self._prosumer.battery.current_charge = kwargs.get('battery_charge_to_set') or self._battery_init_charge
         self._prosumer.scheduled_buy_amounts = None
