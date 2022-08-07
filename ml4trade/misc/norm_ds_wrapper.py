@@ -26,7 +26,7 @@ class DataStrategyWrapper:
         return self.ds.observation_size()
 
     def __getattr__(self, item):
-        return getattr(self.env, item)
+        return getattr(self.ds, item)
 
 
 class DummyWrapper(DataStrategyWrapper):
