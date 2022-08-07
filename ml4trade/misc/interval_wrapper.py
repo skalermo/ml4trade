@@ -36,7 +36,7 @@ class IntervalWrapper(Wrapper):
     def reset(self, **kwargs) -> ObsType:
         seed = kwargs.get('seed')
         if seed is not None:
-            self.env._np_random, seed = seeding.np_random(seed)
+            self.np_random, seed = seeding.np_random(seed)
 
         if self.train_mode:
             start_tick = next(self._ep_interval_ticks_generator)
