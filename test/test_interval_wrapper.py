@@ -107,6 +107,13 @@ class TestIntervalWrapper(unittest.TestCase):
         self.env_wrapper.reset()
         self.assertEqual(self.env_wrapper.env._end_datetime - self.env_wrapper.env._start_datetime, timedelta(days=9))
 
+    def test_reset_with_seed_deterministically(self):
+        self.env_wrapper.reset(seed=42)
+        datetime1 = self.env_wrapper.new_clock_view().cur_datetime()
+        self.env_wrapper.reset(seed=42)
+        datetime2 = self.env_wrapper.new_clock_view().cur_datetime()
+        self.assertEqual(datetime1, datetime2)
+
 
 if __name__ == '__main__':
     unittest.main()
