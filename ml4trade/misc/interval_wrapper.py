@@ -46,14 +46,22 @@ class IntervalWrapper(Wrapper):
             self.env._end_datetime = end_datetime
             self.env._start_tick = start_tick
 
+        wallet_balance = self.env._prosumer.wallet.balance
         battery_charge_to_set = None
         if self.randomly_set_battery and self.train_mode:
             rand_rel_charge = self.np_random.uniform(0.05, 0.95)
             battery_charge_to_set = self.env._prosumer.battery.capacity * rand_rel_charge
 
-        return self.env.reset(
-            battery_charge_to_set=battery_charge_to_set,
-            **kwargs
+        if self.train_mode:
+            return self.env.reset(
+                battery_charge_to_set=battery_charge_to_set,
+                wallet_balance=wallet_balance,
+                **kwargs
+        )
+        else:
+            return self.env.reset(
+                battery_charge_to_set=battery_charge_to_set,
+                **kwargs
         )
 
     def __ep_interval_ticks_generator(self) -> Generator[int, None, None]:

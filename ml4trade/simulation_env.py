@@ -98,7 +98,12 @@ class SimulationEnv(gym.Env):
         self._consumption_system.ds.last_processed = None
         self._market.ds.last_processed = None
 
-        self._prosumer.wallet.balance = self._prosumer_init_balance
+        wallet_balance = kwargs.get('wallet_balance')
+        if wallet_balance is not None:
+            self._prosumer.wallet.balance = wallet_balance
+        else:
+            self._prosumer.wallet.balance = self._prosumer_init_balance
+
         self._prosumer.battery.current_charge = kwargs.get('battery_charge_to_set') or self._battery_init_charge
         self._prosumer.scheduled_buy_amounts = None
         self._prosumer.scheduled_sell_amounts = None
