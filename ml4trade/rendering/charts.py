@@ -45,6 +45,7 @@ def _plot_balance(history: pd.DataFrame, ax, fig, xlabel, ylabel, title):
     ax.plot(df.index, df['wallet_balance'], color='green')
     ax.plot(df.index, np.cumsum(df['potential_profit']), color='blue')
     ax.plot(df.index, np.cumsum(df['potential_profit']) / 2, color='red')
+    ax.plot(df.index, np.cumsum(df['potential_profit'] + df['prices_diff_profit']), color='purple')
     ax.legend(loc='upper right')
     start_datetime = df.head(1).index.item()
     end_datetime = df.tail(1).index.item()

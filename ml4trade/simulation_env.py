@@ -111,7 +111,7 @@ class SimulationEnv(gym.Env):
         self._prev_prosumer_balance = self._prosumer_init_balance
         self._first_actions_scheduled = False
         self._first_actions_set = False
-        self.history = History(self._clock.view())
+        self.history = History(self._clock.view(), self._prosumer.battery.capacity, self._prosumer.battery.efficiency)
         self._simulation = self.__simulation()
         self._simulation.send(None)
 
