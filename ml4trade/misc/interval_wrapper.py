@@ -20,6 +20,7 @@ class IntervalWrapper(Wrapper):
         self.interval = interval
         self.randomly_set_battery = randomly_set_battery
         self.interval_in_ticks = timedelta_to_hours(interval)
+        self.interval_start_ticks = []
         self.train_mode = True
         data_duration = self.end_datetime - self.start_datetime
         self.train_data_duration = data_duration * split_ratio
@@ -65,6 +66,7 @@ class IntervalWrapper(Wrapper):
                 self.start_tick + rand_offset, self.test_data_start_tick - self.interval_in_ticks + 1,
                 self.interval_in_ticks
             )]
+            self.interval_start_ticks = ep_intervals_start_ticks
             assert len(ep_intervals_start_ticks) > 0
             self.np_random.shuffle(ep_intervals_start_ticks)
             for i in ep_intervals_start_ticks:
