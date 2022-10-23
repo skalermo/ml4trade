@@ -25,7 +25,7 @@ class History:
 
     def __init__(self, clock_view: ClockView):
         self._clock_view = clock_view
-        self._tick_offset = clock_view.cur_tick()
+        self._tick_offset = clock_view.cur_tick() if self._clock_view is not None else None
         self._history: List[Dict] = []
 
     def __getitem__(self, item):
