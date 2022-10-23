@@ -83,12 +83,11 @@ class History:
             self._add_empty_rows(24 - self._clock_view.scheduling_hour())
         actions = [{
             'datetime': next_day_start + timedelta(hours=h),
-            'scheduled_buy_amount': action[h],
-            'scheduled_sell_amount': action[24 + h],
-            'scheduled_buy_threshold': action[48 + h],
-            'scheduled_sell_threshold': action[72 + h],
+            'scheduled_buy_amount': action[h].item(),
+            'scheduled_sell_amount': action[24 + h].item(),
+            'scheduled_buy_threshold': action[48 + h].item(),
+            'scheduled_sell_threshold': action[72 + h].item(),
         } for h in range(24)]
-
         self._history.extend(actions)
 
         if self._has_1day_of_history():
