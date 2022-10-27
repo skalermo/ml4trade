@@ -10,8 +10,8 @@ from ml4trade.simulation_env import SimulationEnv
 
 
 CUSTOM_ACTION_SPACE = gym.spaces.Box(
-    low=np.array([-2.] * 96),
-    high=np.array([2.] * 96),
+    low=np.array([-3.] * 96),
+    high=np.array([3.] * 96),
 )
 
 
