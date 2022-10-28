@@ -64,7 +64,7 @@ class ConsumptionWrapper(DataStrategyWrapper):
 
     def observation(self, idx: int) -> List[float]:
         obs = self.ds.observation(idx)
-        return list(map(lambda x: x * 1000, obs))
+        return list(map(lambda x: x * 1000 / self.ds.household_number, obs))
         # return obs
 
 
