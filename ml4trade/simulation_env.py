@@ -209,3 +209,6 @@ class SimulationEnv(gym.Env):
 
     def new_clock_view(self) -> ClockView:
         return self._clock.view()
+
+    def unwrapped_env(self):
+        return self
