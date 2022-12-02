@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Union, Tuple
 
 import numpy as np
-from gym.core import Wrapper
-from gym.spaces import Discrete, MultiDiscrete
+from gymnasium.core import Wrapper, ObsType
+from gymnasium.spaces import Discrete, MultiDiscrete
 
 from ml4trade.simulation_env import SimulationEnv
 from ml4trade.domain.clock import ClockView
@@ -45,15 +45,16 @@ class HourlyStepsWrapper(Wrapper):
                 res[i + 72] = 0  # guaranteed to sell
         return res
 
-    def reset(self, **kwargs):
+    def reset(self, **kwargs) -> Tuple[ObsType, dict]:
         super(HourlyStepsWrapper, self).reset(**kwargs)
         self.current_hour = self.clock_view.cur_datetime().hour
         self.saved_state = None
         return self._observation(), {}
 
-    def step(self, action: int):
+    def step(self, action: int) -> Tuple[ObsType, float, bool, bool, dict]:
         reward = 0
-        done = False
+        terminated = False
+        truncated = False
         if self.current_hour == self.clock_view.scheduling_hour():
             if self.saved_state is not None:
                 (
@@ -62,7 +63,7 @@ class HourlyStepsWrapper(Wrapper):
                     self._env._clock.cur_datetime,
                     self._env._clock.cur_tick,
                 ) = self.saved_state
-            _, reward, done, _ = super().step(
+            _, reward, terminated, truncated, _ = super().step(
                 self._convert_to_original_action_space(self.day_actions)
             )
             self.saved_state = (
@@ -76,7 +77,7 @@ class HourlyStepsWrapper(Wrapper):
             self._env._rand_produce_consume()
         self._env._clock.tick()
         self.current_hour = (self.current_hour + 1) % 24
-        return self._observation(), reward, done, {}
+        return self._observation(), reward, terminated, truncated, {}
 
     def _observation(self) -> np.ndarray:
         predicted_rel_battery_charge = self._env._prosumer.battery.rel_current_charge
