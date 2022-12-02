@@ -56,6 +56,12 @@ class TestBattery(unittest.TestCase):
         with self.assertRaises(AssertionError):
             Battery(MWh(0.1), 0, MWh(0.05))
 
+    def test_init_charge_must_be_set_within_allowed_range(self):
+        with self.assertRaises(AssertionError):
+            Battery(MWh(-0.1), 0, MWh(0.05))
+        with self.assertRaises(AssertionError):
+            Battery(MWh(0.1), 0, MWh(0.11))
+
 
 if __name__ == '__main__':
     unittest.main()
