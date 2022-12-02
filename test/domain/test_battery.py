@@ -53,14 +53,18 @@ class TestBattery(unittest.TestCase):
         self.assertEqual(battery.current_charge, MWh(0))
 
     def test_efficiency_cant_be_set_to_zero(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(AssertionError) as e:
             Battery(MWh(0.1), 0, MWh(0.05))
+        self.assertEqual('Efficiency must be greater than 0', str(e.exception))
 
     def test_init_charge_must_be_set_within_allowed_range(self):
-        with self.assertRaises(AssertionError):
-            Battery(MWh(-0.1), 0, MWh(0.05))
-        with self.assertRaises(AssertionError):
-            Battery(MWh(0.1), 0, MWh(0.11))
+        with self.assertRaises(AssertionError) as e:
+            Battery(MWh(-0.1), 0.25, MWh(0.05))
+        self.assertEqual('Initial charge cannot be negative or exceed battery capacity', str(e.exception))
+
+        with self.assertRaises(AssertionError) as e:
+            Battery(MWh(0.1), 0.25, MWh(0.11))
+        self.assertEqual('Initial charge cannot be negative or exceed battery capacity', str(e.exception))
 
 
 if __name__ == '__main__':
