@@ -3,7 +3,8 @@ from ml4trade.domain.units import MWh
 
 class Battery:
     def __init__(self, capacity: MWh, efficiency: float, init_charge: MWh = MWh(0)):
-        assert efficiency > 0, "Efficiency must be greater than 0"
+        assert efficiency > 0, 'Efficiency must be greater than 0'
+        assert MWh(0) <= init_charge <= capacity, 'Initial charge cannot be negative or exceed battery capacity'
 
         self.capacity = capacity
         self.efficiency = efficiency
