@@ -45,6 +45,12 @@ class HourlyStepsWrapper(Wrapper):
                 res[i + 72] = 0  # guaranteed to sell
         return res
 
+    def reset(self, **kwargs):
+        super(HourlyStepsWrapper, self).reset(**kwargs)
+        self.current_hour = self.clock_view.cur_datetime().hour
+        self.saved_state = None
+        return self._observation(), {}
+
     def step(self, action: int):
         reward = 0
         done = False
@@ -70,5 +76,9 @@ class HourlyStepsWrapper(Wrapper):
             self._env._rand_produce_consume()
         self._env._clock.tick()
         self.current_hour = (self.current_hour + 1) % 24
+        return self._observation(), reward, done, {}
+
+    def _observation(self) -> np.ndarray:
+        predicted_rel_battery_charge = self._env._prosumer.battery.rel_current_charge
         obs = np.array([self.current_hour, predicted_rel_battery_charge])
-        return obs, reward, done, {}
+        return obs
