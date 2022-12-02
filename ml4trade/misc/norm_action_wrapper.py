@@ -1,8 +1,8 @@
 from typing import Tuple, Dict, Union
 from datetime import timedelta, datetime
 
-import gym
-from gym.core import Wrapper, ActionWrapper as _ActionWrapper
+import gymnasium as gym
+from gymnasium.core import Wrapper, ActionWrapper as _ActionWrapper
 import pandas as pd
 import numpy as np
 

@@ -3,7 +3,7 @@ from typing_extensions import Literal
 from functools import wraps
 
 import pandas as pd
-from gym.utils import seeding
+from gymnasium.utils import seeding
 
 from ml4trade.domain.constants import SCHEDULING_TIME
 

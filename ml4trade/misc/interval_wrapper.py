@@ -1,8 +1,8 @@
 from datetime import timedelta, datetime
 from typing import Tuple, Generator, Union
 
-from gym.core import Wrapper, ObsType
-from gym.utils import seeding
+from gymnasium.core import Wrapper, ObsType
+from gymnasium.utils import seeding
 
 from ml4trade.simulation_env import SimulationEnv
 from ml4trade.utils import timedelta_to_hours
@@ -33,7 +33,7 @@ class IntervalWrapper(Wrapper):
     def _is_interval_allowed(self, interval: timedelta) -> bool:
         return self.train_data_duration >= interval
 
-    def reset(self, **kwargs) -> ObsType:
+    def reset(self, **kwargs) -> Tuple[ObsType, dict]:
         seed = kwargs.get('seed')
         if seed is not None:
             self.np_random, seed = seeding.np_random(seed)
@@ -51,8 +51,8 @@ class IntervalWrapper(Wrapper):
             rand_rel_charge = self.np_random.uniform(0.05, 0.95)
             battery_charge_to_set = self.env._prosumer.battery.capacity * rand_rel_charge
 
+        kwargs['options'] = dict(battery_charge_to_set=battery_charge_to_set)
         return self.env.reset(
-            battery_charge_to_set=battery_charge_to_set,
             **kwargs
         )
 
