@@ -2,9 +2,9 @@ from datetime import timedelta, time, datetime
 from typing import Tuple, Generator, Dict
 
 import numpy as np
-import gym
-from gym.core import ObsType, ActType
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium.core import ObsType, ActType
+from gymnasium.utils import seeding
 
 from ml4trade.data_strategies import DataStrategy
 from ml4trade.domain.clock import SimulationClock, ClockView

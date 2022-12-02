@@ -1,8 +1,8 @@
 from datetime import timedelta, datetime
 from typing import Tuple, Generator, Union
 
-from gym.core import Wrapper, ObsType
-from gym.utils import seeding
+from gymnasium.core import Wrapper, ObsType
+from gymnasium.utils import seeding
 
 from ml4trade.simulation_env import SimulationEnv
 from ml4trade.utils import timedelta_to_hours

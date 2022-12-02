@@ -2,7 +2,7 @@ from datetime import time, datetime
 
 
 import numpy as np
-import gym
+import gymnasium as gym
 
 
 SCHEDULING_TIME = time(hour=10, minute=30)
