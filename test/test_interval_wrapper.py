@@ -11,7 +11,7 @@ from utils import setup_default_simulation_env
 class TestIntervalWrapper(unittest.TestCase):
     def setUp(self) -> None:
         self.end_datetime = START_TIME + timedelta(days=14)
-        self.battery_init_charge = MWh(0.42)
+        self.battery_init_charge = MWh(0.1)
         self.env = setup_default_simulation_env(
             end_datetime=self.end_datetime,
             battery_init_charge=self.battery_init_charge
