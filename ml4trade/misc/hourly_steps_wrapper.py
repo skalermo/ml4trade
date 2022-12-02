@@ -2,7 +2,7 @@ from typing import Union
 
 import numpy as np
 from gym.core import Wrapper
-from gym.spaces import Discrete, Tuple, Box
+from gym.spaces import Discrete, MultiDiscrete
 
 from ml4trade.simulation_env import SimulationEnv
 from ml4trade.domain.clock import ClockView
@@ -19,7 +19,7 @@ class HourlyStepsWrapper(Wrapper):
         super().__init__(env)
         self._env = env.unwrapped_env()
         self.action_space = Discrete(21)
-        self.observation_space = Tuple((Discrete(24), Box(0, 1, shape=(1,))))
+        self.observation_space = MultiDiscrete([24, 10])
         self.clock_view = self.new_clock_view()
         self.current_hour = self.clock_view.cur_datetime().hour
         self.day_actions = np.zeros(24)
@@ -80,5 +80,6 @@ class HourlyStepsWrapper(Wrapper):
 
     def _observation(self) -> np.ndarray:
         predicted_rel_battery_charge = self._env._prosumer.battery.rel_current_charge
-        obs = np.array([self.current_hour, predicted_rel_battery_charge])
+        discretized_battery_charge = int(predicted_rel_battery_charge * 10)
+        obs = np.array([self.current_hour, discretized_battery_charge])
         return obs
