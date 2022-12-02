@@ -9,7 +9,7 @@ setup(
     description='Machine learning for trading',
     packages=find_packages(),    
     install_requires=[
-        'gym >= 0.22.0',
+        'gym >=0.22.0, <0.26.0',
         'pandas >= 1.3.5',
     ],
 )
