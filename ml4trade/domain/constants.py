@@ -20,10 +20,10 @@ END_TIME = datetime(
     hour=SCHEDULING_TIME.hour,
 )
 
-BUY_AMOUNT_BOUND_HIGH = np.inf
-SELL_AMOUNT_BOUND_HIGH = np.inf
-BUY_PRICE_THRESHOLD_MAX = np.inf
-SELL_PRICE_THRESHOLD_MAX = np.inf
+BUY_AMOUNT_BOUND_HIGH = 1e6
+SELL_AMOUNT_BOUND_HIGH = 1e6
+BUY_PRICE_THRESHOLD_MAX = 1e6
+SELL_PRICE_THRESHOLD_MAX = 1e6
 
 # 24 buy amount 24 sell amount 24 price buy thresholds 24 price sell thresholds
 # Defines transactions for each hour for the next 24 hours
