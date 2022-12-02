@@ -12,11 +12,12 @@ BIG_THRESHOLD = 99999
 
 
 class HourlyStepsWrapper(Wrapper):
-    env: SimulationEnv
     clock_view: ClockView
+    _env: SimulationEnv
 
     def __init__(self, env: Union[SimulationEnv, Wrapper]):
         super().__init__(env)
+        self._env = env.unwrapped_env()
         self.action_space = Discrete(21)
         self.observation_space = Tuple((Discrete(1), Box(0, 1, shape=(1,))))
         self.clock_view = self.new_clock_view()
@@ -50,25 +51,24 @@ class HourlyStepsWrapper(Wrapper):
         if self.current_hour == self.clock_view.scheduling_hour():
             if self.saved_state is not None:
                 (
-                    self.unwrapped_env()._prosumer.wallet.balance,
-                    self.unwrapped_env()._prosumer.battery.current_charge,
-                    self.unwrapped_env()._clock.cur_datetime,
-                    self.unwrapped_env()._clock.cur_tick
+                    self._env._prosumer.wallet.balance,
+                    self._env._prosumer.battery.current_charge,
+                    self._env._clock.cur_datetime,
+                    self._env._clock.cur_tick,
                 ) = self.saved_state
             _, reward, done, _ = super().step(
                 self._convert_to_original_action_space(self.day_actions)
             )
             self.saved_state = (
-                self.unwrapped_env()._prosumer.wallet.balance,
-                self.unwrapped_env()._prosumer.battery.current_charge,
-                self.unwrapped_env()._clock.cur_datetime,
-                self.unwrapped_env()._clock.cur_tick,
+                self._env._prosumer.wallet.balance,
+                self._env._prosumer.battery.current_charge,
+                self._env._clock.cur_datetime,
+                self._env._clock.cur_tick,
             )
             self.day_actions = np.zeros(24)
-        if self.unwrapped_env()._first_actions_set:
-            self.unwrapped_env()._rand_produce_consume()
-        self.unwrapped_env()._clock.tick()
-        predicted_rel_battery_charge = self.unwrapped_env()._prosumer.battery.rel_current_charge
+        if self._env._first_actions_set:
+            self._env._rand_produce_consume()
+        self._env._clock.tick()
         self.current_hour = (self.current_hour + 1) % 24
         obs = np.array([self.current_hour, predicted_rel_battery_charge])
         return obs, reward, done, {}
