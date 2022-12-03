@@ -75,7 +75,8 @@ class HourlyStepsWrapper(Wrapper):
             self.day_actions = np.zeros(24)
         if self._env._first_actions_set:
             self._env._rand_produce_consume()
-        self._env._clock.tick()
+        if not truncated:
+            self._env._clock.tick()
         self.current_hour = (self.current_hour + 1) % 24
         return self._observation(), reward, terminated, truncated, {}
 
