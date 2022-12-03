@@ -19,7 +19,7 @@ class HourlyStepsWrapper(Wrapper):
         super().__init__(env)
         self._env = env.unwrapped_env()
         self.action_space = Discrete(21)
-        self.observation_space = MultiDiscrete([24, 10])
+        self.observation_space = MultiDiscrete([24, 11])
         self.clock_view = self.new_clock_view()
         self.current_hour = self.clock_view.cur_datetime().hour
         self.day_actions = np.zeros(24)
