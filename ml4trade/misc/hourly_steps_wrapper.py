@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 import numpy as np
 from gymnasium.core import Wrapper, ObsType
@@ -19,11 +19,12 @@ class HourlyStepsWrapper(Wrapper):
         super().__init__(env)
         self._env = env.unwrapped_env()
         self.action_space = Discrete(21)
-        self.observation_space = MultiDiscrete([24, 11])
+        self.observation_space = MultiDiscrete([24, 11, self.action_space.n])
         self.clock_view = self.new_clock_view()
         self.current_hour = self.clock_view.cur_datetime().hour
         self.day_actions = np.zeros(24)
-        self.saved_state = None
+        self.saved_state: Optional[tuple] = None
+        self.last_action: Optional[int] = None
 
     def _convert_to_original_action_space(self, day_actions: np.ndarray):
         res = np.zeros(96)
@@ -49,9 +50,11 @@ class HourlyStepsWrapper(Wrapper):
         super(HourlyStepsWrapper, self).reset(**kwargs)
         self.current_hour = self.clock_view.cur_datetime().hour
         self.saved_state = None
+        self.last_action = None
         return self._observation(), {}
 
     def step(self, action: int) -> Tuple[ObsType, float, bool, bool, dict]:
+        self.last_action = action
         reward = 0
         terminated = False
         truncated = False
@@ -83,5 +86,5 @@ class HourlyStepsWrapper(Wrapper):
     def _observation(self) -> np.ndarray:
         predicted_rel_battery_charge = self._env._prosumer.battery.rel_current_charge
         discretized_battery_charge = int(predicted_rel_battery_charge * 10)
-        obs = np.array([self.current_hour, discretized_battery_charge])
+        obs = np.array([self.current_hour, discretized_battery_charge, self.last_action or 0])
         return obs
