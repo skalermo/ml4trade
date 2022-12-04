@@ -55,6 +55,7 @@ class HourlyStepsWrapper(Wrapper):
 
     def step(self, action: int) -> Tuple[ObsType, float, bool, bool, dict]:
         self.last_action = action
+        self.day_actions[self.current_hour] = action
         reward = 0
         terminated = False
         truncated = False
