@@ -47,11 +47,11 @@ class History:
         new_data = {
             'tick': self._clock_view.cur_tick(),
             'datetime': self._clock_view.cur_datetime(),
-            'price': market.ds.last_processed,
+            'price': market.get_buy_price().value,
             'wallet_balance': prosumer.wallet.balance.value,
             'rel_battery': prosumer.battery.rel_current_charge,
-            'energy_produced': production_system.ds.last_processed,
-            'energy_consumed': consumption_system.ds.last_processed,
+            'energy_produced': production_system.ds.last_processed or 0,
+            'energy_consumed': consumption_system.ds.last_processed or 0,
             'unscheduled_buy_amount': prosumer.last_unscheduled_buy_transaction or (0, False),
             'unscheduled_sell_amount': prosumer.last_unscheduled_sell_transaction or (0, False),
         }
