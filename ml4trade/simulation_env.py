@@ -217,3 +217,6 @@ class SimulationEnv(gym.Env):
 
     def unwrapped_env(self):
         return self
+
+    def get_wallet_balance(self) -> float:
+        return self._prosumer.wallet.balance
