@@ -110,9 +110,12 @@ class TestIntervalWrapper(unittest.TestCase):
     def test_reset_with_seed_deterministically(self):
         self.env_wrapper.reset(seed=42)
         datetime1 = self.env_wrapper.new_clock_view().cur_datetime()
+        interval_start_ticks1 = self.env_wrapper.interval_start_ticks
         self.env_wrapper.reset(seed=42)
         datetime2 = self.env_wrapper.new_clock_view().cur_datetime()
+        interval_start_ticks2 = self.env_wrapper.interval_start_ticks
         self.assertEqual(datetime1, datetime2)
+        self.assertEqual(interval_start_ticks1, interval_start_ticks2)
 
 
 if __name__ == '__main__':
