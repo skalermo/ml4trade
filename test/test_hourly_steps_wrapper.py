@@ -23,25 +23,25 @@ class TestHourlyStepsWrapper(unittest.TestCase):
         self.env.step(self.env.action_space.sample())
 
         obs, _ = self.env.reset()
-        wrapper_hour = obs[0]
+        wrapper_hour = obs[3]
         self.assertEqual(wrapper_hour, env_clock_view.cur_datetime().hour)
 
     def test_step_returns_correct_hour(self):
         env_clock_view: ClockView = self.env.new_clock_view()
 
         obs, _ = self.env.reset()
-        wrapper_hour = obs[0]
+        wrapper_hour = obs[3]
         self.assertEqual(wrapper_hour, env_clock_view.cur_datetime().hour)
 
         for i in range(3 * 24):
             action = self.env.action_space.sample()
             obs, *_ = self.env.step(action)
-            wrapper_hour = obs[0]
+            wrapper_hour = obs[3]
             self.assertEqual(wrapper_hour, env_clock_view.cur_datetime().hour)
 
         self.env.reset()
         obs, *_ = self.env.step(self.env.action_space.sample())
-        wrapper_hour = obs[0]
+        wrapper_hour = obs[3]
         self.assertEqual(wrapper_hour, env_clock_view.cur_datetime().hour)
 
 

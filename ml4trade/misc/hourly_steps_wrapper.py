@@ -25,7 +25,7 @@ class HourlyStepsWrapper(Wrapper):
         super().__init__(env)
         self._env = env.unwrapped_env()
         self.action_space = Discrete(21)
-        self.observation_space = MultiDiscrete([24, 10, self.action_space.n, 10])
+        self.observation_space = MultiDiscrete([10, self.action_space.n, 10, 24])
         self.clock_view = self.new_clock_view()
         self.current_hour = self.clock_view.cur_datetime().hour
         self.day_actions = np.zeros(24)
@@ -128,7 +128,7 @@ class HourlyStepsWrapper(Wrapper):
         predicted_rel_battery_charge = self._env._prosumer.battery.rel_current_charge
         discretized_battery_charge = min(int(predicted_rel_battery_charge * 10), 9)
         discretized_price = self._last_day_discretized_price(self.current_hour)
-        obs = np.array([self.current_hour, discretized_battery_charge, self.last_action or 0, discretized_price])
+        obs = np.array([discretized_price, self.last_action or 0, discretized_battery_charge, self.current_hour])
         return obs
 
     def _reward(self) -> float:
