@@ -15,7 +15,7 @@ class HourlyStepsWrapper(Wrapper):
     clock_view: ClockView
     _env: SimulationEnv
 
-    def __init__(self, env: Union[SimulationEnv, Wrapper]):
+    def __init__(self, env: Union[SimulationEnv, Wrapper], use_dense_rewards: bool = False):
         super().__init__(env)
         self._env = env.unwrapped_env()
         self.action_space = Discrete(21)
@@ -25,6 +25,8 @@ class HourlyStepsWrapper(Wrapper):
         self.day_actions = np.zeros(24)
         self.saved_state: Optional[tuple] = None
         self.last_action: Optional[int] = None
+        self.last_wallet_balance: Optional[float] = 0
+        self.use_dense_rewards = use_dense_rewards
 
     def _convert_to_original_action_space(self, day_actions: np.ndarray):
         res = np.zeros(96)
@@ -51,6 +53,7 @@ class HourlyStepsWrapper(Wrapper):
         self.current_hour = self.clock_view.cur_datetime().hour
         self.saved_state = None
         self.last_action = None
+        self.last_wallet_balance = None
         return self._observation(), {}
 
     def step(self, action: int) -> Tuple[ObsType, float, bool, bool, dict]:
@@ -82,6 +85,9 @@ class HourlyStepsWrapper(Wrapper):
         if not truncated:
             self._env._clock.tick()
         self.current_hour = (self.current_hour + 1) % 24
+        if self.use_dense_rewards:
+            reward = self._reward()
+        self.last_wallet_balance = self._env._prosumer.wallet.balance.value
         return self._observation(), reward, terminated, truncated, {}
 
     def _observation(self) -> np.ndarray:
@@ -89,3 +95,7 @@ class HourlyStepsWrapper(Wrapper):
         discretized_battery_charge = int(predicted_rel_battery_charge * 10)
         obs = np.array([self.current_hour, discretized_battery_charge, self.last_action or 0])
         return obs
+
+    def _reward(self) -> float:
+        reward = self._env._prosumer.wallet.balance.value - (self.last_wallet_balance or 0)
+        return reward
