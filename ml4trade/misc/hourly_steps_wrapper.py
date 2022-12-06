@@ -15,6 +15,7 @@ class LastDayInfo(NamedTuple):
     prices: List[float]
     min_price: float
     max_price: float
+    sparse_reward: float
 
 
 class HourlyStepsWrapper(Wrapper):
@@ -88,7 +89,7 @@ class HourlyStepsWrapper(Wrapper):
                 self._env._clock.cur_datetime,
                 self._env._clock.cur_tick,
             )
-            self._update_last_day_info()
+            self._update_last_day_info(reward)
             self.day_actions = np.zeros(24)
         if self._env._first_actions_set:
             self._env._rand_produce_consume()
@@ -100,7 +101,7 @@ class HourlyStepsWrapper(Wrapper):
         self.last_wallet_balance = self._env._prosumer.wallet.balance.value
         return self._observation(), reward, terminated, truncated, {}
 
-    def _update_last_day_info(self):
+    def _update_last_day_info(self, sparse_reward: float):
         history = self._env.history
         end_idx = history._cur_tick_to_idx()
         start_idx = end_idx - 24 or None
@@ -110,6 +111,7 @@ class HourlyStepsWrapper(Wrapper):
                 prices=last_day_prices,
                 min_price=min(last_day_prices),
                 max_price=max(last_day_prices),
+                sparse_reward=sparse_reward,
             )
 
     def _last_day_discretized_price(self, t: int) -> int:
@@ -132,5 +134,6 @@ class HourlyStepsWrapper(Wrapper):
         return obs
 
     def _reward(self) -> float:
-        reward = self._env._prosumer.wallet.balance.value - (self.last_wallet_balance or 0)
+        reward = self._env._prosumer.wallet.balance.value - (self.last_wallet_balance or 0)\
+                 + self.last_day_info.sparse_reward / 24
         return reward
