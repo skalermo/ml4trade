@@ -1,11 +1,13 @@
 from typing import Union, Tuple, Optional, List, NamedTuple
 
 import numpy as np
+from gymnasium.utils import seeding
 from gymnasium.core import Wrapper, ObsType
 from gymnasium.spaces import Discrete, MultiDiscrete
 
 from ml4trade.simulation_env import SimulationEnv
 from ml4trade.domain.clock import ClockView
+from ml4trade.domain.units import MWh, Currency
 
 
 BIG_THRESHOLD = 99999
@@ -28,74 +30,131 @@ class HourlyStepsWrapper(Wrapper):
         self.action_space = Discrete(21)
         self.observation_space = MultiDiscrete([10, self.action_space.n, 10, 24])
         self.clock_view = self.new_clock_view()
-        self.current_hour = self.clock_view.cur_datetime().hour
-        self.day_actions = np.zeros(24)
+        self.current_hour = self.clock_view._clock.action_replacement_time.hour
+        self.day_actions = None
         self.saved_state: Optional[tuple] = None
         self.last_action: Optional[int] = None
         self.last_wallet_balance: Optional[float] = 0
         self.use_dense_rewards = use_dense_rewards
         # concerns time range 10:00-10:00
         self.last_day_info: Optional[LastDayInfo] = None
+        self._rng, _ = seeding.np_random()
 
-    def _convert_to_original_action_space(self, day_actions: np.ndarray):
-        res = np.zeros(96)
-        for i, a in enumerate(day_actions):
-            if a == 0:
-                res[i] = 0
-                res[i + 24] = 0
-                res[i + 48] = 0
-                res[i + 72] = 0
-            elif 1 <= a <= 10:  # discretized buy amounts
-                res[i] = a / 10
-                res[i + 24] = 0
-                res[i + 48] = BIG_THRESHOLD  # guaranteed to buy
-                res[i + 72] = BIG_THRESHOLD  # guaranteed to not sell
-            elif 11 <= a <= 20:  # discretized sell amounts
-                res[i] = 0
-                res[i + 24] = (a - 10) / 10
-                res[i + 48] = 0  # guaranteed to not buy
-                res[i + 72] = 0  # guaranteed to sell
+    def _convert_to_original_action_space(self, day_actions: np.ndarray) -> np.ndarray:
+        converted_actions = [self._convert_to_original_action(a) for a in day_actions]
+        res = np.array([a for tup in zip(*converted_actions) for a in tup])
         return res
+
+    def _convert_to_original_action(self, a: int) -> (float, float, float, float):
+        battery_cap = self._env._prosumer.battery.capacity.value
+        if a == 0:
+            return 0, 0, 0, 0
+        if 1 <= a <= 10:  # discretized buy amounts
+            return a / 10 * battery_cap , 0, BIG_THRESHOLD, BIG_THRESHOLD
+        if 11 <= a <= 20:  # discretized sell amounts
+            return 0, (a - 10) / 10 * battery_cap, 0, 0
 
     def reset(self, **kwargs) -> Tuple[ObsType, dict]:
         super(HourlyStepsWrapper, self).reset(**kwargs)
-        self.current_hour = self.clock_view.cur_datetime().hour
-        self.saved_state = None
+        # self.current_hour = self.clock_view.cur_datetime().hour
+        self.current_hour = self.clock_view._clock.action_replacement_time.hour
+        self.day_actions = None
         self.last_action = None
         self.last_wallet_balance = None
         self.last_day_info = None
+        self._save_env_state()
+        for _ in range(14):
+            self._env._clock.tick()
         return self._observation(), {}
 
-    def step(self, action: int) -> Tuple[ObsType, float, bool, bool, dict]:
-        self.last_action = action
-        self.day_actions[self.current_hour] = action
-        reward = 0
-        terminated = False
-        truncated = False
-        if self.current_hour == self.clock_view.scheduling_hour():
-            if self.saved_state is not None:
-                (
-                    self._env._prosumer.wallet.balance,
-                    self._env._prosumer.battery.current_charge,
-                    self._env._clock.cur_datetime,
-                    self._env._clock.cur_tick,
-                ) = self.saved_state
-            _, reward, terminated, truncated, _ = super().step(
-                self._convert_to_original_action_space(self.day_actions)
-            )
-            self.saved_state = (
+    def _save_env_state(self):
+        scheduled_buy_amounts = None
+        if self._env._prosumer.scheduled_buy_amounts is not None:
+            scheduled_buy_amounts = self._env._prosumer.scheduled_buy_amounts[:]
+        scheduled_sell_amounts = None
+        if self._env._prosumer.scheduled_sell_amounts is not None:
+            scheduled_sell_amounts = self._env._prosumer.scheduled_sell_amounts[:]
+        scheduled_buy_thresholds = None
+        if self._env._prosumer.scheduled_buy_thresholds is not None:
+            scheduled_buy_thresholds = self._env._prosumer.scheduled_buy_thresholds[:]
+        scheduled_sell_thresholds = None
+        if self._env._prosumer.scheduled_sell_thresholds is not None:
+            scheduled_sell_thresholds = self._env._prosumer.scheduled_sell_thresholds[:]
+
+        self.saved_state = (
+            self._env._prosumer.wallet.balance,
+            self._env._prosumer.battery.current_charge,
+            self._env._clock.cur_datetime,
+            self._env._clock.cur_tick,
+            scheduled_buy_amounts,
+            scheduled_sell_amounts,
+            scheduled_buy_thresholds,
+            scheduled_sell_thresholds,
+            self._rng.bit_generator.state,
+        )
+
+    def _restore_env_state(self):
+        if self.saved_state is not None:
+            (
                 self._env._prosumer.wallet.balance,
                 self._env._prosumer.battery.current_charge,
                 self._env._clock.cur_datetime,
                 self._env._clock.cur_tick,
-            )
+                self._env._prosumer.scheduled_buy_amounts,
+                self._env._prosumer.scheduled_sell_amounts,
+                self._env._prosumer.scheduled_buy_thresholds,
+                self._env._prosumer.scheduled_sell_thresholds,
+                self._rng.bit_generator.state,
+            ) = self.saved_state
+
+    def _set_cur_prosumer_action(self, a: int):
+        (
+            buy_amount,
+            sell_amount,
+            buy_threshold,
+            sell_threshold,
+        ) = self._convert_to_original_action(a)
+        if self._env._prosumer.scheduled_buy_amounts is None:
+            self._env._prosumer.scheduled_buy_amounts = [0] * 24
+        if self._env._prosumer.scheduled_sell_amounts is None:
+            self._env._prosumer.scheduled_sell_amounts = [0] * 24
+        if self._env._prosumer.scheduled_buy_thresholds is None:
+            self._env._prosumer.scheduled_buy_thresholds = [0] * 24
+        if self._env._prosumer.scheduled_sell_thresholds is None:
+            self._env._prosumer.scheduled_sell_thresholds = [0] * 24
+        self._env._prosumer.scheduled_buy_amounts[self.current_hour] = MWh(buy_amount)
+        self._env._prosumer.scheduled_sell_amounts[self.current_hour] = MWh(sell_amount)
+        self._env._prosumer.scheduled_buy_thresholds[self.current_hour] = Currency(buy_threshold)
+        self._env._prosumer.scheduled_sell_thresholds[self.current_hour] = Currency(sell_threshold)
+
+    def step(self, action: int) -> Tuple[ObsType, float, bool, bool, dict]:
+        reward = 0
+        terminated = False
+        truncated = False
+
+        if self.current_hour == 0 and self.day_actions is not None:
+            self._restore_env_state()
+            _, reward, terminated, truncated, _ = super().step(self._convert_to_original_action_space(self.day_actions))
+            self._save_env_state()
             self._update_last_day_info(reward)
             self.day_actions = np.zeros(24)
-        if self._env._first_actions_set:
-            self._env._rand_produce_consume()
+            if not truncated:
+                for _ in range(14):
+                    self._env._rand_produce_consume()
+                    self._env._clock.tick()
+        if self.day_actions is None:
+            self.day_actions = np.zeros(24)
+
+        self.last_action = action
+        self.day_actions[self.current_hour] = action
+
         if not truncated:
+            # perform 1-hour step
+            self._set_cur_prosumer_action(action)
+            self._env._rand_produce_consume()
             self._env._clock.tick()
-        self.current_hour = (self.current_hour + 1) % 24
+            self.current_hour = (self.current_hour + 1) % 24
+
         if self.use_dense_rewards:
             reward = self._reward()
         self.last_wallet_balance = self._env._prosumer.wallet.balance.value
@@ -134,6 +193,7 @@ class HourlyStepsWrapper(Wrapper):
         return obs
 
     def _reward(self) -> float:
-        reward = self._env._prosumer.wallet.balance.value - (self.last_wallet_balance or 0)\
-                 + self.last_day_info.sparse_reward / 24
+        reward = self._env._prosumer.wallet.balance.value - (self.last_wallet_balance or 0)
+        if self.last_day_info is not None:
+            reward += self.last_day_info.sparse_reward / 24
         return reward
