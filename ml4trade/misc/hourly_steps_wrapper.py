@@ -17,7 +17,7 @@ class LastDayInfo(NamedTuple):
     prices: List[float]
     min_price: float
     max_price: float
-    sparse_reward: float
+    energy_surpluses: List[float]
 
 
 class HourlyStepsWrapper(Wrapper):
@@ -136,7 +136,7 @@ class HourlyStepsWrapper(Wrapper):
             self._restore_env_state()
             _, reward, terminated, truncated, _ = super().step(self._convert_to_original_action_space(self.day_actions))
             self._save_env_state()
-            self._update_last_day_info(reward)
+            self._update_last_day_info()
             self.day_actions = np.zeros(24)
             if not truncated:
                 for _ in range(14):
@@ -160,17 +160,19 @@ class HourlyStepsWrapper(Wrapper):
         self.last_wallet_balance = self._env._prosumer.wallet.balance.value
         return self._observation(), reward, terminated, truncated, {}
 
-    def _update_last_day_info(self, sparse_reward: float):
+    def _update_last_day_info(self):
         history = self._env.history
         end_idx = history._cur_tick_to_idx()
         start_idx = end_idx - 24 or None
-        last_day_prices = list(map(lambda x: x['price'], history._history[start_idx:end_idx]))
+        last_day_history = history._history[start_idx:end_idx]
+        last_day_prices = list(map(lambda x: x['price'], last_day_history))
+        energy_surpluses = list(r['energy_produced'] - r['energy_consumed'] for r in last_day_history)
         if all(last_day_prices):
             self.last_day_info = LastDayInfo(
                 prices=last_day_prices,
                 min_price=min(last_day_prices),
                 max_price=max(last_day_prices),
-                sparse_reward=sparse_reward,
+                energy_surpluses=energy_surpluses,
             )
 
     def _last_day_discretized_price(self, t: int) -> int:
@@ -195,5 +197,5 @@ class HourlyStepsWrapper(Wrapper):
     def _reward(self) -> float:
         reward = self._env._prosumer.wallet.balance.value - (self.last_wallet_balance or 0)
         if self.last_day_info is not None:
-            reward += self.last_day_info.sparse_reward / 24
+            reward -= self.last_day_info.energy_surpluses[self.current_hour] * self.last_day_info.prices[self.current_hour]
         return reward
