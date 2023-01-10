@@ -64,8 +64,7 @@ class History:
         prosumer.last_unscheduled_sell_transaction = None
 
     def _add_empty_rows(self, n: int):
-        empty_row = [{}]
-        self._history.extend(empty_row * n)
+        self._history.extend([{} for _ in range(n)])
 
     def _has_1day_of_history(self) -> bool:
         # max span of time history goes unfilled is
