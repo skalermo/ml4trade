@@ -10,8 +10,8 @@ from ml4trade.simulation_env import SimulationEnv
 
 
 CUSTOM_ACTION_SPACE = gym.spaces.Box(
-    low=np.array([-10] * 96),
-    high=np.array([10] * 96),
+    low=np.array([-3.] * 96),
+    high=np.array([3.] * 96),
 )
 
 
@@ -28,7 +28,7 @@ class ActionWrapper(_ActionWrapper):
 
     def action(self, action):
         new_action = np.exp(action)
-        new_action[:48] *= self.ref_power_MW / 2
+        new_action[:48] *= self.ref_power_MW
         price = self._avg_month_price_retriever.get_prev_month_avg_price(
             self.clock_view.cur_datetime()
         )

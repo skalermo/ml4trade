@@ -25,7 +25,7 @@ class History:
 
     def __init__(self, clock_view: ClockView):
         self._clock_view = clock_view
-        self._tick_offset = clock_view.cur_tick()
+        self._tick_offset = clock_view.cur_tick() if self._clock_view is not None else None
         self._history: List[Dict] = []
 
     def __getitem__(self, item):
@@ -82,12 +82,11 @@ class History:
             self._add_empty_rows(24 - self._clock_view.scheduling_hour())
         actions = [{
             'datetime': next_day_start + timedelta(hours=h),
-            'scheduled_buy_amount': action[h],
-            'scheduled_sell_amount': action[24 + h],
-            'scheduled_buy_threshold': action[48 + h],
-            'scheduled_sell_threshold': action[72 + h],
+            'scheduled_buy_amount': action[h].item(),
+            'scheduled_sell_amount': action[24 + h].item(),
+            'scheduled_buy_threshold': action[48 + h].item(),
+            'scheduled_sell_threshold': action[72 + h].item(),
         } for h in range(24)]
-
         self._history.extend(actions)
 
         if self._has_1day_of_history():
