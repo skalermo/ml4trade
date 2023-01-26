@@ -38,6 +38,8 @@ def render_profits_comparison(
         else:
             return histories_info, {}
 
+    plt.style.use('ggplot')
+    plt.rcParams.update({'font.size': 12})
     fig, ax = plt.subplots()
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
