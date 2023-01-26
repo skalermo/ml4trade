@@ -1,6 +1,6 @@
 import math
 from datetime import timedelta
-from typing import List
+from typing import List, Union, Tuple, Optional, Dict
 
 import numpy as np
 import pandas as pd
@@ -14,6 +14,58 @@ def _history_to_df(history: List[dict]) -> pd.DataFrame:
     history_df.set_index('datetime', inplace=True)
     history_df.sort_index()
     return history_df
+
+
+Histories = List[Union['History', List[dict]]]
+RenderInfo = Dict[str, str]
+HistoriesRenderInfo = Union[Histories, Tuple[Histories, RenderInfo]]
+
+
+def render_profits_comparison(
+        *histories_infos: HistoriesRenderInfo,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        title: Optional[str] = None,
+        save_path: Optional[str] = None,
+):
+    from ml4trade.history import History
+
+    def _unpack_algo_info(histories_info: HistoriesRenderInfo) -> (Histories, RenderInfo):
+        if isinstance(histories_info, tuple):
+            if len(histories_info) == 2:
+                _histories, _render_info = histories_info
+                return _histories, _render_info
+        else:
+            return histories_info, {}
+
+    fig, ax = plt.subplots()
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.title.set_text(title)
+
+    for info in histories_infos:
+        histories, kwargs = _unpack_algo_info(info)
+        for i in range(len(histories)):
+            h = histories[i]
+            h = _history_to_df(h._history if isinstance(h, History) else h)
+            histories[i] = h[h['potential_profit'].notna()]
+        runs_profits = [h['wallet_balance'].to_numpy() for h in histories]
+
+        # note: histories should be generated from same timespan
+        timespan = histories[0].index
+
+        means = np.mean([*zip(*runs_profits)], axis=1)
+        stds = np.std([*zip(*runs_profits)], axis=1)
+
+        ax.plot(timespan, means, **kwargs)
+        ax.fill_between(timespan, means - stds, means + stds, alpha=0.2, **{**kwargs, 'label': ''})
+
+    plt.xticks(rotation=45)
+    plt.legend()
+    fig.tight_layout()
+    if save_path is not None:
+        fig.savefig(save_path)
+    plt.show()
 
 
 def render_all(history: List[dict], last_n_days: int = 2, n_days_offset: int = 0, save_path=None):
