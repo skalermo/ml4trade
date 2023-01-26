@@ -27,6 +27,8 @@ def render_profits_comparison(
         ylabel: Optional[str] = None,
         title: Optional[str] = None,
         save_path: Optional[str] = None,
+        draw_potential_profits: bool = False,
+        potential_profits_kwargs: Optional[dict] = None,
 ):
     from ml4trade.history import History
 
@@ -61,6 +63,9 @@ def render_profits_comparison(
 
         ax.plot(timespan, means, **kwargs)
         ax.fill_between(timespan, means - stds, means + stds, alpha=0.2, **{**kwargs, 'label': ''})
+    if len(histories_infos) and draw_potential_profits:
+        ax.plot(timespan, np.cumsum(histories[0]['potential_profit']), **potential_profits_kwargs)
+
 
     plt.xticks(rotation=45)
     plt.legend()

@@ -18,6 +18,8 @@ class TestRenderProfitsComp(unittest.TestCase):
         render_profits_comparison(
             (histories1, {'color': 'red', 'label': 'bbb'}),
             (histories2, {'color': 'cyan', 'label': 'aaa'}),
+            draw_potential_profits=True,
+            potential_profits_kwargs={'linestyle': 'dashed', 'label': 'reference'}
         )
 
 
