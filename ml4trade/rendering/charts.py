@@ -213,8 +213,14 @@ def _plot_scheduled_amounts(history: pd.DataFrame, last_n_days: int, n_days_offs
     prices = df['price'][start_datetime:end_datetime]
     buy_amounts = df['scheduled_buy_amount'][start_datetime:end_datetime]
     sell_amounts = df['scheduled_sell_amount'][start_datetime:end_datetime]
-    buys_success = df.apply(lambda row: row['scheduled_buy_amount'] if row['scheduled_buy_threshold'] >= row['price'] else 0, axis=1)
-    sells_success = df.apply(lambda row: row['scheduled_sell_amount'] if row['scheduled_sell_threshold'] <= row['price'] else 0, axis=1)
+    buys_success = df.apply(
+        lambda row: row['scheduled_buy_amount']if row['scheduled_buy_threshold'] >= row['price'] else np.nan,
+        axis=1,
+    )
+    sells_success = df.apply(
+        lambda row: row['scheduled_sell_amount'] if row['scheduled_sell_threshold'] <= row['price'] else np.nan,
+        axis=1,
+    )
     buys_success = buys_success[start_datetime:end_datetime]
     sells_success = sells_success[start_datetime:end_datetime]
 
@@ -227,7 +233,7 @@ def _plot_scheduled_amounts(history: pd.DataFrame, last_n_days: int, n_days_offs
         plt.sca(ax)
         plt.xticks(rotation=45)
 
-    ax.plot(prices.index, prices / max(prices) * max(max(buys_success), max(sells_success)), color='gray', label='market price')
+    ax.plot(prices.index, prices / max(prices) * max(np.max(buys_success), np.max(sells_success)), color='gray', label='market price')
     ax.plot(energy_diff.index, energy_diff, color='purple', label='produced - consumed')
     ax.plot(buy_amounts.index, buy_amounts, color='lightsalmon', label='buy amount')
     ax.plot(sell_amounts.index, sell_amounts, color='lightblue', label='sell amount')
