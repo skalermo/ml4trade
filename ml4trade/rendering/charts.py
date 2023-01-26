@@ -30,7 +30,7 @@ def render_profits_comparison(
 ):
     from ml4trade.history import History
 
-    def _unpack_algo_info(histories_info: HistoriesRenderInfo) -> (Histories, RenderInfo):
+    def _unpack_histories_info(histories_info: HistoriesRenderInfo) -> (Histories, RenderInfo):
         if isinstance(histories_info, tuple):
             if len(histories_info) == 2:
                 _histories, _render_info = histories_info
@@ -46,7 +46,7 @@ def render_profits_comparison(
     ax.title.set_text(title)
 
     for info in histories_infos:
-        histories, kwargs = _unpack_algo_info(info)
+        histories, kwargs = _unpack_histories_info(info)
         for i in range(len(histories)):
             h = histories[i]
             h = _history_to_df(h._history if isinstance(h, History) else h)
