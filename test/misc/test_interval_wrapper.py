@@ -1,5 +1,6 @@
 import unittest
 from datetime import timedelta
+from unittest import TestCase
 
 from ml4trade.domain.units import MWh
 from ml4trade.domain.constants import START_TIME
@@ -9,6 +10,7 @@ from utils import setup_default_simulation_env
 
 
 class TestIntervalWrapper(unittest.TestCase):
+
     def setUp(self) -> None:
         self.end_datetime = START_TIME + timedelta(days=14)
         self.battery_init_charge = MWh(0.1)
@@ -30,6 +32,26 @@ class TestIntervalWrapper(unittest.TestCase):
         self.assertEqual(self.env_wrapper.train_mode, True)
         self.assertEqual(self.env_wrapper.test_data_start_tick, self.data_start_tick)
 
+    def test_init(self):
+        self.setUp()
+        self.assertEqual(self.env_wrapper.start_datetime, self.env._start_datetime)
+        self.assertEqual(self.env_wrapper.end_datetime, self.env._end_datetime)
+        self.assertEqual(self.env_wrapper.start_tick, self.env._start_tick)
+        self.assertEqual(self.env_wrapper.interval, timedelta(days=1))
+        self.assertEqual(self.env_wrapper.randomly_set_battery, False)
+        self.assertEqual(self.env_wrapper.interval_in_ticks, timedelta_to_hours(timedelta(days=1)))
+        self.assertEqual(self.env_wrapper.interval_start_ticks, [])
+        self.assertEqual(self.env_wrapper.train_mode,True)
+        data_duration = self.env_wrapper.end_datetime - self.env_wrapper.start_datetime
+        self.assertEqual(self.env_wrapper.train_data_duration, data_duration * 0.75)
+        self.assertEqual(self.env_wrapper.test_data_start, self.env_wrapper.start_datetime +
+                         self.env_wrapper.train_data_duration)
+        self.assertEqual(self.env_wrapper.test_data_start_tick, self.env_wrapper.start_tick +
+                         timedelta_to_hours(self.env_wrapper.train_data_duration))
+
+    def test__is_interval_allowed(self):
+        self.assertTrue(self.env_wrapper.train_data_duration >= self.env_wrapper.interval)
+
     # def test_set_to_test(self):
     #     self.env_wrapper.set_to_test_and_reset()
     #     self.assertFalse(self.env_wrapper.train_mode)
@@ -46,7 +68,8 @@ class TestIntervalWrapper(unittest.TestCase):
                              for t in ticks]))
 
     def test_random_start_ticks(self):
-        ticks_expected_count = (self.env_wrapper.test_data_start_tick - self.env_wrapper.start_tick) // self.env_wrapper.interval_in_ticks
+        ticks_expected_count = (
+                                           self.env_wrapper.test_data_start_tick - self.env_wrapper.start_tick) // self.env_wrapper.interval_in_ticks
         ticks1 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
         ticks2 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
         self.assertNotEqual(ticks1, ticks2)
@@ -120,3 +143,4 @@ class TestIntervalWrapper(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
