@@ -1,6 +1,5 @@
 import unittest
 from datetime import timedelta
-from unittest import TestCase
 
 from ml4trade.domain.units import MWh
 from ml4trade.domain.constants import START_TIME
@@ -33,7 +32,6 @@ class TestIntervalWrapper(unittest.TestCase):
         self.assertEqual(self.env_wrapper.test_data_start_tick, self.data_start_tick)
 
     def test_init(self):
-        self.setUp()
         self.assertEqual(self.env_wrapper.start_datetime, self.env._start_datetime)
         self.assertEqual(self.env_wrapper.end_datetime, self.env._end_datetime)
         self.assertEqual(self.env_wrapper.start_tick, self.env._start_tick)
@@ -143,4 +141,3 @@ class TestIntervalWrapper(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
