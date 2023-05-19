@@ -16,6 +16,13 @@ from ml4trade.domain.units import MW
 from ml4trade.simulation_env import SimulationEnv
 
 prices_pl_path = os.path.join(os.path.dirname(__file__), 'mock_data/prices_pl.csv')
+_rendering_data_dir = os.path.join(os.path.dirname(__file__), 'mock_data/rendering_data')
+rendering_data_paths = [
+    os.path.join(_rendering_data_dir, f'run_1/env_history.json'),
+    os.path.join(_rendering_data_dir, f'run_2/env_history.json'),
+    os.path.join(_rendering_data_dir, f'run_3/env_history.json'),
+    os.path.join(_rendering_data_dir, f'run_4/env_history.json'),
+]
 
 
 def load_from_setup(setup: dict, *args) -> tuple:

@@ -1,8 +1,8 @@
 from datetime import timedelta, datetime
 from typing import Tuple, Generator, Union
 
-from gym.core import Wrapper, ObsType
-from gym.utils import seeding
+from gymnasium.core import Wrapper, ObsType
+from gymnasium.utils import seeding
 
 from ml4trade.simulation_env import SimulationEnv
 from ml4trade.utils import timedelta_to_hours
@@ -20,6 +20,7 @@ class IntervalWrapper(Wrapper):
         self.interval = interval
         self.randomly_set_battery = randomly_set_battery
         self.interval_in_ticks = timedelta_to_hours(interval)
+        self.interval_start_ticks = []
         self.train_mode = True
         data_duration = self.end_datetime - self.start_datetime
         self.train_data_duration = data_duration * split_ratio
@@ -33,7 +34,7 @@ class IntervalWrapper(Wrapper):
     def _is_interval_allowed(self, interval: timedelta) -> bool:
         return self.train_data_duration >= interval
 
-    def reset(self, **kwargs) -> ObsType:
+    def reset(self, **kwargs) -> Tuple[ObsType, dict]:
         seed = kwargs.get('seed')
         if seed is not None:
             self.np_random, seed = seeding.np_random(seed)
@@ -51,8 +52,8 @@ class IntervalWrapper(Wrapper):
             rand_rel_charge = self.np_random.uniform(0.05, 0.95)
             battery_charge_to_set = self.env._prosumer.battery.capacity * rand_rel_charge
 
+        kwargs['options'] = dict(battery_charge_to_set=battery_charge_to_set)
         return self.env.reset(
-            battery_charge_to_set=battery_charge_to_set,
             **kwargs
         )
 
@@ -65,6 +66,7 @@ class IntervalWrapper(Wrapper):
                 self.start_tick + rand_offset, self.test_data_start_tick - self.interval_in_ticks + 1,
                 self.interval_in_ticks
             )]
+            self.interval_start_ticks = ep_intervals_start_ticks
             assert len(ep_intervals_start_ticks) > 0
             self.np_random.shuffle(ep_intervals_start_ticks)
             for i in ep_intervals_start_ticks:

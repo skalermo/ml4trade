@@ -17,7 +17,7 @@ class TestSimulationEnv(unittest.TestCase):
         obs = env.reset()
         for _ in range(4):
             action, _states = model.predict(obs)
-            obs, rewards, dones, info = env.step(action)
+            obs, reward, terminated, truncated, info = env.step(action)
 
     def test_step_passes_action_to_prosumer(self):
         env = setup_default_simulation_env()
@@ -39,7 +39,7 @@ class TestSimulationEnv(unittest.TestCase):
         self.assertEqual(env.history[last_tick_idx]['datetime'], env._clock.cur_datetime - timedelta(hours=1))
 
     def test_reset_sets_initial_values(self):
-        env = setup_default_simulation_env(battery_init_charge=MWh(0.1))
+        env = setup_default_simulation_env(battery_init_charge=MWh(0.001))
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())
         env.step(env.action_space.sample())

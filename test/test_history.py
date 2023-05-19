@@ -32,8 +32,8 @@ class TestHistory(unittest.TestCase):
         self.assertEqual(history[0]['unscheduled_buy_amount'], self.env._prosumer.last_unscheduled_buy_transaction or (0, False))
         self.assertEqual(history[0]['unscheduled_sell_amount'], self.env._prosumer.last_unscheduled_sell_transaction or (0, False))
         self.assertEqual(history[0]['price'], self.env._market.ds.last_processed)
-        self.assertEqual(history[0]['energy_produced'], self.env._production_system.ds.last_processed)
-        self.assertEqual(history[0]['energy_consumed'], self.env._consumption_system.ds.last_processed)
+        self.assertEqual(history[0]['energy_produced'], self.env._production_system.ds.last_processed or 0)
+        self.assertEqual(history[0]['energy_consumed'], self.env._consumption_system.ds.last_processed or 0)
 
     def test_tick_update_existing_row(self):
         history = History(self.env._clock.view())

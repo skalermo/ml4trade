@@ -11,7 +11,7 @@ from utils import setup_default_simulation_env
 class TestIntervalWrapper(unittest.TestCase):
     def setUp(self) -> None:
         self.end_datetime = START_TIME + timedelta(days=14)
-        self.battery_init_charge = MWh(0.42)
+        self.battery_init_charge = MWh(0.1)
         self.env = setup_default_simulation_env(
             end_datetime=self.end_datetime,
             battery_init_charge=self.battery_init_charge
@@ -110,9 +110,12 @@ class TestIntervalWrapper(unittest.TestCase):
     def test_reset_with_seed_deterministically(self):
         self.env_wrapper.reset(seed=42)
         datetime1 = self.env_wrapper.new_clock_view().cur_datetime()
+        interval_start_ticks1 = self.env_wrapper.interval_start_ticks
         self.env_wrapper.reset(seed=42)
         datetime2 = self.env_wrapper.new_clock_view().cur_datetime()
+        interval_start_ticks2 = self.env_wrapper.interval_start_ticks
         self.assertEqual(datetime1, datetime2)
+        self.assertEqual(interval_start_ticks1, interval_start_ticks2)
 
 
 if __name__ == '__main__':

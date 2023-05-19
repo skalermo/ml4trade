@@ -1,8 +1,8 @@
 from typing import Tuple, Dict, Union
 from datetime import timedelta, datetime
 
-import gym
-from gym.core import Wrapper, ActionWrapper as _ActionWrapper
+import gymnasium as gym
+from gymnasium.core import Wrapper, ActionWrapper as _ActionWrapper
 import pandas as pd
 import numpy as np
 
@@ -10,8 +10,8 @@ from ml4trade.simulation_env import SimulationEnv
 
 
 CUSTOM_ACTION_SPACE = gym.spaces.Box(
-    low=np.array([-10] * 96),
-    high=np.array([10] * 96),
+    low=np.array([-3] * 96),
+    high=np.array([3] * 96),
 )
 
 
