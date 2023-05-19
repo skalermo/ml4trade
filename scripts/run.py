@@ -87,11 +87,11 @@ def main(cfg: DictConfig) -> None:
     model = A2C('MlpPolicy', env_train, verbose=1)
     model.learn(total_timesteps=1_000)
 
-    obs = env_test.reset()
+    obs, _ = env_test.reset()
     done = False
     while not done:
         action, _states = model.predict(obs)
-        obs, rewards, done, info = env_test.step(action)
+        obs, rewards, _, done, info = env_test.step(action)
 
     env_test.render_all()
 
