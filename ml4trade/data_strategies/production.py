@@ -62,9 +62,13 @@ class ImgwWindDataStrategy(DataStrategy):
     def process(self, idx: int) -> float:
         # wind speed in meters per second
         wind_speed = self.df.iat[idx, self.col_idx]
-        if wind_speed > self.max_wind_speed or wind_speed < 0:
+        return self.calculate_power_value(wind_speed, self.max_wind_speed, self.max_wind_power.value)
+
+    @staticmethod
+    def calculate_power_value(wind_speed: float, max_wind_speed: float, max_wind_power_value: float) -> float:
+        if wind_speed > max_wind_speed or wind_speed < 0:
             return 0
-        return wind_speed * self.max_wind_power.value / self.max_wind_speed
+        return wind_speed * max_wind_power_value / max_wind_speed
 
     def observation(self, idx: int) -> List[float]:
         start_idx = idx + 24 - self.scheduling_hour
@@ -86,12 +90,16 @@ class ImgwSolarDataStrategy(DataStrategy):
 
     @update_last_processed
     def process(self, idx: int) -> float:
-        # cloudiness in oktas
-        # https://en.wikipedia.org/wiki/Okta 
         cloudiness = self.df.iat[idx, self.col_idx]
+        return self.calculate_power_value(cloudiness, self.max_solar_power.value, self.solar_efficiency)
+
+    @staticmethod
+    def calculate_power_value(cloudiness: int, max_solar_power_value: float, solar_efficiency: float) -> float:
+        # cloudiness in oktas
+        # https://en.wikipedia.org/wiki/Okta
         if cloudiness == 9:  # 9 equals lack of observation (sky obscured)
             cloudiness = 8  # 8 equals overcast
-        return self.max_solar_power.value * (1 - cloudiness / 8) * self.solar_efficiency
+        return max_solar_power_value * (1 - cloudiness / 8) * solar_efficiency
 
     def observation(self, idx: int) -> List[float]:
         start_idx = idx + 24 - self.scheduling_hour
