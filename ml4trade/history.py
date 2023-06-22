@@ -124,8 +124,8 @@ class History:
         potential_profit = extra_produced * avg_price
 
         night_low = min(r['price'] for r in last_day_history[:9])
-        evening_high = max(r['price'] for r in last_day_history[9:])
-        price_diff_profit = (evening_high - night_low / self._battery_efficiency) * self._battery_cap.value
+        day_high = max(r['price'] for r in last_day_history[9:])
+        price_diff_profit = max(0, (day_high * self._battery_efficiency - night_low) * self._battery_cap.value)
 
         return potential_profit, price_diff_profit
 
