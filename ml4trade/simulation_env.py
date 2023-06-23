@@ -59,7 +59,7 @@ class SimulationEnv(gym.Env):
             data_strategies = {}
 
         self.action_space = SIMULATION_ENV_ACTION_SPACE
-        obs_size = 2 + sum(map(lambda x: x.observation_size(), data_strategies.values()))
+        obs_size = 3 + sum(map(lambda x: x.observation_size(), data_strategies.values()))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(obs_size,), dtype=np.float32)
         # self.observation_space = gym.spaces.Box(low=-10000, high=10000, shape=(obs_size,), dtype=np.float32)
         if start_tick is None:
@@ -133,6 +133,7 @@ class SimulationEnv(gym.Env):
             *market_obs,
             *production_obs,
             *consumption_obs,
+            self._prosumer.battery.efficiency,
             self._prosumer.battery.rel_current_charge,
             rel_battery_charge_at_midnight,
         ]
