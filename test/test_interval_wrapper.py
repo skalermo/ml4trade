@@ -14,7 +14,8 @@ class TestIntervalWrapper(unittest.TestCase):
         self.battery_init_charge = MWh(0.1)
         self.env = setup_default_simulation_env(
             end_datetime=self.end_datetime,
-            battery_init_charge=self.battery_init_charge
+            battery_init_charge=self.battery_init_charge,
+            battery_efficiency=0.85,
         )
         self.env_wrapper = IntervalWrapper(env=self.env, interval=timedelta(days=1), split_ratio=0.75)
         data_duration = timedelta(days=14) - timedelta(hours=34)
@@ -46,6 +47,7 @@ class TestIntervalWrapper(unittest.TestCase):
                              for t in ticks]))
 
     def test_random_start_ticks(self):
+        self.env_wrapper.reset(seed=42)
         ticks_expected_count = (self.env_wrapper.test_data_start_tick - self.env_wrapper.start_tick) // self.env_wrapper.interval_in_ticks
         ticks1 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
         ticks2 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
@@ -116,6 +118,29 @@ class TestIntervalWrapper(unittest.TestCase):
         interval_start_ticks2 = self.env_wrapper.interval_start_ticks
         self.assertEqual(datetime1, datetime2)
         self.assertEqual(interval_start_ticks1, interval_start_ticks2)
+
+    def test_random_bat_eff(self):
+        self.env_wrapper.reset(seed=42)
+        self.assertFalse(self.env_wrapper.random_bat_eff)
+
+        e = self.env._prosumer.battery.efficiency
+        self.assertEqual(e, 0.85)
+
+        self.env_wrapper.bat_eff_mean = 0.0
+        self.assertEqual(self.env_wrapper.bat_eff_mean, 0.0)
+
+        self.env_wrapper.random_bat_eff = True
+        self.env_wrapper.reset(seed=42)
+        e1 = self.env._prosumer.battery.efficiency
+        self.assertNotEqual(e1, 0.85)
+
+        self.env_wrapper.reset(seed=43)
+        e2 = self.env._prosumer.battery.efficiency
+        self.assertNotEqual(e1, e2)
+
+        self.env_wrapper.reset(seed=42)
+        e2 = self.env._prosumer.battery.efficiency
+        self.assertEqual(e1, e2)
 
 
 if __name__ == '__main__':

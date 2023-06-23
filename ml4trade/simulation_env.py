@@ -28,6 +28,7 @@ class SimulationEnv(gym.Env):
     _end_datetime: datetime
     _prosumer_init_balance: Currency
     _battery_init_charge: MWh
+    _battery_efficiency: float
     _clock: SimulationClock
     _prosumer: Prosumer
     _market: EnergyMarket
@@ -73,6 +74,7 @@ class SimulationEnv(gym.Env):
         self._end_datetime = end_datetime
         self._prosumer_init_balance = prosumer_init_balance
         self._battery_init_charge = battery_init_charge
+        self._battery_efficiency = battery_efficiency
 
         (
             self._clock,
@@ -102,9 +104,9 @@ class SimulationEnv(gym.Env):
         self._market.ds.last_processed = None
 
         self._prosumer.wallet.balance = self._prosumer_init_balance
-        # self._prosumer.battery.current_charge = kwargs.get('battery_charge_to_set') or self._battery_init_charge
         options = options or {}
         self._prosumer.battery.current_charge = options.get('battery_charge_to_set') or self._battery_init_charge
+        self._prosumer.battery.efficiency = options.get('battery_efficiency_to_set') or self._battery_efficiency
         self._prosumer.scheduled_buy_amounts = None
         self._prosumer.scheduled_sell_amounts = None
         self._prosumer.scheduled_buy_thresholds = None

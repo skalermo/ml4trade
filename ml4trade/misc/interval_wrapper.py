@@ -11,7 +11,8 @@ from ml4trade.utils import timedelta_to_hours
 class IntervalWrapper(Wrapper):
     env: SimulationEnv
 
-    def __init__(self, env: Union[SimulationEnv, Wrapper], interval: timedelta, split_ratio: float = 0.8, randomly_set_battery=False):
+    def __init__(self, env: Union[SimulationEnv, Wrapper], interval: timedelta, split_ratio: float = 0.8,
+                 randomly_set_battery: bool = False, random_bat_eff: bool = False):
         super().__init__(env)
 
         self.start_datetime = env._start_datetime
@@ -19,6 +20,8 @@ class IntervalWrapper(Wrapper):
         self.start_tick = env._start_tick
         self.interval = interval
         self.randomly_set_battery = randomly_set_battery
+        self.random_bat_eff = random_bat_eff
+        self.bat_eff_mean = None
         self.interval_in_ticks = timedelta_to_hours(interval)
         self.interval_start_ticks = []
         self.train_mode = True
@@ -52,7 +55,17 @@ class IntervalWrapper(Wrapper):
             rand_rel_charge = self.np_random.uniform(0.05, 0.95)
             battery_charge_to_set = self.env._prosumer.battery.capacity * rand_rel_charge
 
-        kwargs['options'] = dict(battery_charge_to_set=battery_charge_to_set)
+        battery_efficiency_to_set = None
+        if self.random_bat_eff and self.train_mode:
+            mean = self.bat_eff_mean
+            if mean is None:
+                mean = 0.85
+            battery_efficiency_to_set = max(0.1, min(0.85, self.np_random.normal(loc=mean, scale=0.1)))
+
+        kwargs['options'] = dict(
+            battery_charge_to_set=battery_charge_to_set,
+            battery_efficiency_to_set=battery_efficiency_to_set,
+        )
         return self.env.reset(
             **kwargs
         )
