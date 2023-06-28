@@ -146,8 +146,8 @@ class SimulationEnv(gym.Env):
         return (self._prosumer_balance - self._prev_prosumer_balance).value
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
-        self._simulation.send(action)
         self.history.step_update(action)
+        self._simulation.send(action)
         return self._observation()
 
     def _rand_produce_consume(self):
@@ -188,8 +188,12 @@ class SimulationEnv(gym.Env):
         saved_state = (
             self._prosumer.wallet.balance,
             self._prosumer.battery.current_charge,
+            self._prosumer.last_scheduled_buy_transaction,
+            self._prosumer.last_unscheduled_sell_transaction,
+            self._prosumer.last_unscheduled_buy_transaction,
+            self._prosumer.last_unscheduled_sell_transaction,
             self._clock.cur_datetime,
-            self._clock.cur_tick
+            self._clock.cur_tick,
         )
         for _ in range(ticks):
             self._rand_produce_consume()
@@ -198,8 +202,12 @@ class SimulationEnv(gym.Env):
         (
             self._prosumer.wallet.balance,
             self._prosumer.battery.current_charge,
+            self._prosumer.last_scheduled_buy_transaction,
+            self._prosumer.last_unscheduled_sell_transaction,
+            self._prosumer.last_unscheduled_buy_transaction,
+            self._prosumer.last_unscheduled_sell_transaction,
             self._clock.cur_datetime,
-            self._clock.cur_tick
+            self._clock.cur_tick,
         ) = saved_state
         return predicted_rel_battery_charge
 

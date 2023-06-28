@@ -222,11 +222,11 @@ def _plot_scheduled_amounts(history: pd.DataFrame, last_n_days: int, n_days_offs
     buy_amounts = df['scheduled_buy_amount'][start_datetime:end_datetime]
     sell_amounts = df['scheduled_sell_amount'][start_datetime:end_datetime]
     buys_success = df.apply(
-        lambda row: row['scheduled_buy_amount']if row['scheduled_buy_threshold'] >= row['price'] else np.nan,
+        lambda row: row['scheduled_buy_amount'] if row['scheduled_buy_threshold'] >= row['price'] and row['scheduled_buy_amount'] > 0 else np.nan,
         axis=1,
     )
     sells_success = df.apply(
-        lambda row: row['scheduled_sell_amount'] if row['scheduled_sell_threshold'] <= row['price'] else np.nan,
+        lambda row: row['scheduled_sell_amount'] if row['scheduled_sell_threshold'] <= row['price'] and row['scheduled_sell_amount'] > 0 else np.nan,
         axis=1,
     )
     buys_success = buys_success[start_datetime:end_datetime]
