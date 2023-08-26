@@ -53,6 +53,7 @@ class SimulationEnv(gym.Env):
             battery_init_charge: MWh,
             battery_efficiency: float,
             start_tick: int = None,
+            use_reward_penalties: bool = True,
     ):
         if data_strategies is None:
             data_strategies = {}
@@ -73,6 +74,7 @@ class SimulationEnv(gym.Env):
         self._end_datetime = end_datetime
         self._prosumer_init_balance = prosumer_init_balance
         self._battery_init_charge = battery_init_charge
+        self._use_reward_penalties = use_reward_penalties
 
         (
             self._clock,
@@ -140,7 +142,10 @@ class SimulationEnv(gym.Env):
         return obs, reward, terminated, truncated, {}
 
     def _calculate_reward(self) -> float:
-        return self._calculate_balance_diff() - self.history.last_day_potential_profit()
+        potential_profit = 0
+        if self._use_reward_penalties:
+            potential_profit = self.history.last_day_potential_profit()
+        return self._calculate_balance_diff() - potential_profit
 
     def _calculate_balance_diff(self) -> float:
         return (self._prosumer_balance - self._prev_prosumer_balance).value
