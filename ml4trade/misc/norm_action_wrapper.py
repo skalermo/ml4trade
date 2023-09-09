@@ -40,7 +40,7 @@ class ActionWrapper(_ActionWrapper):
 
 
 class AvgIntervalPriceRetriever:
-    def __init__(self, prices_df: pd.DataFrame, interval_days: int = 90):
+    def __init__(self, prices_df: pd.DataFrame, interval_days: int = 30):
         _avg_day_prices: Dict[Tuple[int, int], float] = prices_df.groupby(
             [
                 prices_df['index'].dt.year.rename('year'),
