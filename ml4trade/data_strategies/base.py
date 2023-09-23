@@ -25,7 +25,8 @@ class DataStrategy:
     def __init__(self, df: pd.DataFrame = None, window_size: int = 1,
                  window_direction: Literal['forward', 'backward'] = 'forward',
                  scheduling_hour: int = SCHEDULING_TIME.hour):
-        self.df = self.preprocess_data(df)
+        self.df = df
+        self.col = self.get_column(df)
         self.window_size = window_size
         self.window_direction = window_direction
         self.scheduling_hour = scheduling_hour
@@ -41,8 +42,8 @@ class DataStrategy:
     def set_seed(self, seed: int):
         self._rng, seed = seeding.np_random(seed)
 
-    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        return df
+    def get_column(self, df: pd.DataFrame) -> List[float]:
+        pass
 
     def process(self, idx: int) -> float:
         raise NotImplementedError
