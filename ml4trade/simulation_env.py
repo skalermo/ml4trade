@@ -17,6 +17,7 @@ from ml4trade.domain.units import Currency, MWh
 from ml4trade.domain.utils import setup_systems
 from ml4trade.utils import calc_tick_offset, dfs_are_long_enough
 from ml4trade.history import History
+from ml4trade.potential_calculator import PotentialCalculator
 
 
 class SimulationEnv(gym.Env):
@@ -39,6 +40,7 @@ class SimulationEnv(gym.Env):
     _first_actions_scheduled: bool
     _first_actions_set: bool
     history: History
+    potential_calculator: PotentialCalculator
     _simulation: Generator[None, ActType, None]
 
     def __init__(
@@ -119,6 +121,12 @@ class SimulationEnv(gym.Env):
         self._first_actions_scheduled = False
         self._first_actions_set = False
         self.history = History(self._clock.view(use_tick_offset=False), self._prosumer.battery.capacity, self._prosumer.battery.efficiency)
+        self.potential_calculator = PotentialCalculator(
+            self._clock.view(use_tick_offset=False),
+            self._prosumer.production_system.ds,
+            self._prosumer.consumption_system.ds,
+            self._prosumer.energy_market.ds,
+        )
         self._simulation = self.__simulation()
         self._simulation.send(None)
 
@@ -144,7 +152,7 @@ class SimulationEnv(gym.Env):
     def _calculate_reward(self) -> float:
         potential_profit = 0
         if self._use_reward_penalties:
-            potential_profit = self.history.last_day_potential_profit()
+            potential_profit = self.history.last_day_potential_profit() - self.potential_calculator.cur_day_potential_profit() * 0.9
         return self._calculate_balance_diff() - potential_profit
 
     def _calculate_balance_diff(self) -> float:
