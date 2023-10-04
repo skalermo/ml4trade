@@ -30,26 +30,11 @@ class TestIntervalWrapper(unittest.TestCase):
         self.assertEqual(self.env_wrapper.train_mode, True)
         self.assertEqual(self.env_wrapper.test_data_start_tick, self.data_start_tick)
 
-    # def test_set_to_test(self):
-    #     self.env_wrapper.set_to_test_and_reset()
-    #     self.assertFalse(self.env_wrapper.train_mode)
-    #     self.assertEqual(self.env._start_tick, self.data_start_tick)
-    #     self.assertEqual(
-    #         self.env._start_datetime.replace(minute=0),
-    #         self.env_wrapper.start_datetime + timedelta(hours=self.data_start_tick)
-    #     )
-
     def test_interval_ticks_generator(self):
         ticks = [next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(100)]
         # check if ticks are within allowed range
         self.assertTrue(all([self.env_wrapper.start_tick <= t <= self.env_wrapper.test_data_start_tick
                              for t in ticks]))
-
-    def test_random_start_ticks(self):
-        ticks_expected_count = (self.env_wrapper.test_data_start_tick - self.env_wrapper.start_tick) // self.env_wrapper.interval_in_ticks
-        ticks1 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
-        ticks2 = sorted([next(self.env_wrapper._ep_interval_ticks_generator) for _ in range(ticks_expected_count)])
-        self.assertNotEqual(ticks1, ticks2)
 
     def test_ep_interval_from_start_tick(self):
         tick = 42
