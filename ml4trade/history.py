@@ -4,6 +4,7 @@ from typing import List, Optional, Dict
 
 import numpy as np
 
+from ml4trade.domain.units import MWh
 from ml4trade.domain.clock import ClockView
 from ml4trade.domain.consumption import ConsumptionSystem
 from ml4trade.domain.market import EnergyMarket
@@ -23,11 +24,13 @@ class History:
         'potential_profit',
     ]
 
-    def __init__(self, clock_view: Optional[ClockView] = None):
+    def __init__(self, clock_view: Optional[ClockView] = None, battery_cap: MWh = MWh(2), battery_efficiency: float = 0.85):
         if clock_view is not None:
             self._clock_view = clock_view
             self._tick_offset = clock_view.cur_tick()
         self._history: List[Dict] = []
+        self._battery_cap = battery_cap
+        self._battery_efficiency = battery_efficiency
 
     def __getitem__(self, item):
         return self._history[item]
@@ -92,17 +95,25 @@ class History:
         self._history.extend(actions)
 
         if self._has_1day_of_history():
-            potential_profit = self._last_day_summary()
+            potential_profit, price_diff_profit = self._last_day_summary()
             self._history[cur_idx - self._clock_view.cur_datetime().hour - 1].update({
                 'potential_profit': potential_profit,
+                'price_diff_profit': price_diff_profit,
             })
 
     def last_day_potential_profit(self) -> float:
-        return self._last_day_summary()
+        idx = self._cur_tick_to_idx() - self._clock_view.cur_datetime().hour - 1
+        history_entry = None if idx < 0 else self._history[idx].get('potential_profit')
+        return history_entry or self._last_day_summary()[0]
 
-    def _last_day_summary(self) -> float:
+    def last_day_price_diff_profit(self) -> float:
+        idx = self._cur_tick_to_idx() - self._clock_view.cur_datetime().hour - 1
+        history_entry = None if idx < 0 else self._history[idx].get('price_diff_profit')
+        return history_entry or self._last_day_summary()[1]
+
+    def _last_day_summary(self) -> (float, float):
         if not self._has_1day_of_history():
-            return 0
+            return 0, 0
 
         end_idx = self._cur_tick_to_idx() - self._clock_view.cur_datetime().hour
         start_idx = end_idx - 24 or None
@@ -112,7 +123,11 @@ class History:
         extra_produced = sum(r['energy_produced'] - r['energy_consumed'] for r in last_day_history)
         potential_profit = extra_produced * avg_price
 
-        return potential_profit
+        night_low = min(r['price'] for r in last_day_history[:9])
+        day_high = max(r['price'] for r in last_day_history[9:])
+        price_diff_profit = max(0, (day_high * self._battery_efficiency - night_low) * self._battery_cap.value)
+
+        return potential_profit, price_diff_profit
 
     def render(self, last_n_days: int = 2, n_days_offset: int = 0, save_path=None):
         render_all(self._history, last_n_days, n_days_offset, save_path)

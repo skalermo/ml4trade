@@ -88,7 +88,7 @@ class TestHistory(unittest.TestCase):
 
         update()
         history.step_update(self.env.action_space.sample())
-        self.assertEqual(history._last_day_summary(), 0)
+        self.assertEqual(history._last_day_summary(), (0, 0))
         update()
 
         self.assertNotEqual(history._last_day_summary(), 0)

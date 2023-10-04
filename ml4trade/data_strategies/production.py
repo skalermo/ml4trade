@@ -55,13 +55,16 @@ class ImgwWindDataStrategy(DataStrategy):
         self.max_wind_power = max_wind_power
         self.max_wind_speed = max_wind_speed
 
-    col = 'wind_speed'
-    col_idx = list(imgw_col_ids.keys()).index(col)
+    col_name = 'wind_speed'
+    col_idx = list(imgw_col_ids.keys()).index(col_name)
+
+    def get_column(self, df: pd.DataFrame) -> List[float]:
+        return df.iloc[:, self.col_idx].tolist()
 
     @update_last_processed
     def process(self, idx: int) -> float:
         # wind speed in meters per second
-        wind_speed = self.df.iat[idx, self.col_idx]
+        wind_speed = self.col[idx]
         if wind_speed > self.max_wind_speed or wind_speed < 0:
             return 0
         return wind_speed * self.max_wind_power.value / self.max_wind_speed
@@ -69,7 +72,7 @@ class ImgwWindDataStrategy(DataStrategy):
     def observation(self, idx: int) -> List[float]:
         start_idx = idx + 24 - self.scheduling_hour
         end_idx = start_idx + self.window_size
-        return list(self.df.iloc[start_idx:end_idx, self.col_idx])
+        return self.col[start_idx:end_idx]
 
 
 class ImgwSolarDataStrategy(DataStrategy):
@@ -81,14 +84,17 @@ class ImgwSolarDataStrategy(DataStrategy):
         self.max_solar_power = max_solar_power
         self.solar_efficiency = solar_efficiency
 
-    col = 'cloudiness'
-    col_idx = list(imgw_col_ids.keys()).index(col)
+    col_name = 'cloudiness'
+    col_idx = list(imgw_col_ids.keys()).index(col_name)
+
+    def get_column(self, df: pd.DataFrame) -> List[float]:
+        return df.iloc[:, self.col_idx].tolist()
 
     @update_last_processed
     def process(self, idx: int) -> float:
         # cloudiness in oktas
         # https://en.wikipedia.org/wiki/Okta 
-        cloudiness = self.df.iat[idx, self.col_idx]
+        cloudiness = self.col[idx]
         if cloudiness == 9:  # 9 equals lack of observation (sky obscured)
             cloudiness = 8  # 8 equals overcast
         return self.max_solar_power.value * (1 - cloudiness / 8) * self.solar_efficiency
@@ -96,4 +102,4 @@ class ImgwSolarDataStrategy(DataStrategy):
     def observation(self, idx: int) -> List[float]:
         start_idx = idx + 24 - self.scheduling_hour
         end_idx = start_idx + self.window_size
-        return list(self.df.iloc[start_idx:end_idx, self.col_idx])
+        return self.col[start_idx:end_idx]

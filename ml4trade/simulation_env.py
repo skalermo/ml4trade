@@ -53,6 +53,7 @@ class SimulationEnv(gym.Env):
             battery_init_charge: MWh,
             battery_efficiency: float,
             start_tick: int = None,
+            use_reward_penalties: bool = True,
     ):
         if data_strategies is None:
             data_strategies = {}
@@ -73,6 +74,7 @@ class SimulationEnv(gym.Env):
         self._end_datetime = end_datetime
         self._prosumer_init_balance = prosumer_init_balance
         self._battery_init_charge = battery_init_charge
+        self._use_reward_penalties = use_reward_penalties
 
         (
             self._clock,
@@ -102,9 +104,9 @@ class SimulationEnv(gym.Env):
         self._market.ds.last_processed = None
 
         self._prosumer.wallet.balance = self._prosumer_init_balance
-        # self._prosumer.battery.current_charge = kwargs.get('battery_charge_to_set') or self._battery_init_charge
         options = options or {}
         self._prosumer.battery.current_charge = options.get('battery_charge_to_set') or self._battery_init_charge
+        self._clock.tick_offset = options.get('tick_offset') or 0
         self._prosumer.scheduled_buy_amounts = None
         self._prosumer.scheduled_sell_amounts = None
         self._prosumer.scheduled_buy_thresholds = None
@@ -116,7 +118,7 @@ class SimulationEnv(gym.Env):
         self._prev_prosumer_balance = self._prosumer_init_balance
         self._first_actions_scheduled = False
         self._first_actions_set = False
-        self.history = History(self._clock.view())
+        self.history = History(self._clock.view(use_tick_offset=False), self._prosumer.battery.capacity, self._prosumer.battery.efficiency)
         self._simulation = self.__simulation()
         self._simulation.send(None)
 
@@ -140,14 +142,17 @@ class SimulationEnv(gym.Env):
         return obs, reward, terminated, truncated, {}
 
     def _calculate_reward(self) -> float:
-        return self._calculate_balance_diff() - self.history.last_day_potential_profit()
+        potential_profit = 0
+        if self._use_reward_penalties:
+            potential_profit = self.history.last_day_potential_profit()
+        return self._calculate_balance_diff() - potential_profit
 
     def _calculate_balance_diff(self) -> float:
         return (self._prosumer_balance - self._prev_prosumer_balance).value
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
-        self._simulation.send(action)
         self.history.step_update(action)
+        self._simulation.send(action)
         return self._observation()
 
     def _rand_produce_consume(self):
@@ -188,8 +193,12 @@ class SimulationEnv(gym.Env):
         saved_state = (
             self._prosumer.wallet.balance,
             self._prosumer.battery.current_charge,
+            self._prosumer.last_scheduled_buy_transaction,
+            self._prosumer.last_unscheduled_sell_transaction,
+            self._prosumer.last_unscheduled_buy_transaction,
+            self._prosumer.last_unscheduled_sell_transaction,
             self._clock.cur_datetime,
-            self._clock.cur_tick
+            self._clock.cur_tick,
         )
         for _ in range(ticks):
             self._rand_produce_consume()
@@ -198,8 +207,12 @@ class SimulationEnv(gym.Env):
         (
             self._prosumer.wallet.balance,
             self._prosumer.battery.current_charge,
+            self._prosumer.last_scheduled_buy_transaction,
+            self._prosumer.last_unscheduled_sell_transaction,
+            self._prosumer.last_unscheduled_buy_transaction,
+            self._prosumer.last_unscheduled_sell_transaction,
             self._clock.cur_datetime,
-            self._clock.cur_tick
+            self._clock.cur_tick,
         ) = saved_state
         return predicted_rel_battery_charge
 

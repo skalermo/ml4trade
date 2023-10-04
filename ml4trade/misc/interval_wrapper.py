@@ -11,7 +11,8 @@ from ml4trade.utils import timedelta_to_hours
 class IntervalWrapper(Wrapper):
     env: SimulationEnv
 
-    def __init__(self, env: Union[SimulationEnv, Wrapper], interval: timedelta, split_ratio: float = 0.8, randomly_set_battery=False):
+    def __init__(self, env: Union[SimulationEnv, Wrapper], interval: timedelta, split_ratio: float = 0.8,
+                 randomly_set_battery: bool = False, randomly_shift_obs: bool = False):
         super().__init__(env)
 
         self.start_datetime = env._start_datetime
@@ -19,6 +20,7 @@ class IntervalWrapper(Wrapper):
         self.start_tick = env._start_tick
         self.interval = interval
         self.randomly_set_battery = randomly_set_battery
+        self.randomly_shift_obs = randomly_shift_obs
         self.interval_in_ticks = timedelta_to_hours(interval)
         self.interval_start_ticks = []
         self.train_mode = True
@@ -52,18 +54,22 @@ class IntervalWrapper(Wrapper):
             rand_rel_charge = self.np_random.uniform(0.05, 0.95)
             battery_charge_to_set = self.env._prosumer.battery.capacity * rand_rel_charge
 
-        kwargs['options'] = dict(battery_charge_to_set=battery_charge_to_set)
+        tick_offset = None
+        if self.randomly_shift_obs and self.train_mode:
+            tick_offset = self.np_random.integers(0, 24)
+
+        kwargs['options'] = dict(
+            battery_charge_to_set=battery_charge_to_set,
+            tick_offset=tick_offset,
+        )
         return self.env.reset(
             **kwargs
         )
 
     def __ep_interval_ticks_generator(self) -> Generator[int, None, None]:
-        max_offset = self.test_data_start_tick - self.start_tick - self.interval_in_ticks
         while True:
-            rand_offset = self.np_random.integers(0, min(self.interval_in_ticks - 1, max_offset),
-                                                  size=None, endpoint=True)
             ep_intervals_start_ticks = [start for start in range(
-                self.start_tick + rand_offset, self.test_data_start_tick - self.interval_in_ticks + 1,
+                self.start_tick, self.test_data_start_tick - self.interval_in_ticks + 1,
                 self.interval_in_ticks
             )]
             self.interval_start_ticks = ep_intervals_start_ticks

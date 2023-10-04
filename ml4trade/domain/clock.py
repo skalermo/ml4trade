@@ -2,14 +2,15 @@ from datetime import datetime, time, timedelta
 
 
 class ClockView:
-    def __init__(self, clock: 'SimulationClock'):
+    def __init__(self, clock: 'SimulationClock', use_tick_offset: bool = True):
         self._clock = clock
+        self._use_tick_offset = use_tick_offset
 
     def cur_datetime(self) -> datetime:
         return self._clock.cur_datetime
 
     def cur_tick(self) -> int:
-        return self._clock.cur_tick
+        return self._clock.cur_tick + self._clock.tick_offset * int(self._use_tick_offset)
 
     def scheduling_hour(self) -> int:
         return self._clock.scheduling_hour()
@@ -24,6 +25,7 @@ class SimulationClock:
         self.action_replacement_time = action_replacement_time
         self.cur_tick = start_tick
         self.tick_duration = tick_duration
+        self.tick_offset = 0
 
     def tick(self) -> None:
         self.cur_tick += 1
@@ -38,5 +40,5 @@ class SimulationClock:
     def is_it_action_replacement_hour(self) -> bool:
         return self.action_replacement_time.hour == self.cur_datetime.hour
 
-    def view(self) -> ClockView:
-        return ClockView(self)
+    def view(self, use_tick_offset: bool = True) -> ClockView:
+        return ClockView(self, use_tick_offset)
