@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ml4trade',
-    version='0.2.0',
+    version='1.0.0',
     url='https://github.com/skalermo/ml4trade',
     author='skalermo',
     author_email='skalermo@gmail.com',
